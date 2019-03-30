@@ -2,10 +2,14 @@
 library(EnhancedVolcano)
 library(pheatmap)
 library(DESeq2)
+library(EnhancedVolcano)
+library(pheatmap)
 
-setwd("~/CSBL_shared/RNASeq/TCGA/DEA/tumor_vs_normal/dds")
+setwd("/home/mskaro1/CSBL_shared/RNASeq/TCGA/DEA/tumor_vs_normal/dds")
 
 DE.projects<- list.files()
+DE.file <- DE.projects[1]
+
 
 for(DE.file in DE.projects){
 
@@ -49,28 +53,28 @@ for(DE.file in DE.projects){
                   legendIconSize = 3.0)
   
   savR<- substr(DE.file, 1,9)
-  ggsave(filename=paste0("~/storage/Metastatic_Organo_Tropism/Volcano/",savR,"_TvsN_Volcano_",".png"),
+  ggsave(filename=paste0("/home/mskaro1/storage/Metastatic_Organo_Tropism/Volcano/",savR,"_TvsN_Volcano",".png"),
          plot = p, device = "png", width = 25, height = 25, units = "in", dpi = "retina")
   
   
   # heatmap
   
   vsd <- vst(dds, blind=FALSE)
-  library("pheatmap")
-  select <- order(rowMeans(counts(dds,normalized=TRUE)),
-                  decreasing=TRUE)
-  df <- as.data.frame(colData(dds)[,c("condition")])
-
-  p <- pheatmap(assay(vsd)[select,], cluster_rows=TRUE, show_rownames=FALSE,
-           cluster_cols=TRUE, annotation_col=df)
-   
-  ggsave(filename=paste0("~/storage/Metastatic_Organo_Tropism/Heatmaps/",savR,"_TvsN_HeatMap_",".png"),
-         plot = p, device = "png", width = 25, height = 25, units = "in", dpi = "retina")
+  
+  # select <- order(rowMeans(counts(dds,normalized=TRUE)),
+  #                 decreasing=TRUE)
+  # df <- as.data.frame(colData(dds)[, "condition"])
+  # 
+  # p <- pheatmap(assay(vsd)[select, ], cluster_rows=F, show_rownames=FALSE,
+  #               cluster_cols=TRUE, annotation_col=df)
+  #  
+  # ggsave(filename=paste0("/home/mskaro1/storage/Metastatic_Organo_Tropism/Heatmaps/",savR,"_TvsN_HeatMap",".png"),
+  #        plot = p, device = "png", width = 25, height = 25, units = "in", dpi = "retina")
   
   # PCA plot
   p <- plotPCA(vsd, intgroup=c("condition"))
   
-  ggsave(filename=paste0("~/storage/Metastatic_Organo_Tropism/PCA/",savR,"_TvsN_PCA_",".png"),
+  ggsave(filename=paste0("/home/mskaro1/storage/Metastatic_Organo_Tropism/PCA/",savR,"_TvsN_PCA",".png"),
          plot = p, device = "png", width = 25, height = 25, units = "in", dpi = "retina")
   
   
