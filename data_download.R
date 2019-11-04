@@ -58,13 +58,8 @@ for(plat in platforms){
       
       var <- as.data.frame(gsm@dataTable@table)%>%
         dplyr::select(ID_REF, VALUE)
-      var$Platform_SPOTID <- gpl@dataTable@table$Platform_SPOTID
-      var <- var[c("ID_REF" , "Platform_SPOTID", "VALUE")]
-      colnames(var) <- c("ID_REF" , "Platform_SPOTID", genesSets)
-      #var <- dplyr::select(var, -ID_REF)
-      
-      dat <- cbind(dat, var[3])
-      
+      colnames(var) <- c("ID_REF" , genesSets)
+      dat <- left_join(dat, var, by= "ID_REF")
     }
   }
     # write dat to downloads folder
@@ -109,13 +104,51 @@ for(plat in platforms){
         
         var <- as.data.frame(gsm@dataTable@table)%>%
           dplyr::select(ID_REF, VALUE)
-        var$Platform_SPOTID <- gpl@dataTable@table$Platform_SPOTID
-        var <- var[c("ID_REF" , "Platform_SPOTID", "VALUE")]
-        colnames(var) <- c("ID_REF" , "Platform_SPOTID", genesSets)
-        #var <- dplyr::select(var, -ID_REF)
+        colnames(var) <- c("ID_REF" , genesSets)
+        dat <- left_join(dat, var, by= "ID_REF")
+      }
+    }
+    
+    write.csv(dat, file = str_glue("~/storage/Metastatic_Organo_Tropism/results/{plat}_raw_values.csv"))  
+    write.csv(coldata, file = str_glue("~/storage/Metastatic_Organo_Tropism/results/{plat}_design_matrix_raw.csv"))  
+    rm(dat)
+    
+    if(plat == "GPL96"){
+      setwd("~/storage/Metastatic_Organo_Tropism")
+      # subset by platforms
+      coldata <- refDat %>%
+        filter(Platform_id == plat)
+      # reduce download to only desired GSM list
+      GSMs <- unique(coldata$Sample_id)
+      ##download gsms and concatenate
+      genesSets <- GSMs[1] 
+      # download samples
+      gsm <- GEOquery::getGEO(genesSets, AnnotGPL = TRUE,  getGPL = TRUE)
+      gpl <- getGEO(filename="~/storage/Metastatic_Organo_Tropism/annot_files/GPL96.annot")
+      var <- as.data.frame(gsm@dataTable@table)%>%
+        dplyr::select(ID_REF, VALUE)
+      var$Platform_Probe_ID <- gpl@dataTable@table$ID
+      var <- var[c("ID_REF" , "Platform_Probe_ID", "VALUE")]
+      colnames(var) <- c("ID_REF" , "Platform_Probe_ID", genesSets)  
+      dat <- var
+      
+      for(genesSets in GSMs[2:length(GSMs)]){
         
-        dat <- cbind(dat, var[3])
+        gsm <- GEOquery::getGEO(genesSets, AnnotGPL = TRUE,  getGPL = TRUE)
         
+        #clear the temp_dircache
+        tmp_dir <- tempdir()
+        list.files(tmp_dir)
+        files <- list.files(tmp_dir, full.names = T, pattern = ".soft")
+        file.exists(files)
+        file.remove(files)
+        file.exists(files)
+        list.files(tmp_dir)
+        
+        var <- as.data.frame(gsm@dataTable@table)%>%
+          dplyr::select(ID_REF, VALUE)
+        colnames(var) <- c("ID_REF" , genesSets)
+        dat <- left_join(dat, var, by= "ID_REF")
       }
     }
     
@@ -157,21 +190,14 @@ for(plat in platforms){
         
         var <- as.data.frame(gsm@dataTable@table)%>%
           dplyr::select(ID_REF, VALUE)
-        var$Platform_Probe_ID <- gpl@dataTable@table$ID
-        var <- var[c("ID_REF" , "Platform_Probe_ID", "VALUE")]
-        colnames(var) <- c("ID_REF" , "Platform_Probe_ID", genesSets)
-        #var <- dplyr::select(var, -ID_REF)
-        # probably should do a match .....
-        dat <- cbind(dat, var[3])
-        
+        colnames(var) <- c("ID_REF" , genesSets)
+        dat <- left_join(dat, var, by= "ID_REF")
       }
     }
     
     write.csv(dat, file = str_glue("~/storage/Metastatic_Organo_Tropism/results/{plat}_raw_values.csv"))  
     write.csv(coldata, file = str_glue("~/storage/Metastatic_Organo_Tropism/results/{plat}_design_matrix_raw.csv"))  
     rm(dat)
-    
-    
     
     
     # analyze the data for the expression levels of the 
