@@ -17,7 +17,7 @@ clinical$Sample_id <- substr(clinical$barcode, 0,16)
 
 
 
-i <- projects[3]
+i <- projects[5]
 for(i in projects){
   dat <- as.data.frame(datatable::fread(str_glue("~/CSBL_shared/clinical/TCGA_xml/{i}.csv")))
   
@@ -68,38 +68,58 @@ for(i in projects){
       rm(BRCA_met)
     }
   
-  if(dat== "COAD_clinical"){
+  if(i== "TCGA-COAD"){
     
     dat <- as.data.frame(data.table::fread(str_glue("~/CSBL_shared/clinical/TCGA_xml/{i}.csv"))) 
     
     COAD_met <- as.data.frame(dat %>%
-                                dplyr::select(bcr_patient_barcode,new_neoplasm_event_type ,new_tumor_event_after_initial_treatment,other_malignancy_anatomic_site,
+                                dplyr::select(bcr_patient_barcode,new_neoplasm_event_type ,new_tumor_event_after_initial_treatment,other_malignancy_anatomic_site, other_malignancy_type,
                                               site_of_additional_surgery_new_tumor_event_mets,other_malignancy_laterality))
     
-    write.csv(BRCA_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
+    write.csv(COAD_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
     
-    print("BRCA Done")
-    rm(BRCA_clinical)
-    rm(BRCA_met)
+    print("COAD Done")
+    rm(COAD_met)
   }
   
-  if(dat== "HNSC_clinical"){
+  if(i== "TCGA-ESCA"){
     
-    hnsc_clin_trim <- as.data.frame(HNSC_clinical %>%
-                                      dplyr::select(bcr_patient_barcode, number_of_lymphnodes_positive_by_ihc, 
-                                                    number_of_lymphnodes_positive_by_he))
+    dat <- as.data.frame(data.table::fread(str_glue("~/CSBL_shared/clinical/TCGA_xml/{i}.csv"))) 
     
-    hnsc_clin_trim[is.na(hnsc_clin_trim)] = 0
-    hnsc_clin_trim <- mutate(hnsc_clin_trim, lymph_node_status = ifelse(number_of_lymphnodes_positive_by_ihc | number_of_lymphnodes_positive_by_he  > 0 , 1, 0))
+    ESCA_met <- as.data.frame(dat %>%
+                                dplyr::select(bcr_patient_barcode,number_of_lymphnodes_positive_by_ihc,number_of_lymphnodes_positive_by_he,
+                                              new_tumor_event_after_initial_treatment,new_neoplasm_event_type, new_tumor_event_additional_surgery_procedure,
+                                              new_neoplasm_event_occurrence_anatomic_site,new_neoplasm_event_occurrence_anatomic_site_text,other_malignancy_type,other_malignancy_anatomic_site))
     
-    write.csv(hnsc_clin_trim, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
+    write.csv(ESCA_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
     
+    print("ESCA Done")
+    rm(ESCA_met)
+  } 
+  
+  if(i== "TCGA-HNSC"){
     
+    dat <- as.data.frame(data.table::fread(str_glue("~/CSBL_shared/clinical/TCGA_xml/{i}.csv"))) 
+    
+    HNSC_met <- as.data.frame(dat %>%
+                                dplyr::select(bcr_patient_barcode,number_of_lymphnodes_positive_by_ihc,number_of_lymphnodes_positive_by_he,
+                                              new_tumor_event_after_initial_treatment, additional_surgery_metastatic_procedure,
+                                              new_neoplasm_event_occurrence_anatomic_site,new_neoplasm_occurrence_anatomic_site_text,
+                                              new_neoplasm_event_type,new_tumor_event_additional_surgery_procedure,
+                                              malignancy_type,other_malignancy_anatomic_site))
+    
+    write.csv(ESCA_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
     
     print("HNSC Done")
-    rm(HNSC_clinical)
+    rm(HNSC_met)
   } 
   
   
   
+  
+  
 }
+
+
+
+
