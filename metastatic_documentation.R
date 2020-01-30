@@ -17,7 +17,7 @@ clinical$Sample_id <- substr(clinical$barcode, 0,16)
 
 
 
-i <- projects[5]
+i <- projects[8]
 for(i in projects){
   dat <- as.data.frame(datatable::fread(str_glue("~/CSBL_shared/clinical/TCGA_xml/{i}.csv")))
   
@@ -25,7 +25,7 @@ for(i in projects){
     
     dat <- as.data.frame(data.table::fread(str_glue("~/CSBL_shared/clinical/TCGA_xml/{i}.csv"))) 
     
-    BRCA_met <- as.data.frame(dat %>%
+    BLCA_met <- as.data.frame(dat %>%
                                 dplyr::select(bcr_patient_barcode, number_of_lymphnodes_positive_by_he, number_of_lymphnodes_positive_by_ihc,
                                               metastatic_site_at_diagnosis, new_neoplasm_event_occurrence_anatomic_site,
                                               metastatic_site_at_diagnosis_other,other_malignancy_laterality,
@@ -38,11 +38,9 @@ for(i in projects){
     
     
     
-    write.csv(dat, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
+    write.csv(BLCA_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
     
-    dat$`metastatic_site_at_diagnosis[1]`
-    
-    
+  
     print("BLCA Done")
     rm(BLCA_met)
     rm(dat)
@@ -101,6 +99,7 @@ for(i in projects){
     
     dat <- as.data.frame(data.table::fread(str_glue("~/CSBL_shared/clinical/TCGA_xml/{i}.csv"))) 
     
+    
     HNSC_met <- as.data.frame(dat %>%
                                 dplyr::select(bcr_patient_barcode,number_of_lymphnodes_positive_by_ihc,number_of_lymphnodes_positive_by_he,
                                               new_tumor_event_after_initial_treatment, additional_surgery_metastatic_procedure,
@@ -108,17 +107,170 @@ for(i in projects){
                                               new_neoplasm_event_type,new_tumor_event_additional_surgery_procedure,
                                               malignancy_type,other_malignancy_anatomic_site))
     
-    write.csv(ESCA_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
+    
+    write.csv(EHNSC_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
     
     print("HNSC Done")
     rm(HNSC_met)
   } 
   
+  if(i== "TCGA-KICH"){
+    
+    dat <- as.data.frame(data.table::fread(str_glue("~/CSBL_shared/clinical/TCGA_xml/{i}.csv"))) 
+    
+    KICH_met <- as.data.frame(dat %>% dplyr::select(bcr_patient_barcode,new_tumor_event_after_initial_treatment, number_of_lymphnodes_positive,additional_radiation_therapy,
+                                                       additional_pharmaceutical_therapy,
+                                                       additional_surgery_metastatic_procedure,malignancy_type,
+                                                       other_malignancy_anatomic_site,other_malignancy_histological_type,
+                                                       other_malignancy_histological_type_text,other_malignancy_laterality))
+    
+    write.csv(KICH_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
+    
+    print("KICH is bulshit but it's Done")
+    rm(KICH_met)
+  } 
+  
+  if(i== "TCGA-KIRC"){
+    
+    dat <- as.data.frame(data.table::fread(str_glue("~/CSBL_shared/clinical/TCGA_xml/{i}.csv"))) 
+    
+    
+    KIRC_met <- as.data.frame(dat %>%
+                                dplyr::select(bcr_patient_barcode,new_tumor_event_after_initial_treatment, number_of_lymphnodes_positive,additional_radiation_therapy,
+                                              additional_pharmaceutical_therapy,
+                                              additional_surgery_metastatic_procedure,malignancy_type,
+                                              other_malignancy_anatomic_site,other_malignancy_histological_type,
+                                              other_malignancy_histological_type_text,other_malignancy_laterality))
+    
+    
+    write.csv(KIRC_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
+    
+    print("KIRC Done")
+    rm(KIRC_met)
+  } 
+  
+  if(i== "TCGA-KIRP"){
+    
+    dat <- as.data.frame(data.table::fread(str_glue("~/CSBL_shared/clinical/TCGA_xml/{i}.csv"))) 
+    
+    
+    KIRP_met <- as.data.frame(dat %>%
+                                dplyr::select(bcr_patient_barcode,new_tumor_event_after_initial_treatment, number_of_lymphnodes_positive,additional_radiation_therapy,
+                                              additional_pharmaceutical_therapy,
+                                              additional_surgery_metastatic_procedure,malignancy_type,
+                                              other_malignancy_anatomic_site,other_malignancy_histological_type,
+                                              other_malignancy_histological_type_text,other_malignancy_laterality,other_malignancy_anatomic_site_text))
+    
+    
+    write.csv(KIRP_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
+    
+    print("KIRP Done")
+    rm(KIRP_met)
+  
+  
+  
+  } 
+  
+  if(i== "TCGA-LIHC"){
+    
+    dat <- as.data.frame(data.table::fread(str_glue("~/CSBL_shared/clinical/TCGA_xml/{i}.csv"))) 
+    
+    
+    LIHC_met <- as.data.frame(dat %>%
+                                dplyr::select(bcr_patient_barcode,new_tumor_event_after_initial_treatment,new_neoplasm_event_type,
+                                              new_neoplasm_event_occurrence_anatomic_site,new_tumor_event_additional_surgery_procedure,
+                                              new_neoplasm_occurrence_anatomic_site_text))
+    
+    
+    write.csv(LIHC_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
+    
+    print("LIHC Done")
+    rm(LIHC_met)
+    
+    
+    
+  } 
+  
+  
+  if(i== "TCGA-LUAD"){
+    
+    dat <- as.data.frame(data.table::fread(str_glue("~/CSBL_shared/clinical/TCGA_xml/{i}.csv"))) 
+    
+    
+    LUAD_met <- as.data.frame(dat %>%
+                                dplyr::select(bcr_patient_barcode,new_tumor_event_after_initial_treatment,
+                                              new_neoplasm_event_type,
+                                              additional_surgery_metastatic_procedure,
+                                              additional_surgery_locoregional_procedure,
+                                              other_malignancy_anatomic_site,location_in_lung_parenchyma,
+                                              `new_neoplasm_event_type[1]`,`new_neoplasm_event_type[2]`,
+                                              malignancy_type,other_malignancy_histological_type,other_malignancy_histological_type_text))
+
+    write.csv(LUAD_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
+    
+    print("LUAD Done")
+    rm(LUAD_met)
+    
+    
+    
+  } 
+  
+  if(i== "TCGA-LUSC"){
+    
+    dat <- as.data.frame(data.table::fread(str_glue("~/CSBL_shared/clinical/TCGA_xml/{i}.csv"))) 
+    
+    
+    LUSC_met <- as.data.frame(dat %>%
+                                dplyr::select(bcr_patient_barcode,new_tumor_event_after_initial_treatment,
+                                              new_neoplasm_event_type,
+                                              additional_surgery_metastatic_procedure,
+                                              additional_surgery_locoregional_procedure,
+                                              other_malignancy_anatomic_site,location_in_lung_parenchyma,
+                                              `new_neoplasm_event_type[1]`,`new_neoplasm_event_type[2]`,
+                                              malignancy_type,other_malignancy_histological_type,other_malignancy_histological_type_text))
+    
+    write.csv(LUSC_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
+    
+    print("LUSC Done")
+    rm(LUSC_met)
+    
+    
+    
+  } 
+  
+  if(i== "TCGA-PRAD"){
+    
+    dat <- as.data.frame(data.table::fread(str_glue("~/CSBL_shared/clinical/TCGA_xml/{i}.csv"))) 
+    
+    
+    PRAD_met <- as.data.frame(dat %>%
+                                dplyr::select(bcr_patient_barcode,new_tumor_event_after_initial_treatment,
+                                              new_neoplasm_event_type,
+                                              additional_surgery_metastatic_procedure,
+                                              additional_surgery_locoregional_procedure,
+                                              other_malignancy_anatomic_site,location_in_lung_parenchyma,
+                                              `new_neoplasm_event_type[1]`,`new_neoplasm_event_type[2]`,
+                                              malignancy_type,other_malignancy_histological_type,other_malignancy_histological_type_text))
+    
+    write.csv(PRAD_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
+    
+    print("PRAD Done")
+    rm(PRAD_met)
+    
+    
+    
+  } 
   
   
   
   
 }
+
+
+
+
+
+
 
 
 
