@@ -3,6 +3,7 @@
 setwd("~/CSBL_shared/clinical/TCGA_xml") # most comprehensive
 
 
+
 projects <- c("TCGA-BLCA","TCGA-BRCA","TCGA-COAD","TCGA-ESCA","TCGA-HNSC","TCGA-KICH","TCGA-KIRC","TCGA-KIRP","TCGA-LIHC","TCGA-LUAD","TCGA-LUSC","TCGA-PRAD","TCGA-STAD","TCGA-THCA")
 
 #projects <- c("BLCA","BRCA","COAD","HNSC","KICH","KIRC","KIRP","LIHC","LUAD","LUSC","PRAD","STAD","THCA")
@@ -17,25 +18,28 @@ clinical$Sample_id <- substr(clinical$barcode, 0,16)
 
 
 
-i <- projects[8]
+i <- projects[1]
 for(i in projects){
-  dat <- as.data.frame(datatable::fread(str_glue("~/CSBL_shared/clinical/TCGA_xml/{i}.csv")))
   
   if(i== "TCGA-BLCA"){
     
     dat <- as.data.frame(data.table::fread(str_glue("~/CSBL_shared/clinical/TCGA_xml/{i}.csv"))) 
     
-    BLCA_met <- as.data.frame(dat %>%
-                                dplyr::select(bcr_patient_barcode, number_of_lymphnodes_positive_by_he, number_of_lymphnodes_positive_by_ihc,
-                                              metastatic_site_at_diagnosis, new_neoplasm_event_occurrence_anatomic_site,
-                                              metastatic_site_at_diagnosis_other,other_malignancy_laterality,
-                                              `metastatic_site_at_diagnosis[1]`,`metastatic_site_at_diagnosis[2]`,`metastatic_site_at_diagnosis[3]`,
-                                              `metastatic_site_at_diagnosis[4]`,other_malignancy_anatomic_site_text))
+    BLCA_met <- as.data.frame(dat %>% dplyr::select(bcr_patient_barcode,malignancy_type,number_of_lymphnodes_positive_by_he,
+                                                    other_malignancy_anatomic_site,metastatic_site,new_tumor_event_after_initial_treatment,
+                                                    new_neoplasm_event_type,new_neoplasm_event_occurrence_anatomic_site,
+                                                    new_neoplasm_occurrence_anatomic_site_text,new_tumor_event_additional_surgery_procedure,
+                                                    metastatic_site,`metastatic_site[1]`,`metastatic_site[2]`,`metastatic_site[3]`))
     #lymph node status
+    
+    
+    
+    
+    
     
     # consolidate columns
     
-    
+    dat$metastatic_site
     
     
     write.csv(BLCA_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
@@ -309,12 +313,10 @@ for(i in projects){
   
   
   
+  
+  
+  
 }
-
-
-
-
-
 
 
 
