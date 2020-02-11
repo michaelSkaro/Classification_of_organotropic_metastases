@@ -31,18 +31,37 @@ for(i in projects){
                                                     new_neoplasm_occurrence_anatomic_site_text,new_tumor_event_additional_surgery_procedure,
                                                     metastatic_site,`metastatic_site[1]`,`metastatic_site[2]`,`metastatic_site[3]`))
     #lymph node status
-    
-    
-    
-    
-    
-    
+    #View(BLCA_met)
     # consolidate columns
+    library(dplyr)
     
-    dat$metastatic_site
+    ## define a helper function
+    empty_as_na <- function(x){
+      if("factor" %in% class(x)) x <- as.character(x) ## since ifelse wont work with factors
+      ifelse(as.character(x)!="", x, NA)
+    }
+    
+    ## transform all columns
+    BLCA_met<- BLCA_met %>% 
+      mutate_each(funs(empty_as_na)) %>%
+      mutate(BLCA_met, LymphNodeStatus = ifelse(is.na(number_of_lymphnodes_positive_by_he), 0,
+                                                ifelse(number_of_lymphnodes_positive_by_he == 0, 0, 1))) %>%
+      mutate(BLCA_met, Metastatic_status = ifelse(is.na(malignancy_type), 0,
+                                           ifelse(malignancy_type == "Prior Malignancy", 0,1)))
+    
+     
     
     
-    write.csv(BLCA_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
+    
+                                          
+    # ifelse(is.na(`metastatic_site[1]`), 0,
+    #        ifelse(is.na(`metastatic_site[2]`), 0,       
+    #               ifelse(is.na(`metastatic_site[3]`), 0, 
+    #                      ifelse(is.na(new_neoplasm_event_occurrence_anatomic_site), 0,
+    #                             ifelse(is.na(`metastatic_site[2]`), 0,1))))))))
+    
+    
+    write.csv(BLCA_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_status_.csv"))
     
   
     print("BLCA Done")
@@ -317,6 +336,11 @@ for(i in projects){
   
   
 }
+
+
+
+
+
 
 
 
