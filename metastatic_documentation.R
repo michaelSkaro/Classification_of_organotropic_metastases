@@ -51,9 +51,12 @@ for(i in projects){
         is.na(new_neoplasm_event_occurrence_anatomic_site) & is.na(new_neoplasm_event_type) & 
           is.na(new_neoplasm_occurrence_anatomic_site_text) | malignancy_type == " Prior Malignancy" ~ 0,
         TRUE ~1)) %>%
-      tidyr::unite(metastatic_site, `metastatic_site[1]`:`metastatic_site[3]`, na.rm =TRUE, sep = "|")%>%
+      tidyr::unite(metastatic_site, `metastatic_site[1]`:`metastatic_site[3]`, na.rm =TRUE, sep = "|") %>%
       tidyr::unite(met_site_merge, new_neoplasm_event_type:new_neoplasm_occurrence_anatomic_site_text , na.rm =TRUE, sep = "|") %>%
-      tidyr::unite(other_malignancy, other_malignancy_anatomic_site:metastatic_site , na.rm =TRUE, sep = "|")
+      dplyr::select(bcr_patient_barcode, malignancy_type, metastatic_site, met_site_merge, other_malignancy_anatomic_site, 
+                    number_of_lymphnodes_positive_by_he, LymphNodeStatus, Metastatic_status) %>%
+      tidyr::unite(met_loc, metastatic_site:other_malignancy_anatomic_site , na.rm =TRUE, sep = "|")
+    
     
     index <- BLCA_met$malignancy_type == "Synchronous Malignancy" 
     BLCA_met$Metastatic_status[index] <- 1
@@ -65,13 +68,6 @@ for(i in projects){
     BLCA_met$Metastatic_status[index] <- 1
     
     
-    BLCA_met_2 <- BLCA_met %>%
-      dplyr::select(bcr_patient_barcode, LymphNodeStatus, malignancy_type, other_malignancy_anatomic_site , Metastatic_status,new_neoplasm_event_occurrence_anatomic_site, new_neoplasm_occurrence_anatomic_site_text)
-    
-    
-    BLCA_met<- BLCA_met_2
-    rm(BLCA_met_2)
-
     write.csv(BLCA_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_status_.csv"))
     
   
@@ -381,12 +377,6 @@ for(i in projects){
   
   
 }
-
-
-
-
-
-
 
 
 
