@@ -42,25 +42,36 @@ for(i in projects){
     }
     
     ## transform all columns
+    
     BLCA_met<- BLCA_met %>% 
       mutate_each(funs(empty_as_na)) %>%
       mutate(BLCA_met, LymphNodeStatus = ifelse(is.na(number_of_lymphnodes_positive_by_he), 0,
                                                 ifelse(number_of_lymphnodes_positive_by_he == 0, 0, 1))) %>%
-      mutate(BLCA_met, Metastatic_status = ifelse(is.na(malignancy_type), 0,
-                                           ifelse(malignancy_type == "Prior Malignancy", 0,1)))
+      mutate(BLCA_met, Metastatic_status = case_when(
+        is.na(new_neoplasm_event_occurrence_anatomic_site) & is.na(new_neoplasm_event_type) & 
+          is.na(new_neoplasm_occurrence_anatomic_site_text) | malignancy_type == " Prior Malignancy" ~ 0,
+        TRUE ~1)) %>%
+      tidyr::unite(metastatic_site, `metastatic_site[1]`:`metastatic_site[3]`, na.rm =TRUE, sep = "|")%>%
+      tidyr::unite(met_site_merge, new_neoplasm_event_type:new_neoplasm_occurrence_anatomic_site_text , na.rm =TRUE, sep = "|") %>%
+      tidyr::unite(other_malignancy, other_malignancy_anatomic_site:metastatic_site , na.rm =TRUE, sep = "|")
     
-     
+    index <- BLCA_met$malignancy_type == "Synchronous Malignancy" 
+    BLCA_met$Metastatic_status[index] <- 1
+    
+    index <- BLCA_met$malignancy_type == "Synchronous Malignancy|Prior Malignancy" 
+    BLCA_met$Metastatic_status[index] <- 1
+                                                         
+    index <- BLCA_met$malignancy_type == "Prior Malignancy|Synchronous Malignancy" 
+    BLCA_met$Metastatic_status[index] <- 1
     
     
-    
-                                          
-    # ifelse(is.na(`metastatic_site[1]`), 0,
-    #        ifelse(is.na(`metastatic_site[2]`), 0,       
-    #               ifelse(is.na(`metastatic_site[3]`), 0, 
-    #                      ifelse(is.na(new_neoplasm_event_occurrence_anatomic_site), 0,
-    #                             ifelse(is.na(`metastatic_site[2]`), 0,1))))))))
+    BLCA_met_2 <- BLCA_met %>%
+      dplyr::select(bcr_patient_barcode, LymphNodeStatus, malignancy_type, other_malignancy_anatomic_site , Metastatic_status,new_neoplasm_event_occurrence_anatomic_site, new_neoplasm_occurrence_anatomic_site_text)
     
     
+    BLCA_met<- BLCA_met_2
+    rm(BLCA_met_2)
+
     write.csv(BLCA_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_status_.csv"))
     
   
@@ -71,13 +82,47 @@ for(i in projects){
   
     if(i = "TCGA-BRCA"){
       
-      dat <- as.data.frame(data.table::fread(str_glue("~/CSBL_shared/clinical/TCGA_xml/{i}.csv"))) 
+      dat <- as.data.frame(data.table::fread(str_glue("~/CSBL_shared/clinical/TCGA_xml/{i}.csv")))
+      
+      ## define a helper function
+      empty_as_na <- function(x){
+        if("factor" %in% class(x)) x <- as.character(x) ## since ifelse wont work with factors
+        ifelse(as.character(x)!="", x, NA)
+      }
+      
+      ## transform all columns
+      
+      
       
       BRCA_met <- as.data.frame(dat %>%
-                                  dplyr::select(bcr_patient_barcode, metastatic_site, number_of_lymphnodes_positive_by_he, number_of_lymphnodes_positive_by_ihc,
-                                                `metastatic_site[1]`,`metastatic_site[2]`,`metastatic_site[3]`,new_neoplasm_event_occurrence_anatomic_site))
+                                  dplyr::select(bcr_patient_barcode, metastatic_site_at_diagnosis, number_of_lymphnodes_positive_by_he,
+                                               `metastatic_site_at_diagnosis[1]`,`metastatic_site_at_diagnosis[2]`,
+                                               `metastatic_site_at_diagnosis[3]`,`metastatic_site_at_diagnosis[4]`,
+                                                new_neoplasm_event_occurrence_anatomic_site, 
+                                                new_neoplasm_occurrence_anatomic_site_text))%>% 
+        mutate_each(funs(empty_as_na)) %>%
+        mutate(BRCA_met, LymphNodeStatus = ifelse(!is.na(number_of_lymphnodes_positive_by_he) & number_of_lymphnodes_positive_by_he >0, 1,0)) %>%
+        tidyr::unite(met_site_merge, `metastatic_site_at_diagnosis[1]`:`metastatic_site_at_diagnosis[4]`, na.rm =TRUE, sep = ",") %>%
+        tidyr::unite(neoplasm_and_distant_met, met_site_merge:new_neoplasm_occurrence_anatomic_site_text, na.rm =TRUE,sep = ",")
+        
+        
+        
+        
+        
+        # mutate(BRCA_met, LymphNodeStatus = ifelse(is.na(number_of_lymphnodes_positive_by_he & number_of_lymphnodes_positive_by_ihc), 0,
+        #                                           ifelse(number_of_lymphnodes_positive_by_he == 0 & number_of_lymphnodes_positive_by_ihc == 0, 0,
+        #                                                  ifelse(number_of_lymphnodes_positive_by_he == 0 & is.na(number_of_lymphnodes_positive_by_ihc), 0,
+        #                                                         ifelse(is.na(number_of_lymphnodes_positive_by_he) & number_of_lymphnodes_positive_by_ihc ==0, 0, 1)))))
+        # 
+      index <- is.na(BRCA_met$LymphNodeStatus)
+      BRCA_met$LymphNodeStatus[index] <- 0
       
       #lymph node status
+      
+      
+      
+      
+      
       
       # consolidate columns
       
