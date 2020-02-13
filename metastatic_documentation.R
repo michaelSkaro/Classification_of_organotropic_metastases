@@ -1,4 +1,9 @@
 # look at some clinical data
+library(tidyverse)
+library(dplyr)
+library(tidyr)
+library(stringr)
+library(gsubfn)
 
 setwd("~/CSBL_shared/clinical/TCGA_xml") # most comprehensive
 
@@ -18,7 +23,7 @@ clinical$Sample_id <- substr(clinical$barcode, 0,16)
 
 
 
-i <- projects[1]
+i <- projects[3]
 for(i in projects){
   
   if(i== "TCGA-BLCA"){
@@ -55,7 +60,18 @@ for(i in projects){
       tidyr::unite(met_site_merge, new_neoplasm_event_type:new_neoplasm_occurrence_anatomic_site_text , na.rm =TRUE, sep = "|") %>%
       dplyr::select(bcr_patient_barcode, malignancy_type, metastatic_site, met_site_merge, other_malignancy_anatomic_site, 
                     number_of_lymphnodes_positive_by_he, LymphNodeStatus, Metastatic_status) %>%
-      tidyr::unite(met_loc, metastatic_site:other_malignancy_anatomic_site , na.rm =TRUE, sep = "|")
+      tidyr::unite(met_loc, metastatic_site:other_malignancy_anatomic_site , na.rm =TRUE, sep = "|") 
+      
+      
+    
+    BLCA_met$met_loc <- stringr::str_replace_all(BLCA_met$met_loc, "[||]", ",")
+     
+    
+    
+    
+    index <- BLCA_met$met_loc == ",No New Tumor Event"
+    BLCA_met$Metastatic_status[index] <- 0
+    
     
     
     index <- BLCA_met$malignancy_type == "Synchronous Malignancy" 
@@ -68,7 +84,7 @@ for(i in projects){
     BLCA_met$Metastatic_status[index] <- 1
     
     
-    write.csv(BLCA_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_status_.csv"))
+    write.csv(BLCA_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_status.csv"))
     
   
     print("BLCA Done")
@@ -99,24 +115,19 @@ for(i in projects){
         mutate_each(funs(empty_as_na)) %>%
         mutate(BRCA_met, LymphNodeStatus = ifelse(!is.na(number_of_lymphnodes_positive_by_he) & number_of_lymphnodes_positive_by_he >0, 1,0)) %>%
         tidyr::unite(met_site_merge, `metastatic_site_at_diagnosis[1]`:`metastatic_site_at_diagnosis[4]`, na.rm =TRUE, sep = ",") %>%
-        tidyr::unite(neoplasm_and_distant_met, met_site_merge:new_neoplasm_occurrence_anatomic_site_text, na.rm =TRUE,sep = ",")
+        tidyr::unite(neoplasm_and_distant_met, met_site_merge:new_neoplasm_occurrence_anatomic_site_text, na.rm =TRUE,sep = ",") %>%
+        dplyr::select(bcr_patient_barcode,metastatic_site_at_diagnosis,neoplasm_and_distant_met,number_of_lymphnodes_positive_by_he,LymphNodeStatus) %>%
+        tidyr::unite(met_loc, metastatic_site_at_diagnosis:neoplasm_and_distant_met,na.rm =TRUE,sep = ",") %>%
+        mutate_each(funs(empty_as_na))%>%
+        mutate(BRCA_met, Metastatic_status = ifelse(is.na(met_loc) & LymphNodeStatus ==0, 0, 1))
         
-        
-        
-        
-        
-        # mutate(BRCA_met, LymphNodeStatus = ifelse(is.na(number_of_lymphnodes_positive_by_he & number_of_lymphnodes_positive_by_ihc), 0,
-        #                                           ifelse(number_of_lymphnodes_positive_by_he == 0 & number_of_lymphnodes_positive_by_ihc == 0, 0,
-        #                                                  ifelse(number_of_lymphnodes_positive_by_he == 0 & is.na(number_of_lymphnodes_positive_by_ihc), 0,
-        #                                                         ifelse(is.na(number_of_lymphnodes_positive_by_he) & number_of_lymphnodes_positive_by_ihc ==0, 0, 1)))))
-        # 
       index <- is.na(BRCA_met$LymphNodeStatus)
       BRCA_met$LymphNodeStatus[index] <- 0
       
       #lymph node status
       
-      
-      
+      index <- is.na(BRCA_met$number_of_lymphnodes_positive_by_he)
+      BRCA_met$number_of_lymphnodes_positive_by_he[index] <- 0
       
       
       
@@ -126,7 +137,6 @@ for(i in projects){
       write.csv(BRCA_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
       
       print("BRCA Done")
-      rm(BRCA_clinical)
       rm(BRCA_met)
     }
   
@@ -135,8 +145,9 @@ for(i in projects){
     dat <- as.data.frame(data.table::fread(str_glue("~/CSBL_shared/clinical/TCGA_xml/{i}.csv"))) 
     
     COAD_met <- as.data.frame(dat %>%
-                                dplyr::select(bcr_patient_barcode,new_neoplasm_event_type ,new_tumor_event_after_initial_treatment,other_malignancy_anatomic_site, other_malignancy_type,
-                                              site_of_additional_surgery_new_tumor_event_mets,other_malignancy_laterality))
+                                dplyr::select(bcr_patient_barcode,malignancy_type,new_neoplasm_event_type, other_malignancy_anatomic_site, 
+                                              site_of_additional_surgery_new_tumor_event_mets,number_of_lymphnodes_positive_by_he)) %>%
+                                tidyr::unite(met_loc,new_neoplasm_event_type:site_of_additional_surgery_new_tumor_event_mets, na.rm =TRUE,sep = ",")
     
     write.csv(COAD_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
     
@@ -377,6 +388,12 @@ for(i in projects){
   
   
 }
+
+
+
+
+
+
 
 
 
