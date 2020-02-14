@@ -23,7 +23,7 @@ clinical$Sample_id <- substr(clinical$barcode, 0,16)
 
 
 
-i <- projects[3]
+i <- projects[6]
 for(i in projects){
   
   if(i== "TCGA-BLCA"){
@@ -147,9 +147,32 @@ for(i in projects){
     COAD_met <- as.data.frame(dat %>%
                                 dplyr::select(bcr_patient_barcode,malignancy_type,new_neoplasm_event_type, other_malignancy_anatomic_site, 
                                               site_of_additional_surgery_new_tumor_event_mets,number_of_lymphnodes_positive_by_he)) %>%
-                                tidyr::unite(met_loc,new_neoplasm_event_type:site_of_additional_surgery_new_tumor_event_mets, na.rm =TRUE,sep = ",")
+                                tidyr::unite(met_loc,new_neoplasm_event_type:site_of_additional_surgery_new_tumor_event_mets, na.rm =TRUE,sep = ",") %>%
+                                mutate_each(funs(empty_as_na)) %>%
+                                mutate(COAD_met, LymphNodeStatus = ifelse(!is.na(number_of_lymphnodes_positive_by_he) & number_of_lymphnodes_positive_by_he >0, 1,0)) %>%
+                                mutate(COAD_met, Metastatic_status = ifelse(met_loc ==",," & LymphNodeStatus ==0 & malignancy_type != "Prior Malignancy", 0, 1)) 
+                                
+      
+                            
+                              
+    index <- is.na(COAD_met$LymphNodeStatus)
+    COAD_met$LymphNodeStatus[index] <- 0
     
-    write.csv(COAD_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
+    
+    index <- COAD_met$malignancy_type == "Prior Malignancy"
+    COAD_met$Metastatic_status[index] <- 0
+    
+    index <- is.na(COAD_met$Metastatic_status)
+    COAD_met$Metastatic_status[index] <- 0
+    
+    
+    index <- COAD_met$met_loc == ",,"
+    COAD_met$met_loc[index] <- NA
+    
+    index <- is.na(COAD_met$number_of_lymphnodes_positive_by_he)
+    COAD_met$number_of_lymphnodes_positive_by_he[index] <- 0
+    
+    write.csv(COAD_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus.csv"))
     
     print("COAD Done")
     rm(COAD_met)
@@ -160,11 +183,30 @@ for(i in projects){
     dat <- as.data.frame(data.table::fread(str_glue("~/CSBL_shared/clinical/TCGA_xml/{i}.csv"))) 
     
     ESCA_met <- as.data.frame(dat %>%
-                                dplyr::select(bcr_patient_barcode,number_of_lymphnodes_positive_by_ihc,number_of_lymphnodes_positive_by_he,
-                                              new_tumor_event_after_initial_treatment,new_neoplasm_event_type, new_tumor_event_additional_surgery_procedure,
-                                              new_neoplasm_event_occurrence_anatomic_site,new_neoplasm_event_occurrence_anatomic_site_text,other_malignancy_type,other_malignancy_anatomic_site))
+                                dplyr::select(bcr_patient_barcode,malignancy_type,number_of_lymphnodes_positive_by_he,new_neoplasm_event_type,
+                                              new_neoplasm_event_occurrence_anatomic_site,new_neoplasm_occurrence_anatomic_site_text,other_malignancy_anatomic_site)) %>%
+                                mutate_each(funs(empty_as_na))%>%
+                                tidyr::unite(met_loc,new_neoplasm_event_type:other_malignancy_anatomic_site, na.rm =TRUE,sep = ",") %>%
+                                mutate(ESCA_met, LymphNodeStatus = ifelse(!is.na(number_of_lymphnodes_positive_by_he) & number_of_lymphnodes_positive_by_he >0, 1,0)) %>%
+                                mutate_each(funs(empty_as_na))%>%
+                                mutate(ESCA_met, Metastatic_status = ifelse(is.na(met_loc) & LymphNodeStatus ==0 & malignancy_type != "Prior Malignancy", 0, 1)) 
+      
+    index <- is.na(ESCA_met$LymphNodeStatus)
+    ESCA_met$LymphNodeStatus[index] <- 0
     
-    write.csv(ESCA_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
+    
+    index <- ESCA_met$malignancy_type == "Prior Malignancy"
+    ESCA_met$Metastatic_status[index] <- 0
+    
+    index <- is.na(ESCA_met$Metastatic_status)
+    ESCA_met$Metastatic_status[index] <- 0
+    
+    index <- is.na(ESCA_met$number_of_lymphnodes_positive_by_he)
+    ESCA_met$number_of_lymphnodes_positive_by_he[index] <- 0
+    
+                                            
+    
+    write.csv(ESCA_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus.csv"))
     
     print("ESCA Done")
     rm(ESCA_met)
@@ -176,14 +218,29 @@ for(i in projects){
     
     
     HNSC_met <- as.data.frame(dat %>%
-                                dplyr::select(bcr_patient_barcode,number_of_lymphnodes_positive_by_ihc,number_of_lymphnodes_positive_by_he,
-                                              new_tumor_event_after_initial_treatment, additional_surgery_metastatic_procedure,
-                                              new_neoplasm_event_occurrence_anatomic_site,new_neoplasm_occurrence_anatomic_site_text,
-                                              new_neoplasm_event_type,new_tumor_event_additional_surgery_procedure,
-                                              malignancy_type,other_malignancy_anatomic_site))
+                                dplyr::select(bcr_patient_barcode,malignancy_type,number_of_lymphnodes_positive_by_he,new_neoplasm_event_type, other_malignancy_anatomic_site_text,
+                                              new_neoplasm_event_occurrence_anatomic_site,new_neoplasm_occurrence_anatomic_site_text,other_malignancy_anatomic_site)) %>%
+                                              mutate_each(funs(empty_as_na))%>%
+                                              tidyr::unite(met_loc,new_neoplasm_event_type:other_malignancy_anatomic_site, na.rm =TRUE,sep = ",") %>%
+                                              mutate(HNSC_met, LymphNodeStatus = ifelse(!is.na(number_of_lymphnodes_positive_by_he) & number_of_lymphnodes_positive_by_he >0, 1,0)) %>%
+                                              mutate_each(funs(empty_as_na))%>%
+                                              mutate(HNSC_met, Metastatic_status = ifelse(is.na(met_loc) & LymphNodeStatus ==0 & malignancy_type != "Prior Malignancy", 0, 1)) 
+    
+    index <- is.na(HNSC_met$LymphNodeStatus)
+    HNSC_met$LymphNodeStatus[index] <- 0
     
     
-    write.csv(EHNSC_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
+    index <- HNSC_met$malignancy_type == "Prior Malignancy"
+    HNSC_met$Metastatic_status[index] <- 0
+    
+    index <- is.na(HNSC_met$Metastatic_status)
+    HNSC_met$Metastatic_status[index] <- 0
+    
+    index <- is.na(HNSC_met$number_of_lymphnodes_positive_by_he)
+    HNSC_met$number_of_lymphnodes_positive_by_he[index] <- 0
+    
+    
+    write.csv(HNSC_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus.csv"))
     
     print("HNSC Done")
     rm(HNSC_met)
