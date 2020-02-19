@@ -377,16 +377,40 @@ for(i in projects){
   if(i== "TCGA-LUAD"){
     
     dat <- as.data.frame(data.table::fread(str_glue("~/CSBL_shared/clinical/TCGA_xml/{i}.csv"))) 
-    
-    
+
     LUAD_met <- as.data.frame(dat %>%
                                 dplyr::select(bcr_patient_barcode,malignancy_type,
-                                              other_malignancy_anatomic_site, pathologic_N,pathologic_M))%>%
-      tidyr::unite(met_loc,other_malignancy_anatomic_site:new_neoplasm_event_occurrence_anatomic_site, na.rm =TRUE,sep = ",") %>%
+                                              other_malignancy_anatomic_site, pathologic_N,pathologic_M))%>% 
+      tidyr::unite(met_loc,other_malignancy_anatomic_site, na.rm =TRUE,sep = ",") %>%
       mutate_each(funs(empty_as_na))%>%
-      mutate(LIHC_met, Metastatic_status = ifelse(!is.na(met_loc) & malignancy_type !="Prior Malignnacy" , 1, 0))
-      
-
+      mutate(LUAD_met, Metastatic_status = ifelse(!is.na(met_loc) & malignancy_type !="Prior Malignnacy" | pathologic_M == "M1"| pathologic_M == "M1a" | pathologic_M == "M1b" , 1, 0)) %>%
+      mutate(LUAD_met, LymphNodeStatus = ifelse(is.na(pathologic_N) | pathologic_N == "NX" | pathologic_N == "N0" , 0,1)) 
+    
+    LUAD_met[LUAD_met == ",,"] <- NA
+    
+    LUAD_met[LUAD_met == "MX"] <- "M0"
+    
+    index <- is.na(LUAD_met$pathologic_M)
+    LUAD_met$pathologic_M[index] <- "M0"
+    
+    
+    index <- is.na(LUAD_met$pathologic_N)
+    LUAD_met$pathologic_M[index] <- "N0"
+    
+    
+    index <- !is.na(LUAD_met$met_loc) & is.na(LUAD_met$Metastatic_status)
+    LUAD_met$Metastatic_status[index] <- 0
+    
+    index <- LUAD_met$malignancy_type == "Prior Malignancy"
+    LUAD_met$Metastatic_status[index] <- 0
+    
+    index <- is.na(LUAD_met$Metastatic_status)
+    LUAD_met$Metastatic_status[index] <- 0
+    
+    LUAD_met$met_loc <- str_replace_all(LUAD_met$met_loc, ",,","")
+    
+    
+  
     write.csv(LUAD_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
     
     print("LUAD Done")
@@ -491,13 +515,4 @@ for(i in projects){
   
   
 }
-
-
-
-
-
-
-
-
-
 
