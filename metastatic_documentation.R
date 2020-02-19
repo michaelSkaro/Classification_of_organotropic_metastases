@@ -395,7 +395,7 @@ for(i in projects){
     
     
     index <- is.na(LUAD_met$pathologic_N)
-    LUAD_met$pathologic_M[index] <- "N0"
+    LUAD_met$pathologic_N[index] <- "N0"
     
     
     index <- !is.na(LUAD_met$met_loc) & is.na(LUAD_met$Metastatic_status)
@@ -426,10 +426,36 @@ for(i in projects){
     
     
     LUSC_met <- as.data.frame(dat %>%
-                                dplyr::select(bcr_patient_barcode,new_tumor_event_after_initial_treatment,
-                                              new_neoplasm_event_type,
-                                              other_malignancy_anatomic_site,
-                                              `new_neoplasm_event_type[1]`,`new_neoplasm_event_type[2]`))
+                                dplyr::select(bcr_patient_barcode,malignancy_type,other_malignancy_anatomic_site,other_malignancy_anatomic_site_text,
+                                              other_malignancy_anatomic_site,pathologic_N,pathologic_M)) %>%
+                                tidyr::unite(met_loc,other_malignancy_anatomic_site:other_malignancy_anatomic_site_text, na.rm =TRUE,sep = ",") %>%
+                                mutate_each(funs(empty_as_na))%>%
+                                mutate(LUSC_met, Metastatic_status = ifelse(!is.na(met_loc) & malignancy_type !="Prior Malignnacy" 
+                                                                            | pathologic_M == "M1"| pathologic_M == "M1a" | pathologic_M == "M1b" , 1, 0)) %>%
+                                mutate(LUSC_met, LymphNodeStatus = ifelse(is.na(pathologic_N) | pathologic_N == "NX" | pathologic_N == "N0" , 0,1)) 
+    
+    LUSC_met[LUSC_met == ","] <- NA
+    
+    LUSC_met[LUSC_met == "MX"] <- "M0"
+    
+    index <- is.na(LUSC_met$pathologic_M)
+    LUSC_met$pathologic_M[index] <- "M0"
+    
+    
+    index <- is.na(LUSC_met$pathologic_N)
+    LUSC_met$pathologic_N[index] <- "N0"
+    
+    
+    index <- !is.na(LUSC_met$met_loc) & is.na(LUSC_met$Metastatic_status)
+    LUSC_met$Metastatic_status[index] <- 0
+    
+    index <- LUSC_met$malignancy_type == "Prior Malignancy"
+    LUSC_met$Metastatic_status[index] <- 0
+    
+    index <- is.na(LUSC_met$Metastatic_status)
+    LUSC_met$Metastatic_status[index] <- 0
+    
+    LUSC_met$met_loc <- str_replace_all(LUSC_met$met_loc, ",,","")
     
     write.csv(LUSC_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
     
