@@ -23,7 +23,7 @@ clinical$Sample_id <- substr(clinical$barcode, 0,16)
 
 
 
-i <- projects[6]
+i <- projects[8]
 for(i in projects){
   
   if(i== "TCGA-BLCA"){
@@ -134,7 +134,7 @@ for(i in projects){
       # consolidate columns
       
       
-      write.csv(BRCA_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
+      write.csv(BRCA_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus.csv"))
       
       print("BRCA Done")
       rm(BRCA_met)
@@ -219,13 +219,13 @@ for(i in projects){
     
     HNSC_met <- as.data.frame(dat %>%
                                 dplyr::select(bcr_patient_barcode,malignancy_type,number_of_lymphnodes_positive_by_he,new_neoplasm_event_type, other_malignancy_anatomic_site_text,
-                                              new_neoplasm_event_occurrence_anatomic_site,new_neoplasm_occurrence_anatomic_site_text,other_malignancy_anatomic_site)) %>%
-                                              mutate_each(funs(empty_as_na))%>%
-                                              tidyr::unite(met_loc,new_neoplasm_event_type:other_malignancy_anatomic_site, na.rm =TRUE,sep = ",") %>%
-                                              mutate(HNSC_met, LymphNodeStatus = ifelse(!is.na(number_of_lymphnodes_positive_by_he) & number_of_lymphnodes_positive_by_he >0, 1,0)) %>%
-                                              mutate_each(funs(empty_as_na))%>%
-                                              mutate(HNSC_met, Metastatic_status = ifelse(is.na(met_loc) & LymphNodeStatus ==0 & malignancy_type != "Prior Malignancy", 0, 1)) 
-    
+                                      new_neoplasm_event_occurrence_anatomic_site,new_neoplasm_occurrence_anatomic_site_text,other_malignancy_anatomic_site)) %>%
+                                      mutate_each(funs(empty_as_na))%>%
+                                      tidyr::unite(met_loc,new_neoplasm_event_type:other_malignancy_anatomic_site, na.rm =TRUE,sep = ",") %>%
+                                      mutate(HNSC_met, LymphNodeStatus = ifelse(!is.na(number_of_lymphnodes_positive_by_he) & number_of_lymphnodes_positive_by_he >0, 1,0)) %>%
+                                      mutate_each(funs(empty_as_na))%>%
+                                      mutate(HNSC_met, Metastatic_status = ifelse(is.na(met_loc) & LymphNodeStatus ==0 & malignancy_type != "Prior Malignancy", 0, 1)) 
+
     index <- is.na(HNSC_met$LymphNodeStatus)
     HNSC_met$LymphNodeStatus[index] <- 0
     
@@ -250,11 +250,13 @@ for(i in projects){
     
     dat <- as.data.frame(data.table::fread(str_glue("~/CSBL_shared/clinical/TCGA_xml/{i}.csv"))) 
     
-    KICH_met <- as.data.frame(dat %>% dplyr::select(bcr_patient_barcode,new_tumor_event_after_initial_treatment, number_of_lymphnodes_positive,additional_radiation_therapy,
-                                                       additional_pharmaceutical_therapy,
-                                                       additional_surgery_metastatic_procedure,malignancy_type,
-                                                       other_malignancy_anatomic_site,other_malignancy_histological_type,
-                                                       other_malignancy_histological_type_text,other_malignancy_laterality))
+    KICH_met <- as.data.frame(dat %>%
+                                dplyr::select(bcr_patient_barcode,malignancy_type,number_of_lymphnodes_positive, 
+                                              other_malignancy_anatomic_site)) %>%
+                                mutate(KICH_met, LymphNodeStatus = ifelse(!is.na(number_of_lymphnodes_positive) & number_of_lymphnodes_positive >0, 1,0)) %>%
+                                mutate_each(funs(empty_as_na))%>%
+                                mutate(KICH_met, met_loc = ifelse(malignancy_type == "Synchronous Malignancy", malignancy_type, NA)) %>%
+                                mutate(KICH_met, Metastatic_status = ifelse(is.na(met_loc) & LymphNodeStatus ==0, 0, 1)) 
     
     write.csv(KICH_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
     
@@ -268,12 +270,27 @@ for(i in projects){
     
     
     KIRC_met <- as.data.frame(dat %>%
-                                dplyr::select(bcr_patient_barcode,new_tumor_event_after_initial_treatment, number_of_lymphnodes_positive,additional_radiation_therapy,
-                                              additional_pharmaceutical_therapy,
-                                              additional_surgery_metastatic_procedure,malignancy_type,
-                                              other_malignancy_anatomic_site,other_malignancy_histological_type,
-                                              other_malignancy_histological_type_text,other_malignancy_laterality))
+                                dplyr::select(bcr_patient_barcode, number_of_lymphnodes_positive,malignancy_type,
+                                              other_malignancy_anatomic_site, other_malignancy_anatomic_site_text)) %>% 
+                              mutate_each(funs(empty_as_na))%>%
+                              tidyr::unite(met_loc,other_malignancy_anatomic_site:other_malignancy_anatomic_site_text, na.rm =TRUE,sep = ",") %>%
+                              mutate(KIRC_met, LymphNodeStatus = ifelse(!is.na(number_of_lymphnodes_positive) & number_of_lymphnodes_positive >0, 1,0)) %>%
+                              mutate(KIRC_met, Metastatic_status = ifelse(is.na(met_loc) & LymphNodeStatus >0 | is.na(LymphNodeStatus) | malignancy_type =="Prior Malignnacy" , 0, 1))
     
+    index <- is.na(KIRC_met$LymphNodeStatus)
+    KIRC_met$LymphNodeStatus[index] <- 0
+    
+    index <- KIRC_met$LymphNodeStatus >0
+    KIRC_met$Metastatic_status[index] <- 1
+    
+    index <- KIRC_met$malignancy_type == "Prior Malignancy"
+    KIRC_met$Metastatic_status[index] <- 0
+    
+    index <- is.na(KIRC_met$Metastatic_status)
+    KIRC_met$Metastatic_status[index] <- 0
+    
+    index <- is.na(KIRC_met$number_of_lymphnodes)
+    KIRC_met$number_of_lymphnodes_positive[index] <- 0
     
     write.csv(KIRC_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
     
@@ -287,12 +304,27 @@ for(i in projects){
     
     
     KIRP_met <- as.data.frame(dat %>%
-                                dplyr::select(bcr_patient_barcode,new_tumor_event_after_initial_treatment, number_of_lymphnodes_positive,additional_radiation_therapy,
-                                              additional_pharmaceutical_therapy,
-                                              additional_surgery_metastatic_procedure,malignancy_type,
-                                              other_malignancy_anatomic_site,other_malignancy_histological_type,
-                                              other_malignancy_histological_type_text,other_malignancy_laterality,other_malignancy_anatomic_site_text))
+                                dplyr::select(bcr_patient_barcode, number_of_lymphnodes_positive,malignancy_type,
+                                              other_malignancy_anatomic_site, other_malignancy_anatomic_site_text)) %>% 
+      mutate_each(funs(empty_as_na))%>%
+      tidyr::unite(met_loc,other_malignancy_anatomic_site:other_malignancy_anatomic_site_text, na.rm =TRUE,sep = ",") %>%
+      mutate(KIRP_met, LymphNodeStatus = ifelse(!is.na(number_of_lymphnodes_positive) & number_of_lymphnodes_positive >0, 1,0)) %>%
+      mutate(KIRP_met, Metastatic_status = ifelse(is.na(met_loc) & LymphNodeStatus >0 | is.na(LymphNodeStatus) | malignancy_type =="Prior Malignnacy" , 0, 1))
     
+    index <- is.na(KIRP_met$LymphNodeStatus)
+    KIRP_met$LymphNodeStatus[index] <- 0
+    
+    index <- KIRP_met$LymphNodeStatus >0
+    KIRP_met$Metastatic_status[index] <- 1
+    
+    index <- KIRP_met$malignancy_type == "Prior Malignancy"
+    KIRP_met$Metastatic_status[index] <- 0
+    
+    index <- is.na(KIRP_met$Metastatic_status)
+    KIRP_met$Metastatic_status[index] <- 0
+    
+    index <- is.na(KIRP_met$number_of_lymphnodes)
+    KIRP_met$number_of_lymphnodes_positive[index] <- 0
     
     write.csv(KIRP_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
     
@@ -309,9 +341,27 @@ for(i in projects){
     
     
     LIHC_met <- as.data.frame(dat %>%
-                                dplyr::select(bcr_patient_barcode,new_tumor_event_after_initial_treatment,new_neoplasm_event_type,
-                                              new_neoplasm_event_occurrence_anatomic_site,new_tumor_event_additional_surgery_procedure,
-                                              new_neoplasm_occurrence_anatomic_site_text))
+                                dplyr::select(bcr_patient_barcode, malignancy_type, other_malignancy_anatomic_site, other_malignancy_anatomic_site_text,new_neoplasm_event_occurrence_anatomic_site)) %>% 
+      tidyr::unite(met_loc,other_malignancy_anatomic_site:new_neoplasm_event_occurrence_anatomic_site, na.rm =TRUE,sep = ",") %>%
+      mutate_each(funs(empty_as_na))%>%
+      mutate(LIHC_met, Metastatic_status = ifelse(!is.na(met_loc) & malignancy_type !="Prior Malignnacy" , 1, 0))
+    
+    LIHC_met[LIHC_met == ",,"] <- NA
+    
+    
+    index <- !is.na(LIHC_met$met_loc) & is.na(LIHC_met$Metastatic_status)
+    LIHC_met$Metastatic_status[index] <- 1
+    
+    index <- LIHC_met$met_loc
+    LIHC_met$Metastatic_status[index] <- 1
+    
+    index <- LIHC_met$malignancy_type == "Prior Malignancy"
+    LIHC_met$Metastatic_status[index] <- 0
+    
+    index <- is.na(LIHC_met$Metastatic_status)
+    LIHC_met$Metastatic_status[index] <- 0
+    
+    LIHC_met$met_loc <- str_replace_all(LIHC_met$met_loc, ",,","")
     
     
     write.csv(LIHC_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
@@ -330,13 +380,12 @@ for(i in projects){
     
     
     LUAD_met <- as.data.frame(dat %>%
-                                dplyr::select(bcr_patient_barcode,new_tumor_event_after_initial_treatment,
-                                              new_neoplasm_event_type,
-                                              additional_surgery_metastatic_procedure,
-                                              additional_surgery_locoregional_procedure,
-                                              other_malignancy_anatomic_site,location_in_lung_parenchyma,
-                                              `new_neoplasm_event_type[1]`,`new_neoplasm_event_type[2]`,
-                                              malignancy_type,other_malignancy_histological_type,other_malignancy_histological_type_text))
+                                dplyr::select(bcr_patient_barcode,malignancy_type,
+                                              other_malignancy_anatomic_site, pathologic_N,pathologic_M))%>%
+      tidyr::unite(met_loc,other_malignancy_anatomic_site:new_neoplasm_event_occurrence_anatomic_site, na.rm =TRUE,sep = ",") %>%
+      mutate_each(funs(empty_as_na))%>%
+      mutate(LIHC_met, Metastatic_status = ifelse(!is.na(met_loc) & malignancy_type !="Prior Malignnacy" , 1, 0))
+      
 
     write.csv(LUAD_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
     
@@ -355,11 +404,8 @@ for(i in projects){
     LUSC_met <- as.data.frame(dat %>%
                                 dplyr::select(bcr_patient_barcode,new_tumor_event_after_initial_treatment,
                                               new_neoplasm_event_type,
-                                              additional_surgery_metastatic_procedure,
-                                              additional_surgery_locoregional_procedure,
-                                              other_malignancy_anatomic_site,location_in_lung_parenchyma,
-                                              `new_neoplasm_event_type[1]`,`new_neoplasm_event_type[2]`,
-                                              malignancy_type,other_malignancy_histological_type,other_malignancy_histological_type_text))
+                                              other_malignancy_anatomic_site,
+                                              `new_neoplasm_event_type[1]`,`new_neoplasm_event_type[2]`))
     
     write.csv(LUSC_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
     
