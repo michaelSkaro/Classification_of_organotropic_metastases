@@ -1,18 +1,22 @@
-# look at some clinical data
+# Clear your workspace
+rm(list=ls(all=TRUE))
+# Load some things
 library(tidyverse)
 library(dplyr)
 library(tidyr)
 library(stringr)
 library(gsubfn)
+library(dplyr)
 
+# make a working directory to read all the files from
 setwd("~/CSBL_shared/clinical/TCGA_xml") # most comprehensive
 
 
-
+# lets decide which data sets we are going to work on
 projects <- c("TCGA-BLCA","TCGA-BRCA","TCGA-COAD","TCGA-ESCA","TCGA-HNSC","TCGA-KICH","TCGA-KIRC","TCGA-KIRP","TCGA-LIHC","TCGA-LUAD","TCGA-LUSC","TCGA-PRAD","TCGA-STAD","TCGA-THCA")
 
 #projects <- c("BLCA","BRCA","COAD","HNSC","KICH","KIRC","KIRP","LIHC","LUAD","LUSC","PRAD","STAD","THCA")
-
+# annotate weird gene symbols and get some clinical data
 annot <- data.table::fread("~/CSBL_shared/ID_mapping/Ensembl_symbol_entrez.csv")
 refDat <- data.table::fread("~/storage/Metastatic_Organo_Tropism/Metastatic_database_project_information.csv")
 refDat <- refDat[order(refDat$Sample_id),]
@@ -23,51 +27,69 @@ clinical$Sample_id <- substr(clinical$barcode, 0,16)
 
 
 
-i <- projects[8]
+
+
+## define a helper function
+empty_as_na <- function(x){
+  if("factor" %in% class(x)) x <- as.character(x) ## since ifelse wont work with factors
+  ifelse(as.character(x)!="", x, NA)
+}
+
+
+
+i <- projects[1]
+
+# do the things
+
 for(i in projects){
   
   if(i== "TCGA-BLCA"){
     
     dat <- as.data.frame(data.table::fread(str_glue("~/CSBL_shared/clinical/TCGA_xml/{i}.csv"))) 
     
-    BLCA_met <- as.data.frame(dat %>% dplyr::select(bcr_patient_barcode,malignancy_type,number_of_lymphnodes_positive_by_he,
-                                                    other_malignancy_anatomic_site,metastatic_site,new_tumor_event_after_initial_treatment,
-                                                    new_neoplasm_event_type,new_neoplasm_event_occurrence_anatomic_site,
-                                                    new_neoplasm_occurrence_anatomic_site_text,new_tumor_event_additional_surgery_procedure,
-                                                    metastatic_site,`metastatic_site[1]`,`metastatic_site[2]`,`metastatic_site[3]`))
-    #lymph node status
-    #View(BLCA_met)
-    # consolidate columns
-    library(dplyr)
-    
-    ## define a helper function
-    empty_as_na <- function(x){
-      if("factor" %in% class(x)) x <- as.character(x) ## since ifelse wont work with factors
-      ifelse(as.character(x)!="", x, NA)
-    }
-    
-    ## transform all columns
-    
-    BLCA_met<- BLCA_met %>% 
-      mutate_each(funs(empty_as_na)) %>%
+    BLCA_met <- as.data.frame(dat %>% dplyr::select(bcr_patient_barcode,malignancy_type,other_malignancy_anatomic_site, metastatic_site,`metastatic_site[1]`,
+                                                    `metastatic_site[2]`,`metastatic_site[3]`,new_neoplasm_event_occurrence_anatomic_site,new_neoplasm_occurrence_anatomic_site_text,
+                                                    number_of_lymphnodes_positive_by_he)) %>%
       mutate(BLCA_met, LymphNodeStatus = ifelse(is.na(number_of_lymphnodes_positive_by_he), 0,
                                                 ifelse(number_of_lymphnodes_positive_by_he == 0, 0, 1))) %>%
+      tidyr::unite(met_loc, other_malignancy_anatomic_site:new_neoplasm_occurrence_anatomic_site_text, na.rm =TRUE, sep = ",") %>%
+      mutate_each(funs(empty_as_na))
+      
+      
+      index <- BLCA_met$met_loc == ",,,,,," 
+      BLCA_met$met_loc[index] <- NA
+      
+      BLCA_met$met_loc <- stringr::str_replace_all(BLCA_met$met_loc, ",,,,,,", ",")
+      
+      BLCA_met$met_loc <- stringr::str_replace_all(BLCA_met$met_loc, ",,,,,", ",")
+      
+      BLCA_met$met_loc <- stringr::str_replace_all(BLCA_met$met_loc, ",,,", ",")
+      
+      BLCA_met$met_loc <- stringr::str_replace_all(BLCA_met$met_loc, ",,", ",")
+      
+      index <- BLCA_met$met_loc == ",None," 
+      BLCA_met$met_loc[index] <- NA
+      BLCA_met$met_loc <- stringr::str_replace(BLCA_met$met_loc, ",,", "")
+      BLCA_met$met_loc <- stringr::str_replace(BLCA_met$met_loc, ",", "")
+      
+      BLCA_met$met_loc <- stringr::str_replace_all(BLCA_met$met_loc, "Other specify", "")
+      BLCA_met$met_loc <- stringr::str_replace_all(BLCA_met$met_loc, "Other, specify", "")
+      BLCA_met$met_loc <- stringr::str_replace_all(BLCA_met$met_loc, ",,", ",")
+      BLCA_met$met_loc <- stringr::str_replace_all(BLCA_met$met_loc, "[|]", ",")
+      BLCA_met$met_loc <- stringr::str_replace_all(BLCA_met$met_loc, ",,", ",")
+      BLCA_met$met_loc <- stringr::str_replace_all(BLCA_met$met_loc, "None,", "")
+      
+      index <- BLCA_met$malignancy_type == "Prior Malignancy|Synchronous Malignancy" 
+      BLCA_met$Metastatic_status[index] <- 1
+    
+      
       mutate(BLCA_met, Metastatic_status = case_when(
         is.na(new_neoplasm_event_occurrence_anatomic_site) & is.na(new_neoplasm_event_type) & 
           is.na(new_neoplasm_occurrence_anatomic_site_text) | malignancy_type == " Prior Malignancy" ~ 0,
         TRUE ~1)) %>%
-      tidyr::unite(metastatic_site, `metastatic_site[1]`:`metastatic_site[3]`, na.rm =TRUE, sep = "|") %>%
-      tidyr::unite(met_site_merge, new_neoplasm_event_type:new_neoplasm_occurrence_anatomic_site_text , na.rm =TRUE, sep = "|") %>%
-      dplyr::select(bcr_patient_barcode, malignancy_type, metastatic_site, met_site_merge, other_malignancy_anatomic_site, 
-                    number_of_lymphnodes_positive_by_he, LymphNodeStatus, Metastatic_status) %>%
-      tidyr::unite(met_loc, metastatic_site:other_malignancy_anatomic_site , na.rm =TRUE, sep = "|") 
       
       
-    
     BLCA_met$met_loc <- stringr::str_replace_all(BLCA_met$met_loc, "[||]", ",")
-     
-    
-    
     
     index <- BLCA_met$met_loc == ",No New Tumor Event"
     BLCA_met$Metastatic_status[index] <- 0
@@ -620,7 +642,7 @@ for(i in projects){
   } 
   
 }
-sessionInfo()
+
 # R version 3.5.1 (2018-07-02)
 # Platform: x86_64-pc-linux-gnu (64-bit)
 # Running under: Debian GNU/Linux 9 (stretch)
