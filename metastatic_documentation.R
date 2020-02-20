@@ -74,37 +74,126 @@ for(i in projects){
       
       BLCA_met$met_loc <- stringr::str_replace_all(BLCA_met$met_loc, "Other specify", "")
       BLCA_met$met_loc <- stringr::str_replace_all(BLCA_met$met_loc, "Other, specify", "")
+      BLCA_met$met_loc <- stringr::str_replace_all(BLCA_met$met_loc, "Other,", "")
       BLCA_met$met_loc <- stringr::str_replace_all(BLCA_met$met_loc, ",,", ",")
       BLCA_met$met_loc <- stringr::str_replace_all(BLCA_met$met_loc, "[|]", ",")
       BLCA_met$met_loc <- stringr::str_replace_all(BLCA_met$met_loc, ",,", ",")
       BLCA_met$met_loc <- stringr::str_replace_all(BLCA_met$met_loc, "None,", "")
       
-      index <- BLCA_met$malignancy_type == "Prior Malignancy|Synchronous Malignancy" 
-      BLCA_met$Metastatic_status[index] <- 1
+      BLCA_met <- BLCA_met %>%
+        mutate_each(funs(empty_as_na)) %>%
+        mutate(BLCA_met, Metastatic_status = ifelse(is.na(met_loc) | malignancy_type == "Prior Malignancy" & LymphNodeStatus ==0, 0, 1))
+
     
-      
-      mutate(BLCA_met, Metastatic_status = case_when(
-        is.na(new_neoplasm_event_occurrence_anatomic_site) & is.na(new_neoplasm_event_type) & 
-          is.na(new_neoplasm_occurrence_anatomic_site_text) | malignancy_type == " Prior Malignancy" ~ 0,
-        TRUE ~1)) %>%
-      
-      
-    BLCA_met$met_loc <- stringr::str_replace_all(BLCA_met$met_loc, "[||]", ",")
+    index <- is.na(BLCA_met$number_of_lymphnodes_positive_by_he)
+    BLCA_met$number_of_lymphnodes_positive_by_he[index] <- 0
     
-    index <- BLCA_met$met_loc == ",No New Tumor Event"
+    index <- BLCA_met$met_loc == "Lymph node only," 
     BLCA_met$Metastatic_status[index] <- 0
+    BLCA_met$met_loc[index] <- "Lymph node"
     
+    index <- BLCA_met$met_loc == "Lymph Node Only," 
+    BLCA_met$Metastatic_status[index] <- 0
+    BLCA_met$met_loc[index] <- "Lymph node"
     
-    
-    index <- BLCA_met$malignancy_type == "Synchronous Malignancy" 
+    index <- BLCA_met$met_loc == "Bone," 
+    BLCA_met$met_loc[index] <- "Bone"
     BLCA_met$Metastatic_status[index] <- 1
     
-    index <- BLCA_met$malignancy_type == "Synchronous Malignancy|Prior Malignancy" 
-    BLCA_met$Metastatic_status[index] <- 1
-                                                         
-    index <- BLCA_met$malignancy_type == "Prior Malignancy|Synchronous Malignancy" 
+    
+    index <- BLCA_met$met_loc == "Bladder," 
+    BLCA_met$met_loc[index] <- "Bladder"
     BLCA_met$Metastatic_status[index] <- 1
     
+    index <- BLCA_met$met_loc == "Liver," 
+    BLCA_met$met_loc[index] <- "Liver"
+    BLCA_met$Metastatic_status[index] <- 1
+    
+    index <- BLCA_met$met_loc == "Lung," 
+    BLCA_met$met_loc[index] <- "Lung"
+    BLCA_met$Metastatic_status[index] <- 1
+    
+    BLCA_met$met_loc <- stringr::str_replace_all(BLCA_met$met_loc, "Lymph Node Only", "Lymph Node")
+    BLCA_met$met_loc <- stringr::str_replace_all(BLCA_met$met_loc, "Lymph node only", "Lymph Node")
+    BLCA_met$met_loc <- stringr::str_replace_all(BLCA_met$met_loc, "Lymph node", "Lymph Node")
+    
+    
+    index <- is.na(BLCA_met$Metastatic_status)
+    BLCA_met$Metastatic_status[index] <- 1
+    
+    # Not proud of this next 100 lines. I should probably use regex but i am now tired and this needs to be done now. Sorry.
+    
+    index <- BLCA_met$met_loc == ",Abdominal wall" 
+    BLCA_met$met_loc[index] <- "Abdominal wall"
+    BLCA_met$Metastatic_status[index] <- 1
+    
+    index <- BLCA_met$met_loc == ",Adrenal" 
+    BLCA_met$met_loc[index] <- "Adrenal"
+    BLCA_met$Metastatic_status[index] <- 1
+    
+    index <- BLCA_met$met_loc == ",brain and spinal cord" 
+    BLCA_met$met_loc[index] <- "brain,spinal cord"
+    BLCA_met$Metastatic_status[index] <- 1
+                                                      
+    index <- BLCA_met$met_loc == ",brain and spinal cord" 
+    BLCA_met$met_loc[index] <- "brain,spinal cord"
+    BLCA_met$Metastatic_status[index] <- 1
+    
+    index <- BLCA_met$met_loc == ",Groin" 
+    BLCA_met$met_loc[index] <- "Groin"
+    BLCA_met$Metastatic_status[index] <- 1
+    
+    index <- BLCA_met$met_loc == ",Left posterior pelvic wall" 
+    BLCA_met$met_loc[index] <- "Pelvis"
+    BLCA_met$Metastatic_status[index] <- 1
+    
+    index <- BLCA_met$met_loc == ",Lung,Brain" 
+    BLCA_met$met_loc[index] <- "Lung,Brain"
+    BLCA_met$Metastatic_status[index] <- 1
+    
+    index <- BLCA_met$met_loc == ",Lymph Node,Bone,neck node,neck lymph node" 
+    BLCA_met$met_loc[index] <- "Lymph Node,Bone,Head Neck"
+    BLCA_met$Metastatic_status[index] <- 1
+    
+    index <- BLCA_met$met_loc == ",Pelvic" 
+    BLCA_met$met_loc[index] <- "Pelvis"
+    BLCA_met$Metastatic_status[index] <- 1
+    
+    index <- BLCA_met$met_loc == ",penile urethra" 
+    BLCA_met$met_loc[index] <- "Penis"
+    BLCA_met$Metastatic_status[index] <- 1
+    
+    index <- BLCA_met$met_loc == ",peritoneum" 
+    BLCA_met$met_loc[index] <- "Peritoneum"
+    BLCA_met$Metastatic_status[index] <- 1
+    
+    index <- BLCA_met$met_loc == ",peritoneum" 
+    BLCA_met$met_loc[index] <- "Peritoneum"
+    BLCA_met$Metastatic_status[index] <- 1
+    
+    index <- BLCA_met$met_loc == ",psoas" 
+    BLCA_met$met_loc[index] <- "Psoas"
+    BLCA_met$Metastatic_status[index] <- 1
+    
+    index <- BLCA_met$met_loc == ",Rectum" 
+    BLCA_met$met_loc[index] <- "Rectum"
+    BLCA_met$Metastatic_status[index] <- 1
+    
+    index <- BLCA_met$met_loc == ",right hemipelvis" 
+    BLCA_met$met_loc[index] <- "Pelvis"
+    BLCA_met$Metastatic_status[index] <- 1
+    
+    index <- BLCA_met$met_loc == ",sacrum" 
+    BLCA_met$met_loc[index] <- "Sacrum"
+    BLCA_met$Metastatic_status[index] <- 1
+    
+    index <- BLCA_met$met_loc == ",sigmoid colon" 
+    BLCA_met$met_loc[index] <- "Colon"
+    BLCA_met$Metastatic_status[index] <- 1
+    
+    index <- BLCA_met$met_loc == ",soft tissue pelvic mass" 
+    BLCA_met$met_loc[index] <- "Pelvis"
+    BLCA_met$Metastatic_status[index] <- 1
     
     write.csv(BLCA_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_status.csv"))
     
