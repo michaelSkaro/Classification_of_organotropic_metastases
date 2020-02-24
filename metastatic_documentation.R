@@ -37,7 +37,7 @@ empty_as_na <- function(x){
 
 
 
-i <- projects[1]
+i <- projects[5]
 
 # do the things
 
@@ -206,17 +206,7 @@ for(i in projects){
     if(i = "TCGA-BRCA"){
       
       dat <- as.data.frame(data.table::fread(str_glue("~/CSBL_shared/clinical/TCGA_xml/{i}.csv")))
-      
-      ## define a helper function
-      empty_as_na <- function(x){
-        if("factor" %in% class(x)) x <- as.character(x) ## since ifelse wont work with factors
-        ifelse(as.character(x)!="", x, NA)
-      }
-      
-      ## transform all columns
-      
-      
-      
+    
       BRCA_met <- as.data.frame(dat %>%
                                   dplyr::select(bcr_patient_barcode, metastatic_site_at_diagnosis, number_of_lymphnodes_positive_by_he,
                                                `metastatic_site_at_diagnosis[1]`,`metastatic_site_at_diagnosis[2]`,
@@ -230,7 +220,7 @@ for(i in projects){
         dplyr::select(bcr_patient_barcode,metastatic_site_at_diagnosis,neoplasm_and_distant_met,number_of_lymphnodes_positive_by_he,LymphNodeStatus) %>%
         tidyr::unite(met_loc, metastatic_site_at_diagnosis:neoplasm_and_distant_met,na.rm =TRUE,sep = ",") %>%
         mutate_each(funs(empty_as_na))%>%
-        mutate(BRCA_met, Metastatic_status = ifelse(is.na(met_loc) & LymphNodeStatus ==0, 0, 1))
+        mutate(BRCA_met, Metastatic_status = ifelse(is.na(met_loc), 0, 1))
         
       index <- is.na(BRCA_met$LymphNodeStatus)
       BRCA_met$LymphNodeStatus[index] <- 0
@@ -283,6 +273,10 @@ for(i in projects){
     index <- is.na(COAD_met$number_of_lymphnodes_positive_by_he)
     COAD_met$number_of_lymphnodes_positive_by_he[index] <- 0
     
+    index <- is.na(COAD_met$met_loc)
+    COAD_met$Metastatic_status[index] <- 0
+    
+    
     write.csv(COAD_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus.csv"))
     
     print("COAD Done")
@@ -294,10 +288,9 @@ for(i in projects){
     dat <- as.data.frame(data.table::fread(str_glue("~/CSBL_shared/clinical/TCGA_xml/{i}.csv"))) 
     
     ESCA_met <- as.data.frame(dat %>%
-                                dplyr::select(bcr_patient_barcode,malignancy_type,number_of_lymphnodes_positive_by_he,new_neoplasm_event_type,
-                                              new_neoplasm_event_occurrence_anatomic_site,new_neoplasm_occurrence_anatomic_site_text,other_malignancy_anatomic_site)) %>%
+                                dplyr::select(bcr_patient_barcode,malignancy_type,number_of_lymphnodes_positive_by_he,new_neoplasm_occurrence_anatomic_site_text,other_malignancy_anatomic_site)) %>%
                                 mutate_each(funs(empty_as_na))%>%
-                                tidyr::unite(met_loc,new_neoplasm_event_type:other_malignancy_anatomic_site, na.rm =TRUE,sep = ",") %>%
+                                tidyr::unite(met_loc,new_neoplasm_occurrence_anatomic_site_text:other_malignancy_anatomic_site, na.rm =TRUE,sep = ",") %>%
                                 mutate(ESCA_met, LymphNodeStatus = ifelse(!is.na(number_of_lymphnodes_positive_by_he) & number_of_lymphnodes_positive_by_he >0, 1,0)) %>%
                                 mutate_each(funs(empty_as_na))%>%
                                 mutate(ESCA_met, Metastatic_status = ifelse(is.na(met_loc) & LymphNodeStatus ==0 & malignancy_type != "Prior Malignancy", 0, 1)) 
@@ -315,7 +308,81 @@ for(i in projects){
     index <- is.na(ESCA_met$number_of_lymphnodes_positive_by_he)
     ESCA_met$number_of_lymphnodes_positive_by_he[index] <- 0
     
-                                            
+    index <- is.na(ESCA_met$met_loc)
+    ESCA_met$Metastatic_status[index] <- 0
+    
+    index <- ESCA_met$met_loc == "Adrenal" 
+    ESCA_met$met_loc[index] <- "Adrenal Gland"
+    ESCA_met$Metastatic_status[index] <- 1
+    
+    index <- ESCA_met$met_loc == "Adrenal Gland|Colon|Thigh" 
+    ESCA_met$met_loc[index] <- "Adrenal Gland,Colon,Thigh"
+    ESCA_met$Metastatic_status[index] <- 1
+    
+    index <- ESCA_met$met_loc == "bone" 
+    ESCA_met$met_loc[index] <- "Bone"
+    ESCA_met$Metastatic_status[index] <- 1
+    
+    index <- ESCA_met$met_loc == "brain" 
+    ESCA_met$met_loc[index] <- "Brain"
+    ESCA_met$Metastatic_status[index] <- 1
+    
+    index <- ESCA_met$met_loc == "Brain - right occipital lobe and cerebellum" 
+    ESCA_met$met_loc[index] <- "Brain"
+    ESCA_met$Metastatic_status[index] <- 1
+    
+    index <- ESCA_met$met_loc == "Ear" 
+    ESCA_met$met_loc[index] <- "Head and Neck"
+    ESCA_met$Metastatic_status[index] <- 1
+    
+    index <- ESCA_met$met_loc == "Head and neck lymph node" 
+    ESCA_met$met_loc[index] <- "Head and Neck,Lymph Node"
+    ESCA_met$Metastatic_status[index] <- 1
+    
+    index <- ESCA_met$met_loc == "Neck" 
+    ESCA_met$met_loc[index] <- "Head and Neck"
+    ESCA_met$Metastatic_status[index] <- 1 
+    
+    index <- ESCA_met$met_loc == "Pleural Mets" 
+    ESCA_met$met_loc[index] <- "Lung"
+    ESCA_met$Metastatic_status[index] <- 1
+    
+    index <- ESCA_met$met_loc == "regional lymph nodes" 
+    ESCA_met$met_loc[index] <- "Lymph Node"
+    ESCA_met$Metastatic_status[index] <- 1
+    
+    index <- ESCA_met$met_loc == "Right diaphragm-HG spindle cell sarcoma" 
+    ESCA_met$met_loc[index] <- "Lung"
+    ESCA_met$Metastatic_status[index] <- 1
+    
+    index <- ESCA_met$met_loc == "stomach" 
+    ESCA_met$met_loc[index] <- "Stomach"
+    ESCA_met$Metastatic_status[index] <- 1
+    
+    index <- ESCA_met$met_loc == "left supraclavicular nodal metastasis" 
+    ESCA_met$met_loc[index] <- "Lymph Node"
+    ESCA_met$Metastatic_status[index] <- 1
+    
+    index <- ESCA_met$met_loc == "left gastric node" 
+    ESCA_met$met_loc[index] <- "Lymph Node"
+    ESCA_met$Metastatic_status[index] <- 1
+    
+    index <- ESCA_met$met_loc == "lymph node|Lymph Node" 
+    ESCA_met$met_loc[index] <- "Lymph Node"
+    ESCA_met$Metastatic_status[index] <- 1
+    
+    index <- ESCA_met$met_loc == "peritoneum" 
+    ESCA_met$met_loc[index] <- "Peritoneum"
+    ESCA_met$Metastatic_status[index] <- 1
+    
+    index <- ESCA_met$met_loc == "Mediastinal lymph node" 
+    ESCA_met$met_loc[index] <- "Lymph Node"
+    ESCA_met$Metastatic_status[index] <- 1
+    
+    index <- ESCA_met$malignancy_type == "Prior Malignancy"
+    ESCA_met$Metastatic_status[index] <- 0
+  
+    
     
     write.csv(ESCA_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus.csv"))
     
@@ -329,14 +396,34 @@ for(i in projects){
     
     
     HNSC_met <- as.data.frame(dat %>%
-                                dplyr::select(bcr_patient_barcode,malignancy_type,number_of_lymphnodes_positive_by_he,new_neoplasm_event_type, other_malignancy_anatomic_site_text,
-                                      new_neoplasm_event_occurrence_anatomic_site,new_neoplasm_occurrence_anatomic_site_text,other_malignancy_anatomic_site)) %>%
+                                dplyr::select(bcr_patient_barcode,malignancy_type,number_of_lymphnodes_positive_by_he,other_malignancy_anatomic_site, other_malignancy_anatomic_site_text,
+                                      new_neoplasm_event_occurrence_anatomic_site,new_neoplasm_occurrence_anatomic_site_text)) %>%
                                       mutate_each(funs(empty_as_na))%>%
-                                      tidyr::unite(met_loc,new_neoplasm_event_type:other_malignancy_anatomic_site, na.rm =TRUE,sep = ",") %>%
+                                      tidyr::unite(met_loc,other_malignancy_anatomic_site:new_neoplasm_occurrence_anatomic_site_text, na.rm =TRUE,sep = ",") %>%
                                       mutate(HNSC_met, LymphNodeStatus = ifelse(!is.na(number_of_lymphnodes_positive_by_he) & number_of_lymphnodes_positive_by_he >0, 1,0)) %>%
                                       mutate_each(funs(empty_as_na))%>%
                                       mutate(HNSC_met, Metastatic_status = ifelse(is.na(met_loc) & LymphNodeStatus ==0 & malignancy_type != "Prior Malignancy", 0, 1)) 
-
+    
+    HNSC_met$met_loc <- stringr::str_replace_all(HNSC_met$met_loc, "Distant Metastasis|", "")
+    HNSC_met$met_loc <- stringr::str_replace_all(HNSC_met$met_loc, "Distant Metastasis,", "")
+    HNSC_met$met_loc <- stringr::str_replace_all(HNSC_met$met_loc, ",lung", "Lung")
+    HNSC_met$met_loc <- stringr::str_replace_all(HNSC_met$met_loc, ",Lung", "Lung")
+    HNSC_met$met_loc <- stringr::str_replace_all(HNSC_met$met_loc, "LUNG", "Lung")
+    HNSC_met$met_loc <- stringr::str_replace_all(HNSC_met$met_loc, "Lungs", "Lung")
+    HNSC_met$met_loc <- stringr::str_replace_all(HNSC_met$met_loc, "Lung (distant mets or possible new primary)", "Lung")
+    
+    
+    
+    
+    index <- HNSC_met$met_loc == "Distant Metastasis|" 
+    HNSC_met$met_loc[index] <- ""
+    HNSC_met$Metastatic_status[index] <- 1
+    
+    index <- HNSC_met$met_loc == "Distant Metastasis," 
+    HNSC_met$met_loc[index] <- ""
+    HNSC_met$Metastatic_status[index] <- 1
+    
+    
     index <- is.na(HNSC_met$LymphNodeStatus)
     HNSC_met$LymphNodeStatus[index] <- 0
     
@@ -349,6 +436,9 @@ for(i in projects){
     
     index <- is.na(HNSC_met$number_of_lymphnodes_positive_by_he)
     HNSC_met$number_of_lymphnodes_positive_by_he[index] <- 0
+    
+    index <- is.na(HNSC_met$met_loc)
+    HNSC_met$Metastatic_status[index] <- 0
     
     
     write.csv(HNSC_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus.csv"))
