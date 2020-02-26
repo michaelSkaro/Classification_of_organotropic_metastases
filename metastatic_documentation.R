@@ -1,3 +1,29 @@
+# I would liek to start by saying before anyone moves forward with this code:
+
+# I am neither proud nor am I happy with 99% of this code. However,
+# I really have exhausted many of my options in the forms of REGEX to 
+# complete this work. 
+# The files I was given from the database were very terribly organized and for that
+# I hope no one ever tries to use this code. 
+
+#Thanks. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Clear your workspace
 rm(list=ls(all=TRUE))
 # Load some things
@@ -37,7 +63,7 @@ empty_as_na <- function(x){
 
 
 
-i <- projects[5]
+i <- projects[7]
 
 # do the things
 
@@ -415,6 +441,79 @@ for(i in projects){
     
     
     
+    index	<-	HNSC_met$met_loc	==	",Brain Metastasis"
+    HNSC_met$met_loc[index]	<-	"Brain"
+    index	<-	HNSC_met$met_loc	==	",Brain|Cerebellum"
+    HNSC_met$met_loc[index]	<-	"Brain"
+    index	<-	HNSC_met$met_loc	==	",esophagus|Esophagus"
+    HNSC_met$met_loc[index]	<-	"Esophagus"
+    index	<-	HNSC_met$met_loc	==	",L neck subdermal mets"
+    HNSC_met$met_loc[index]	<-	"Skin"
+    index	<-	HNSC_met$met_loc	==	",left axilla"
+    HNSC_met$met_loc[index]	<-	"Brain"
+    index	<-	HNSC_met$met_loc	==	",suprasternal"
+    HNSC_met$met_loc[index]	<-	"Suprasternal"
+    index	<-	HNSC_met$met_loc	==	",trachea|Lung, Right Lower Lobe"
+    HNSC_met$met_loc[index]	<-	"Lung"
+    index	<-	HNSC_met$met_loc	==	",tracheostoma"
+    HNSC_met$met_loc[index]	<-	"Lung"
+    index	<-	HNSC_met$met_loc	==	"|Cervical Lymph NodesLung"
+    HNSC_met$met_loc[index]	<-	"Lymph Node"
+    index	<-	HNSC_met$met_loc	==	"|Cervical Lymph NodesLung|parapharyngeal space"
+    HNSC_met$met_loc[index]	<-	"Lymph Node"
+    index	<-	HNSC_met$met_loc	==	"Acute myeloid leukemia"
+    HNSC_met$met_loc[index]	<-	"Bone"
+    index	<-	HNSC_met$met_loc	==	"Oropharynx,OROPHARYNX, OVERLAPPING|oropharynx"
+    HNSC_met$met_loc[index]	<-	"Oropharynx"
+    index	<-	HNSC_met$met_loc	==	"Cervical Lymph Nodes,bilateral"
+    HNSC_met$met_loc[index]	<-	"Lymph Node"
+    index	<-	HNSC_met$met_loc	==	"Cervical Lymph Nodes"
+    HNSC_met$met_loc[index]	<-	"Lymph Node"
+    index	<-	HNSC_met$met_loc	==	"R. Lung"
+    HNSC_met$met_loc[index]	<-	"Lung"
+    index	<-	HNSC_met$met_loc	==	"Oropharynx,Oropharynx and cervical lymph node"
+    HNSC_met$met_loc[index]	<-	"Oropharynx, Lymph Node"
+    
+    index	<-	HNSC_met$met_loc	==	"Prostate|Kidney"
+    HNSC_met$met_loc[index]	<-	"Prostate, Kidney"
+    
+    index	<-	HNSC_met$met_loc	==	"Prostate|Hypopharynx"
+    HNSC_met$met_loc[index]	<-	"Prostate, Hypopharynx"
+    
+    index	<-	HNSC_met$met_loc	==	"Other,skin of right cheek"
+    HNSC_met$met_loc[index]	<-	"Skin"
+    
+    index	<-	HNSC_met$met_loc	==	"Other,skin NOS"
+    HNSC_met$met_loc[index]	<-	"Skin"
+    
+    index	<-	HNSC_met$met_loc	==	"Other,skin"
+    HNSC_met$met_loc[index]	<-	"Skin"
+    
+    index	<-	HNSC_met$met_loc	==	"Oropharynx|Oral Cavity,Submandibular gland|tongue and floor of mouth"
+    HNSC_met$met_loc[index]	<-	"Oral Cavity"
+    
+    index	<-	HNSC_met$met_loc	==	"Lung, mediastinal lymph node|lung, mediastinal and hilar lymph nodes|liver, spleen, kidney, adrenal, bone|brain"
+    HNSC_met$met_loc[index]	<-	"Lung,Liver,Brain,Bone,Adrenal Gland,Lymph Node"
+    
+    index	<-	HNSC_met$met_loc	==	"Oropharynx,L tonsil"
+    HNSC_met$met_loc[index]	<-	"Oropharynx, Bone"
+    
+    index	<-	HNSC_met$met_loc	==	"mediastinum"
+    HNSC_met$met_loc[index]	<-	"Mediastinum"
+    
+    
+    index	<-	HNSC_met$met_loc	==	"LUL Lung"
+    HNSC_met$met_loc[index]	<-	"Lung"
+    
+    index	<-	HNSC_met$met_loc	==	"Cervical Lymph Nodes,L NECK"
+    HNSC_met$met_loc[index]	<-	"Lymph Node"
+    
+    index	<-	HNSC_met$met_loc	==	"Lung (distant mets or possible new primary)"
+    HNSC_met$met_loc[index]	<-	"Lung"
+    
+    index	<-	HNSC_met$met_loc	==	"Oropharynx,tonsil"
+    HNSC_met$met_loc[index]	<-	"Oropharynx,Bone"
+    
     index <- HNSC_met$met_loc == "Distant Metastasis|" 
     HNSC_met$met_loc[index] <- ""
     HNSC_met$Metastatic_status[index] <- 1
@@ -437,9 +536,9 @@ for(i in projects){
     index <- is.na(HNSC_met$number_of_lymphnodes_positive_by_he)
     HNSC_met$number_of_lymphnodes_positive_by_he[index] <- 0
     
-    index <- is.na(HNSC_met$met_loc)
+    index <- HNSC_met$met_loc == "Lymph Node"
     HNSC_met$Metastatic_status[index] <- 0
-    
+    HNSC_met$LymphNodeStatus[index] <- 1
     
     write.csv(HNSC_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus.csv"))
     
@@ -492,6 +591,77 @@ for(i in projects){
     
     index <- is.na(KIRC_met$number_of_lymphnodes)
     KIRC_met$number_of_lymphnodes_positive[index] <- 0
+    
+    
+    index	<-	KIRC_met$met_loc	==	"Anus|Kidney"
+    KIRC_met$met_loc[index]	<-	"Anus, Kidney"
+    
+    index	<-	KIRC_met$met_loc	==	"Back|Uterus"
+    KIRC_met$met_loc[index]	<-	"Skin, Uterus"
+    
+    index	<-	KIRC_met$met_loc	==	"Bladder|Prostate"
+    KIRC_met$met_loc[index]	<-	"Bladder, Prostate"
+    
+    index	<-	KIRC_met$met_loc	==	"Bladder|Uterus"
+    KIRC_met$met_loc[index]	<-	"Bladder, Uterus"
+    
+    index	<-	KIRC_met$met_loc	==	"Bone marrow"
+    KIRC_met$met_loc[index]	<-	"Bone"
+    
+    index	<-	KIRC_met$met_loc	==	"Colon|Prostate"
+    KIRC_met$met_loc[index]	<-	"Colon,Prostate"
+    
+    index	<-	KIRC_met$met_loc	==	"Ear"
+    KIRC_met$met_loc[index]	<-	"Head and Neck"
+    
+    index	<-	KIRC_met$met_loc	==	"Forehead"
+    KIRC_met$met_loc[index]	<-	"Head and Neck, Skin"
+    
+    index	<-	KIRC_met$met_loc	==	"Head/Neck"
+    KIRC_met$met_loc[index]	<-	"Head and Neck"
+    
+    index	<-	KIRC_met$met_loc	==	"Kidney|Eye"
+    KIRC_met$met_loc[index]	<-	"Kidney, Eye"
+    
+    index	<-	KIRC_met$met_loc	==	"Kidney|Pancreas"
+    KIRC_met$met_loc[index]	<-	"Kidney, Pancreas"
+    
+    index	<-	KIRC_met$met_loc	==	"Kidney|Prostate"
+    KIRC_met$met_loc[index]	<-	"Kidney, Prostate"
+    
+    index	<-	KIRC_met$met_loc	==	"Lymph node(s)"
+    KIRC_met$met_loc[index]	<-	"Lymph Node"
+    
+    index	<-	KIRC_met$met_loc	==	"Neck"
+    KIRC_met$met_loc[index]	<-	"Head and Neck"
+    
+    index	<-	KIRC_met$met_loc	==	"Other"
+    KIRC_met$met_loc[index]	<-	NA
+    
+    index	<-	KIRC_met$met_loc	==	"other"
+    KIRC_met$met_loc[index]	<-	NA
+    
+    index	<-	KIRC_met$met_loc	==	"Other,site not stated"
+    KIRC_met$met_loc[index]	<-	NA
+    
+    index	<-	KIRC_met$met_loc	==	"Other,Skin"
+    KIRC_met$met_loc[index]	<-	"Skin"
+    
+    index	<-	KIRC_met$met_loc	==	"Pancreas|Kidney"
+    KIRC_met$met_loc[index]	<-	"Pancreas, Kidney"
+    
+    index	<-	KIRC_met$met_loc	==	"Prostate|Kidney"
+    KIRC_met$met_loc[index]	<-	"Prostate, Kidney"
+    
+    index	<-	KIRC_met$met_loc	==	"Spine"
+    KIRC_met$met_loc[index]	<-	"Bone"
+    
+    index	<-	KIRC_met$met_loc	==	"Thyroid gland|Kidney"
+    KIRC_met$met_loc[index]	<-	"Thyroid gland, Kidney"
+    
+    index	<-	KIRC_met$met_loc	==	"Other,Skin Cancer"
+    KIRC_met$met_loc[index]	<-	"Skin"
+    
     
     write.csv(KIRC_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
     
