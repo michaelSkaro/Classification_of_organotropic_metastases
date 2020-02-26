@@ -1,10 +1,11 @@
-# I would liek to start by saying before anyone moves forward with this code:
+# I would like to start by saying: 
 
+#Before anyone moves forward with this code,
 # I am neither proud nor am I happy with 99% of this code. However,
-# I really have exhausted many of my options in the forms of REGEX to 
+# I really have exhausted many of my options in the forms of REGEX and other parsing mechanisms to 
 # complete this work. 
 # The files I was given from the database were very terribly organized and for that
-# I hope no one ever tries to use this code. 
+# I hope no one ever tries to use this code for any other reason that for this exact problem. 
 
 #Thanks. 
 
