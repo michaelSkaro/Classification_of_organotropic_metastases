@@ -1,25 +1,12 @@
-# I would like to start by saying: 
+# I would liek to start by saying before anyone moves forward with this code:
 
-#Before anyone moves forward with this code,
 # I am neither proud nor am I happy with 99% of this code. However,
-# I really have exhausted many of my options in the forms of REGEX and other parsing mechanisms to 
+# I really have exhausted many of my options in the forms of REGEX to 
 # complete this work. 
 # The files I was given from the database were very terribly organized and for that
-# I hope no one ever tries to use this code for any other reason that for this exact problem. 
+# I hope no one ever tries to use this code. 
 
 #Thanks. 
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -64,7 +51,7 @@ empty_as_na <- function(x){
 
 
 
-i <- projects[7]
+i <- projects[1]
 
 # do the things
 
@@ -145,10 +132,10 @@ for(i in projects){
     BLCA_met$met_loc <- stringr::str_replace_all(BLCA_met$met_loc, "Lymph node", "Lymph Node")
     
     
+    
+    
     index <- is.na(BLCA_met$Metastatic_status)
     BLCA_met$Metastatic_status[index] <- 1
-    
-    # Not proud of this next 100 lines. I should probably use regex but i am now tired and this needs to be done now. Sorry.
     
     index <- BLCA_met$met_loc == ",Abdominal wall" 
     BLCA_met$met_loc[index] <- "Abdominal wall"
@@ -221,6 +208,142 @@ for(i in projects){
     index <- BLCA_met$met_loc == ",soft tissue pelvic mass" 
     BLCA_met$met_loc[index] <- "Pelvis"
     BLCA_met$Metastatic_status[index] <- 1
+    
+    BLCA_met$met_loc <- gsub(",$", "", BLCA_met$met_loc)
+    BLCA_met$met_loc <- gsub("$,", "", BLCA_met$met_loc)
+    
+    index <- BLCA_met$met_loc == ",Pelvis" 
+    BLCA_met$met_loc[index] <- "Pelvis"
+    BLCA_met$Metastatic_status[index] <- 1
+    
+    index <- BLCA_met$met_loc == "Abdominal wall" 
+    BLCA_met$met_loc[index] <- "Abdomen"
+    BLCA_met$Metastatic_status[index] <- 1
+    
+    index <- BLCA_met$met_loc == "Ankle" 
+    BLCA_met$met_loc[index] <- "Bone"
+    
+    index <- BLCA_met$met_loc == "Bladder,Bone,Lung,Liver,Lymph Node,Adrenal Metastases,Pelvic Sidewall Soft Tissue Recurrence" 
+    BLCA_met$met_loc[index] <- "Bladder,Bone,Lung,Liver,Lymph Node,Adrenal, Pevis, Soft Tissue"
+    
+    index <- BLCA_met$met_loc == "Bladder,Lung,suprapubic area" 
+    BLCA_met$met_loc[index] <- "Bladder,Lung,Abdomen"
+   
+    index <- BLCA_met$met_loc == "Bone,Lung,Liver,pancreas" 
+    BLCA_met$met_loc[index] <- "Bone,Lung,Liver,Pancreas"
+    
+    index <- BLCA_met$met_loc == "Fallopian tube" 
+    BLCA_met$met_loc[index] <- "Ovary"
+    
+    index <- BLCA_met$met_loc == "Forehead,Prostate" 
+    BLCA_met$met_loc[index] <- "Head and Neck, Skin"
+    
+    index <- BLCA_met$met_loc == "Head - face or neck NOS" 
+    BLCA_met$met_loc[index] <- "Head and Neck, Skin"
+    
+    index <- BLCA_met$met_loc == "Liver,Lung,Bone,adrenal" 
+    BLCA_met$met_loc[index] <- "Liver,Lung,Bone,Adrenal"
+   
+    index <- BLCA_met$met_loc == "Liver,Pelvic Soft Tissue Mass" 
+    BLCA_met$met_loc[index] <- "Liver,Pelvis, Soft Tissue"
+    
+    index <- BLCA_met$met_loc == "lower abdominal wall and right pelvis" 
+    BLCA_met$met_loc[index] <- "Abdomen, Pelvis"
+    
+    index <- BLCA_met$met_loc == "Lung,adjacent to the right iliac crest" 
+    BLCA_met$met_loc[index] <- "Lung, Illiac crest"
+    
+    index <- BLCA_met$met_loc == "Lung,local & retroperitonium" 
+    BLCA_met$met_loc[index] <- "Lung, Abdomen"
+    
+    index <- BLCA_met$met_loc == "Lung,Lung" 
+    BLCA_met$met_loc[index] <- "Lung"
+    
+    index <- BLCA_met$met_loc == "Lung,Lung,Bladder" 
+    BLCA_met$met_loc[index] <- "Lung, Bladder"
+    
+    index <- BLCA_met$met_loc == "Lung,Lymph Node,Bone,Soft tissue,Soft Tissue" 
+    BLCA_met$met_loc[index] <- "Lung,Lymph Node,Bone,Soft tissue"
+    
+    index <- BLCA_met$met_loc == "Lung,Lymph Node,Lung" 
+    BLCA_met$met_loc[index] <- "Lung, Lymph Node"
+    
+    index <- BLCA_met$met_loc == "Lung,Peritoneum- Pelvic Lymph Nodes" 
+    BLCA_met$met_loc[index] <- "Lung, Lymph Node"
+    
+    index <- BLCA_met$met_loc == "Lung,Rectal wall,Rectal Wall" 
+    BLCA_met$met_loc[index] <- "Lung, Rectum"
+    
+    index <- BLCA_met$met_loc == "Lung,soft tissue pelvic mass" 
+    BLCA_met$met_loc[index] <- "Lung, Pelvis, Soft Tissue"
+    
+    index <- BLCA_met$met_loc == "Lymph Node,Bladder,Lymph Node" 
+    BLCA_met$met_loc[index] <- "Bladder, Lymph Node"
+    
+    index <- BLCA_met$met_loc == "Lymph Node,Bone,Head Neck" 
+    BLCA_met$met_loc[index] <- "Lymph Node,Bone,Head and Neck"
+    
+    index <- BLCA_met$met_loc == "Lymph Node,Bone,Liver,Lymph Nodes" 
+    BLCA_met$met_loc[index] <- "Lymph Node,Bone,Liver"
+    
+    index <- BLCA_met$met_loc == "Lymph Node,Liver,Bone,Lymph Node" 
+    BLCA_met$met_loc[index] <- "Lymph Node,Liver,Bone"
+    
+    index <- BLCA_met$met_loc == "Lymph Node,lumbar spine and right hemipelvis" 
+    BLCA_met$met_loc[index] <- "Lymph Node, Spine Bone"
+    
+    index <- BLCA_met$met_loc == "Lymph Node,Lung,Bone,Lymph Node" 
+    BLCA_met$met_loc[index] <- "Lymph  Node, Lung"
+    
+    index <- BLCA_met$met_loc == "Lymph Node,Lung,Liver,Lymph Node,Lung,Liver" 
+    BLCA_met$met_loc[index] <- "Lymph Node,Lung,Liver"
+    
+    index <- BLCA_met$met_loc == "Lymph Node,Lung,Lymph Node" 
+    BLCA_met$met_loc[index] <- "Lymph  Node, Lung"
+    
+    index <- BLCA_met$met_loc == "Lymph Node,Lymph Node" 
+    BLCA_met$met_loc[index] <- "Lymph Node"
+    
+    index <- BLCA_met$met_loc == "Lymph Node,pelvic mass with adherence to pelvic sidewall and sigmoid colon,sigmoid colon,pelvic side wall" 
+    BLCA_met$met_loc[index] <- "Lymph Node,Pelvis, Colon"
+    
+    index <- BLCA_met$met_loc == "Lymph Node,Scrotum and Perineum" 
+    BLCA_met$met_loc[index] <- "Lymph Node,Scrotum, Perineum"
+    
+    index <- BLCA_met$met_loc == "Lymph Node(s)" 
+    BLCA_met$met_loc[index] <- "Lymph Node"
+    
+    index <- BLCA_met$met_loc == "Other" 
+    BLCA_met$met_loc[index] <- NA
+    
+    index <- BLCA_met$met_loc == "Other,Prostate" 
+    BLCA_met$met_loc[index] <- "Prostate"
+    
+    index <- BLCA_met$met_loc == "pelvis" 
+    BLCA_met$met_loc[index] <- "Pelvis"
+    
+    index <- BLCA_met$met_loc == "Pelvis and vagina" 
+    BLCA_met$met_loc[index] <- "Pelvis, Vagina"
+    
+    index <- BLCA_met$met_loc == "Prostate,Other,Bladder" 
+    BLCA_met$met_loc[index] <- "Prostate, Bladder"
+    
+    index <- BLCA_met$met_loc == "Renal Pelvis,Lymph Node,pelvis" 
+    BLCA_met$met_loc[index] <- "Renal Pelvis,Lymph Node,Pelvis"
+    
+    index <- BLCA_met$met_loc == "small bowel" 
+    BLCA_met$met_loc[index] <- "Small Bowel"
+    
+    index <- BLCA_met$met_loc == "Thyroid gland" 
+    BLCA_met$met_loc[index] <- "Thyroid"
+    
+    index <- BLCA_met$met_loc == "Tongue Base of tongue" 
+    BLCA_met$met_loc[index] <- "Oral Cavity"
+    
+    index <- BLCA_met$met_loc == "Urethra,Lymph Node,Blood-Large B Cell Lymphoma" 
+    BLCA_met$met_loc[index] <- "Urethra,Lymph Node,Lymphoma"
+    
+    
     
     write.csv(BLCA_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_status.csv"))
     
@@ -698,6 +821,48 @@ for(i in projects){
     index <- is.na(KIRP_met$number_of_lymphnodes)
     KIRP_met$number_of_lymphnodes_positive[index] <- 0
     
+    
+    index	<-	KIRP_met$met_loc	==	"Back"
+    KIRP_met$met_loc[index]	<-	"Skin"
+    
+    index	<-	KIRP_met$met_loc	==	"Back|Eye"
+    KIRP_met$met_loc[index]	<-	"Back,Eye"
+    
+    index	<-	KIRP_met$met_loc	==	"Breast|Ovary"
+    KIRP_met$met_loc[index]	<-	"Breast,Ovary"
+    
+    index	<-	KIRP_met$met_loc	==	"Colon and rectum|Colon"
+    KIRP_met$met_loc[index]	<-	"Colon, Rectum"
+    
+    index	<-	KIRP_met$met_loc	==	"Ear|Prostate"
+    KIRP_met$met_loc[index]	<-	"Head and Neck, Prostate"
+    
+    index	<-	KIRP_met$met_loc	==	"Kidney|Prostate"
+    KIRP_met$met_loc[index]	<-	"Kidney, Prostate"
+    
+    index	<-	KIRP_met$met_loc	==	"Lymph node(s)"
+    KIRP_met$met_loc[index]	<-	"Lymph Node"
+    
+    index	<-	KIRP_met$met_loc	==	"Other,Face"
+    KIRP_met$met_loc[index]	<-	"Head and Neck, Skin"
+    
+    index	<-	KIRP_met$met_loc	==	"Other,Skin, nothing more specific provided"
+    KIRP_met$met_loc[index]	<-	"Skin"
+    
+    index	<-	KIRP_met$met_loc	==	"Other|Kidney,Skin"
+    KIRP_met$met_loc[index]	<-	"Kidney, Skin"
+    
+    index	<-	KIRP_met$met_loc	==	"Thigh"
+    KIRP_met$met_loc[index]	<-	"Skin"
+    
+    index	<-	KIRP_met$met_loc	==	"Thyroid gland|Prostate"
+    KIRP_met$met_loc[index]	<-	"Thyroid gland, Prostate"
+    
+    index	<-	KIRP_met$met_loc	==	"Transverse Colon"
+    KIRP_met$met_loc[index]	<-	"Colon"
+    
+    
+    
     write.csv(KIRP_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
     
     print("KIRP Done")
@@ -735,12 +900,101 @@ for(i in projects){
     
     LIHC_met$met_loc <- str_replace_all(LIHC_met$met_loc, ",,","")
     
+    index	<-	LIHC_met$met_loc	==	"Arm"
+    LIHC_met$met_loc[index]	<-	"Skin"
+    
+    index	<-	LIHC_met$met_loc	==	"Back"
+    LIHC_met$met_loc[index]	<-	"Skin"
+    
+    index	<-	LIHC_met$met_loc	==	"Back|Breast"
+    LIHC_met$met_loc[index]	<-	"Skin, Breast"
+    
+    index	<-	LIHC_met$met_loc	==	"Bladder|Prostate"
+    LIHC_met$met_loc[index]	<-	"Bladder, Prostate"
+    
+    index	<-	LIHC_met$met_loc	==	"Bone|Liver"
+    LIHC_met$met_loc[index]	<-	"Bone, Liver"
+    
+    index	<-	LIHC_met$met_loc	==	"Brain|Liver"
+    LIHC_met$met_loc[index]	<-	"Brain, Liver"
+    
+    index	<-	LIHC_met$met_loc	==	"Cecum"
+    LIHC_met$met_loc[index]	<-	"Intestine"
+    
+    index	<-	LIHC_met$met_loc	==	"Colon and rectum"
+    LIHC_met$met_loc[index]	<-	"Colon, Rectum"
+    
+    index	<-	LIHC_met$met_loc	==	"Ear"
+    LIHC_met$met_loc[index]	<-	"Head and Neck"
+    
+    index	<-	LIHC_met$met_loc	==	"Forehead"
+    LIHC_met$met_loc[index]	<-	"Head and Neck, Skin"
+    
+    index	<-	LIHC_met$met_loc	==	"Head - face or neck, NOS"
+    LIHC_met$met_loc[index]	<-	"Head and Neck, Skin"
+    
+    index	<-	LIHC_met$met_loc	==	"Leg"
+    LIHC_met$met_loc[index]	<-	"Skin"
+    
+    index	<-	LIHC_met$met_loc	==	"Liver|Bone"
+    LIHC_met$met_loc[index]	<-	"Liver, Bone"
+    
+    index	<-	LIHC_met$met_loc	==	"Liver|Brain"
+    LIHC_met$met_loc[index]	<-	"Liver, Brain"
+    
+    index	<-	LIHC_met$met_loc	==	"Liver|Lung"
+    LIHC_met$met_loc[index]	<-	"Liver, Lung"
+    
+    index	<-	LIHC_met$met_loc	==	"Liver|Lung|Other, specify"
+    LIHC_met$met_loc[index]	<-	"Liver, Lung"
+    
+    index	<-	LIHC_met$met_loc	==	"Liver|Other, specify"
+    LIHC_met$met_loc[index]	<-	"Liver"
+    
+    index	<-	LIHC_met$met_loc	==	"Liver|Other, specify|Lung"
+    LIHC_met$met_loc[index]	<-	"Liver, Lung"
+    
+    index	<-	LIHC_met$met_loc	==	"Lung|Bone"
+    LIHC_met$met_loc[index]	<-	"Lung, Bone"
+    
+    index	<-	LIHC_met$met_loc	==	"Lung|Brain"
+    LIHC_met$met_loc[index]	<-	"Lung, Brain"
+    
+    index	<-	LIHC_met$met_loc	==	"Lymph Node(s)"
+    LIHC_met$met_loc[index]	<-	"Lymph Node"
+    
+    index	<-	LIHC_met$met_loc	==	"Other, specify"
+    LIHC_met$met_loc[index]	<-	NA
+    
+    index	<-	LIHC_met$met_loc	==	"Other, specify|Bone"
+    LIHC_met$met_loc[index]	<-	"Bone"
+    
+    index	<-	LIHC_met$met_loc	==	"Other,Endometrium,"
+    LIHC_met$met_loc[index]	<-	"Uterus"
+    
+    index	<-	LIHC_met$met_loc	==	"Other,SKIN,"
+    LIHC_met$met_loc[index]	<-	"Skin"
+    
+    index	<-	LIHC_met$met_loc	==	"Other|Scalp,Cheek,"
+    LIHC_met$met_loc[index]	<-	"Head and Neck, Skin"
+    
+    index	<-	LIHC_met$met_loc	==	"Prostate|Laryngopharynx"
+    LIHC_met$met_loc[index]	<-	"Prostate, Laryngopharynx"
+    
+    index	<-	LIHC_met$met_loc	==	"Pulmonary"
+    LIHC_met$met_loc[index]	<-	"Lung"
+    
+    index	<-	LIHC_met$met_loc	==	"Sigmoid colon|Prostate"
+    LIHC_met$met_loc[index]	<-	"Colon, Prosate"
+    
+    
+    View(table(LIHC_met$met_loc))
+    
     
     write.csv(LIHC_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
     
     print("LIHC Done")
     rm(LIHC_met)
-    
     
     
   } 
@@ -780,6 +1034,67 @@ for(i in projects){
     LUAD_met$Metastatic_status[index] <- 0
     
     LUAD_met$met_loc <- str_replace_all(LUAD_met$met_loc, ",,","")
+    
+    
+    View(table(LUAD_met$met_loc))
+    
+    
+    index	<-	LUAD_met$met_loc	==	"Arm"
+    LUAD_met$met_loc[index]	<-	"Skin"
+    
+    index	<-	LUAD_met$met_loc	==	"Arm|Lung"
+    LUAD_met$met_loc[index]	<-	"Arm, Lung"
+    
+    index	<-	LUAD_met$met_loc	==	"Breast|Uterus|Cervix"
+    LUAD_met$met_loc[index]	<-	"Breast, Uterus, Cervix"
+    
+    index	<-	LUAD_met$met_loc	==	"Chest wall"
+    LUAD_met$met_loc[index]	<-	"Bone"
+    
+    index	<-	LUAD_met$met_loc	==	"Descending colon"
+    LUAD_met$met_loc[index]	<-	"Colon"
+    
+    index	<-	LUAD_met$met_loc	==	"Ear|Other"
+    LUAD_met$met_loc[index]	<-	"Head and Neck"
+    
+    index	<-	LUAD_met$met_loc	==	"Forehead"
+    LUAD_met$met_loc[index]	<-	"Head and Neck, Skin"
+    
+    index	<-	LUAD_met$met_loc	==	"Hand"
+    LUAD_met$met_loc[index]	<-	"Skin"
+    
+    index	<-	LUAD_met$met_loc	==	"Head - face or neck, NOS"
+    LUAD_met$met_loc[index]	<-	"Head and Neck, Skin"
+    
+    index	<-	LUAD_met$met_loc	==	"Kidney|Bowel"
+    LUAD_met$met_loc[index]	<-	"Kidney, Intestine"
+    
+    index	<-	LUAD_met$met_loc	==	"Lymph Node(s) Cervical"
+    LUAD_met$met_loc[index]	<-	"Lymph Node"
+    
+    index	<-	LUAD_met$met_loc	==	"Mouth"
+    LUAD_met$met_loc[index]	<-	"Oral Cavity"
+    
+    index	<-	LUAD_met$met_loc	==	"Neck"
+    LUAD_met$met_loc[index]	<-	"Head and Neck"
+    
+    index	<-	LUAD_met$met_loc	==	"Other"
+    LUAD_met$met_loc[index]	<-	NA
+    
+    index	<-	LUAD_met$met_loc	==	"Other|Blood"
+    LUAD_met$met_loc[index]	<-	"Blood"
+    
+    index	<-	LUAD_met$met_loc	==	"Rectum|Bladder"
+    LUAD_met$met_loc[index]	<-	"Rectum, Bladder"
+    
+    index	<-	LUAD_met$met_loc	==	"Rectum|Prostate"
+    LUAD_met$met_loc[index]	<-	"Rectum, Prostate"
+    
+    index	<-	LUAD_met$met_loc	==	"Spleen|Breast"
+    LUAD_met$met_loc[index]	<-	"Spleen, Breast"
+    
+    index	<-	LUAD_met$met_loc	==	"Throat|Jaw"
+    LUAD_met$met_loc[index]	<-	"Esophagus, Bone"
     
     
   
@@ -828,6 +1143,117 @@ for(i in projects){
     LUSC_met$Metastatic_status[index] <- 0
     
     LUSC_met$met_loc <- str_replace_all(LUSC_met$met_loc, ",,","")
+    
+    index	<-	LUSC_met$met_loc	==	"Bladder,"
+    LUSC_met$met_loc[index]	<-	"Bladder"
+    
+    index	<-	LUSC_met$met_loc	==	"Blood,"
+    LUSC_met$met_loc[index]	<-	"Blood"
+    
+    index	<-	LUSC_met$met_loc	==	"Breast,"
+    LUSC_met$met_loc[index]	<-	"Breast"
+    
+    index	<-	LUSC_met$met_loc	==	"Breast|Thymus,"
+    LUSC_met$met_loc[index]	<-	"Breast, Thymus"
+    
+    index	<-	LUSC_met$met_loc	==	"Cervix,"
+    LUSC_met$met_loc[index]	<-	"Cervix"
+    
+    index	<-	LUSC_met$met_loc	==	"Colon,"
+    LUSC_met$met_loc[index]	<-	"Colon"
+    
+    index	<-	LUSC_met$met_loc	==	"Eye,"
+    LUSC_met$met_loc[index]	<-	"Eye"
+    
+    index	<-	LUSC_met$met_loc	==	"Foot,"
+    LUSC_met$met_loc[index]	<-	"Foot, Bone"
+    
+    index	<-	LUSC_met$met_loc	==	"Forehead|Lung,"
+    LUSC_met$met_loc[index]	<-	"Head and Neck, Skin, Lung"
+    
+    index	<-	LUSC_met$met_loc	==	"Forehead|Other,Face"
+    LUSC_met$met_loc[index]	<-	"Head and Neck, Skin"
+    
+    index	<-	LUSC_met$met_loc	==	"Head - face or neck, NOS,"
+    LUSC_met$met_loc[index]	<-	"Head and Neck, Skin"
+    
+    index	<-	LUSC_met$met_loc	==	"Kidney,"
+    LUSC_met$met_loc[index]	<-	"Kidney"
+    
+    index	<-	LUSC_met$met_loc	==	"Larynx,"
+    LUSC_met$met_loc[index]	<-	"Larynx"
+    
+    index	<-	LUSC_met$met_loc	==	"Lip|Other|Shoulder,NOSE"
+    LUSC_met$met_loc[index]	<-	"Head and Neck, Skin"
+    
+    index	<-	LUSC_met$met_loc	==	"Liver,"
+    LUSC_met$met_loc[index]	<-	"Liver"
+    
+    index	<-	LUSC_met$met_loc	==	"Lung,"
+    LUSC_met$met_loc[index]	<-	"Lung"
+    
+    index	<-	LUSC_met$met_loc	==	"Lymphoma,"
+    LUSC_met$met_loc[index]	<-	"Lymphoma"
+    
+    index	<-	LUSC_met$met_loc	==	"Nasopharynx,"
+    LUSC_met$met_loc[index]	<-	"Nasopharynx"
+    
+    index	<-	LUSC_met$met_loc	==	"Neck"
+    LUSC_met$met_loc[index]	<-	"Head and Neck"
+    
+    index	<-	LUSC_met$met_loc	==	"Other,Basel Cell Skin Cancer"
+    LUSC_met$met_loc[index]	<-	"Skin"
+    
+    index	<-	LUSC_met$met_loc	==	"Other,gynecological (not otherwise specified)"
+    LUSC_met$met_loc[index]	<-	"Cervix"
+    
+    index	<-	LUSC_met$met_loc	==	"Other,Right Tongue"
+    LUSC_met$met_loc[index]	<-	"Oral Cavity"
+    
+    index	<-	LUSC_met$met_loc	==	"Other,skin"
+    LUSC_met$met_loc[index]	<-	"Skin"
+    
+    index	<-	LUSC_met$met_loc	==	"Other,Skin"
+    LUSC_met$met_loc[index]	<-	"Skin"
+    
+    index	<-	LUSC_met$met_loc	==	"Other,Skin- Nose - Nasal tip"
+    LUSC_met$met_loc[index]	<-	"Head and Neck, Skin"
+    
+    index	<-	LUSC_met$met_loc	==	"Other,Skin, NOS"
+    LUSC_met$met_loc[index]	<-	"Skin"
+    
+    index	<-	LUSC_met$met_loc	==	"Other|Arm,Left Chest"
+    LUSC_met$met_loc[index]	<-	"Skin"
+    
+    index	<-	LUSC_met$met_loc	==	"Pelvis|Bladder,"
+    LUSC_met$met_loc[index]	<-	"Pelvis, Bladder"
+    
+    index	<-	LUSC_met$met_loc	==	"Pharynx,"
+    LUSC_met$met_loc[index]	<-	"Pharynx"
+    
+    index	<-	LUSC_met$met_loc	==	"Prostate,"
+    LUSC_met$met_loc[index]	<-	"Prostate"
+    
+    index	<-	LUSC_met$met_loc	==	"Prostate|Back,"
+    LUSC_met$met_loc[index]	<-	"Prostate, Skin"
+    
+    index	<-	LUSC_met$met_loc	==	"Prostate|Lung,"
+    LUSC_met$met_loc[index]	<-	"Prostate, Lung"
+    
+    index	<-	LUSC_met$met_loc	==	"Thymus,"
+    LUSC_met$met_loc[index]	<-	"Thymus"
+    
+    index	<-	LUSC_met$met_loc	==	"Tongue,"
+    LUSC_met$met_loc[index]	<-	"Oral Cavity"
+    
+    index	<-	LUSC_met$met_loc	==	"Tonsil,"
+    LUSC_met$met_loc[index]	<-	"Oral Cavity, Bone"
+    
+    index	<-	LUSC_met$met_loc	==	"Uterus,"
+    LUSC_met$met_loc[index]	<-	"Uterus"
+    
+    
+    
     
     write.csv(LUSC_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
     
@@ -879,6 +1305,78 @@ for(i in projects){
     index <- PRAD_met$LymphNodeStatus > 0
     PRAD_met$Metastatic_status[index] <- 1
     
+    index	<-	PRAD_met$met_loc	==	"Arm,"
+    PRAD_met$met_loc[index]	<-	"Skin"
+    
+    index	<-	PRAD_met$met_loc	==	"Bladder,"
+    PRAD_met$met_loc[index]	<-	"Bladder"
+    
+    index	<-	PRAD_met$met_loc	==	"Chest wall,"
+    PRAD_met$met_loc[index]	<-	"Bone"
+    
+    index	<-	PRAD_met$met_loc	==	"Colon,"
+    PRAD_met$met_loc[index]	<-	"Colon"
+    
+    index	<-	PRAD_met$met_loc	==	"Esophagus,"
+    PRAD_met$met_loc[index]	<-	"Esophagus"
+    
+    index	<-	PRAD_met$met_loc	==	"Femur,"
+    PRAD_met$met_loc[index]	<-	"Bone"
+    
+    index	<-	PRAD_met$met_loc	==	"Head - face or neck, NOS,"
+    PRAD_met$met_loc[index]	<-	"Head and Neck, Skin"
+    
+    index	<-	PRAD_met$met_loc	==	"Kidney,"
+    PRAD_met$met_loc[index]	<-	"Kidney"
+    
+    index	<-	PRAD_met$met_loc	==	"Lung,"
+    PRAD_met$met_loc[index]	<-	"Lung"
+    
+    index	<-	PRAD_met$met_loc	==	"Lymph node(s),"
+    PRAD_met$met_loc[index]	<-	"Lymph Node"
+    
+    index	<-	PRAD_met$met_loc	==	"Lymphoma,"
+    PRAD_met$met_loc[index]	<-	"Lymphoma"
+    
+    index	<-	PRAD_met$met_loc	==	"Mammary Gland,"
+    PRAD_met$met_loc[index]	<-	"Breast"
+    
+    index	<-	PRAD_met$met_loc	==	"Neck,"
+    PRAD_met$met_loc[index]	<-	"Head and Neck"
+    
+    index	<-	PRAD_met$met_loc	==	"Other,Eye lid"
+    PRAD_met$met_loc[index]	<-	"Head and Neck, Skin"
+    
+    index	<-	PRAD_met$met_loc	==	"Other,Nose"
+    PRAD_met$met_loc[index]	<-	"Head and Neck, Skin"
+    
+    index	<-	PRAD_met$met_loc	==	"Other,skin"
+    PRAD_met$met_loc[index]	<-	"Head and Neck, Skin"
+    
+    index	<-	PRAD_met$met_loc	==	"Other,Skin"
+    PRAD_met$met_loc[index]	<-	"Head and Neck, Skin"
+    
+    index	<-	PRAD_met$met_loc	==	"Other,Skin of Arms and Back"
+    PRAD_met$met_loc[index]	<-	"Skin"
+    
+    index	<-	PRAD_met$met_loc	==	"Other,Skin right front parietal scalp"
+    PRAD_met$met_loc[index]	<-	"Head and Neck, Skin"
+    
+    index	<-	PRAD_met$met_loc	==	"Pancreas,"
+    PRAD_met$met_loc[index]	<-	"Pancreas"
+    PRAD_met$Metastatic_status[index] <- 1
+    
+    index	<-	PRAD_met$met_loc	==	"Scalp,"
+    PRAD_met$met_loc[index]	<-	"Head and Neck, Skin"
+    
+    index	<-	PRAD_met$met_loc	==	"Scalp|Other,Infraorbital region"
+    PRAD_met$met_loc[index]	<-	"Head and Neck, Skin"
+    
+    index	<-	PRAD_met$met_loc	==	"Thyroid gland,"
+    PRAD_met$met_loc[index]	<-	"Thyroid"
+    
+    index <- PRAD_met$pathologic_N =="N1"
+    PRAD_met$Metastatic_status[index] <- 0
     
     
     write.csv(PRAD_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
@@ -930,8 +1428,47 @@ for(i in projects){
     STAD_met$Metastatic_status[index] <- 1
     
     
- 
+    index	<-	STAD_met$met_loc	==	"Bladder,"
+    STAD_met$met_loc[index]	<-	"Bladder"
     
+    index	<-	STAD_met$met_loc	==	"Breast,"
+    STAD_met$met_loc[index]	<-	"Breast"
+    
+    index	<-	STAD_met$met_loc	==	"Colon and rectum,"
+    STAD_met$met_loc[index]	<-	"Colon, Rectum"
+    
+    index	<-	STAD_met$met_loc	==	"Kidney,"
+    STAD_met$met_loc[index]	<-	"Kidney"
+    
+    index	<-	STAD_met$met_loc	==	"Kidney|Prostate,"
+    STAD_met$met_loc[index]	<-	"Kidney, Prostate"
+    
+    index	<-	STAD_met$met_loc	==	"Other,Skin"
+    STAD_met$met_loc[index]	<-	"Skin"
+    
+    index	<-	STAD_met$met_loc	==	"Other,Skin - face"
+    STAD_met$met_loc[index]	<-	"Head and Neck, Skin"
+    
+    index	<-	STAD_met$met_loc	==	"Ovary,"
+    STAD_met$met_loc[index]	<-	"Ovary"
+    
+    index	<-	STAD_met$met_loc	==	"Prostate,"
+    STAD_met$met_loc[index]	<-	"Prostate"
+    
+    index	<-	STAD_met$met_loc	==	"Prostate|Testicle|Bladder,"
+    STAD_met$met_loc[index]	<-	"Prostate, Testicle, Bladder"
+    
+    index	<-	STAD_met$met_loc	==	"Sigmoid colon,"
+    STAD_met$met_loc[index]	<-	"Colon"
+    
+    index	<-	STAD_met$met_loc	==	"Testicle,"
+    STAD_met$met_loc[index]	<-	"Testicle"
+    
+    index <- STAD_met$pathologic_N =="N1"
+    STAD_met$Metastatic_status[index] <- 0
+    
+    
+
     write.csv(STAD_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
     
     print("STAD Done")
@@ -981,6 +1518,61 @@ for(i in projects){
     
     index <- THCA_met$LymphNodeStatus > 0
     THCA_met$Metastatic_status[index] <- 1
+    
+    index	<-	THCA_met$met_loc	==	"Back,"
+    THCA_met$met_loc[index]	<-	"Skin"
+    
+    index	<-	THCA_met$met_loc	==	"Brain,"
+    THCA_met$met_loc[index]	<-	"Brain"
+    
+    index	<-	THCA_met$met_loc	==	"Breast,"
+    THCA_met$met_loc[index]	<-	"Breast"
+    
+    index	<-	THCA_met$met_loc	==	"Buccal mucosa,"
+    THCA_met$met_loc[index]	<-	"Oral Cavity"
+    
+    index	<-	THCA_met$met_loc	==	"Calf,"
+    THCA_met$met_loc[index]	<-	"Muscle"
+    
+    index	<-	THCA_met$met_loc	==	"Colon,"
+    THCA_met$met_loc[index]	<-	"Colon"
+    
+    index	<-	THCA_met$met_loc	==	"Head - face or neck, NOS,"
+    THCA_met$met_loc[index]	<-	"Head and Neck, Skin"
+    
+    index	<-	THCA_met$met_loc	==	"Head/Neck/Chest/Abd/Pelvis,"
+    THCA_met$met_loc[index]	<-	"Head and Neck, Skin, Bone,Abdomen,Pelvis"
+    
+    index	<-	THCA_met$met_loc	==	"Lung,"
+    THCA_met$met_loc[index]	<-	"Lung"
+    
+    index	<-	THCA_met$met_loc	==	"Lymphoma,"
+    THCA_met$met_loc[index]	<-	"Lymphoma"
+    
+    index	<-	THCA_met$met_loc	==	"Mandible,"
+    THCA_met$met_loc[index]	<-	"Head and Neck, Bone"
+    
+    index	<-	THCA_met$met_loc	==	"Oral cavity,"
+    THCA_met$met_loc[index]	<-	"Oral Cavity"
+    
+    index	<-	THCA_met$met_loc	==	"Other,Nose"
+    THCA_met$met_loc[index]	<-	"Head and Neck, Skin"
+    
+    index	<-	THCA_met$met_loc	==	"Other,skin of face back and neck"
+    THCA_met$met_loc[index]	<-	"Head and Neck, Skin"
+    
+    index	<-	THCA_met$met_loc	==	"Prostate,"
+    THCA_met$met_loc[index]	<-	"Prostate"
+    
+    index	<-	THCA_met$met_loc	==	"Rectum,"
+    THCA_met$met_loc[index]	<-	"Rectum"
+    
+    index	<-	THCA_met$met_loc	==	"Scalp,"
+    THCA_met$met_loc[index]	<-	"Head and Neck, Skin"
+    
+    index	<-	THCA_met$met_loc	==	"Thyroid gland,"
+    THCA_met$met_loc[index]	<-	"Thyroid"
+    
     
     write.csv(THCA_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
     
