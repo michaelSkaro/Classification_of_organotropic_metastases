@@ -385,6 +385,186 @@ for(i in projects){
       # consolidate columns
       
       
+      index	<-	BRCA_met$met_loc	==	",Bone"
+      BRCA_met$met_loc[index]	<-	"Bone"
+      
+      index	<-	BRCA_met$met_loc	==	",Bone|Brain"
+      BRCA_met$met_loc[index]	<-	"Bone, Brain"
+      
+      index	<-	BRCA_met$met_loc	==	",Bone|Liver"
+      BRCA_met$met_loc[index]	<-	"Bone, Liver"
+      
+      index	<-	BRCA_met$met_loc	==	",Bone|Liver,Liver"
+      BRCA_met$met_loc[index]	<-	"Bone, Liver"
+      
+      index	<-	BRCA_met$met_loc	==	",Bone|Liver|Other, specify,Breast"
+      BRCA_met$met_loc[index]	<-	"Bone, Liver, Breast"
+      
+      index	<-	BRCA_met$met_loc	==	",Bone|Liver|Other, specify|Brain,Intrathoracic Lymph Node"
+      BRCA_met$met_loc[index]	<-	"Bone, Liver, Breast, Lymph Node"
+      
+      index	<-	BRCA_met$met_loc	==	",Bone|Other, specify,omentum"
+      BRCA_met$met_loc[index]	<-	"Bone, Omentum"
+      
+      index	<-	BRCA_met$met_loc	==	",Brain"
+      BRCA_met$met_loc[index]	<-	"Brain"
+      
+      index	<-	BRCA_met$met_loc	==	",Liver"
+      BRCA_met$met_loc[index]	<-	"Liver"
+      
+      index	<-	BRCA_met$met_loc	==	",Lung"
+      BRCA_met$met_loc[index]	<-	"Lung"
+      
+      index	<-	BRCA_met$met_loc	==	",Lung,Liver"
+      BRCA_met$met_loc[index]	<-	"Lung, Liver"
+      
+      index	<-	BRCA_met$met_loc	==	",Lung|Other, specify|Brain,Mediastinal and Supraclavicular Lymph Nodes"
+      BRCA_met$met_loc[index]	<-	"Lung, Brain, Lymph Node"
+      
+      index	<-	BRCA_met$met_loc	==	",Other, specify,Bone Marrow"
+      BRCA_met$met_loc[index]	<-	"Bone"
+      
+      index	<-	BRCA_met$met_loc	==	",Other, specify,bone, brain"
+      BRCA_met$met_loc[index]	<-	"Bone, Brain"
+      
+      index	<-	BRCA_met$met_loc	==	",Other, specify,Breast"
+      BRCA_met$met_loc[index]	<-	"Breast"
+      
+      index	<-	BRCA_met$met_loc	==	",Other, specify,breast|Lymph Node"
+      BRCA_met$met_loc[index]	<-	"Breast, Lymph Node"
+      
+      index	<-	BRCA_met$met_loc	==	",Other, specify,Chest Wall"
+      BRCA_met$met_loc[index]	<-	"Chest Wall"
+      
+      index	<-	BRCA_met$met_loc	==	",Other, specify,colon"
+      BRCA_met$met_loc[index]	<-	"Colon"
+      
+      index	<-	BRCA_met$met_loc	==	",Other, specify,Contralateral Breast"
+      BRCA_met$met_loc[index]	<-	"Breast"
+      
+      index	<-	BRCA_met$met_loc	==	",Other, specify,Dermis and epidermis"
+      BRCA_met$met_loc[index]	<-	"Skin"
+      
+      index	<-	BRCA_met$met_loc	==	",Other, specify,Endometrial"
+      BRCA_met$met_loc[index]	<-	"Uterus"
+      
+      index	<-	BRCA_met$met_loc	==	",Other, specify,Endometrium"
+      BRCA_met$met_loc[index]	<-	"Uterus"
+      
+      index	<-	BRCA_met$met_loc	==	",Other, specify,Left axilla"
+      BRCA_met$met_loc[index]	<-	"Lymph Node"
+      
+      index	<-	BRCA_met$met_loc	==	",Other, specify,left breast"
+      BRCA_met$met_loc[index]	<-	"Breast"
+      
+      index	<-	BRCA_met$met_loc	==	",Other, specify,LEFT BREAST"
+      BRCA_met$met_loc[index]	<-	"Breast"
+      
+      index	<-	BRCA_met$met_loc	==	",Other, specify,Left Cervical Lymph Node"
+      BRCA_met$met_loc[index]	<-	"Lymph Node"
+      
+      index	<-	BRCA_met$met_loc	==	",Other, specify,Left Chest Wall"
+      BRCA_met$met_loc[index]	<-	"Chest Wall"
+      
+      index	<-	BRCA_met$met_loc	==	",Other, specify,Liver and Pleura and Bone"
+      BRCA_met$met_loc[index]	<-	"Liver, Bone, Lung"
+      
+      index	<-	BRCA_met$met_loc	==	",Other, specify,Lung"
+      BRCA_met$met_loc[index]	<-	"Lung"
+      
+      index	<-	BRCA_met$met_loc	==	",Other, specify,Lung, Bone, Liver, Brain and Skin Nodules"
+      BRCA_met$met_loc[index]	<-	"Lung, Liver, Brain, Bone, Skin"
+      
+      index	<-	BRCA_met$met_loc	==	",Other, specify,malignant melanoma|Malignant melanoma"
+      BRCA_met$met_loc[index]	<-	"Skin"
+      
+      index	<-	BRCA_met$met_loc	==	",Other, specify,mediastinal lymph node"
+      BRCA_met$met_loc[index]	<-	"Lymph Node"
+      
+      index	<-	BRCA_met$met_loc	==	",Other, specify,mediastinal lymph nodes"
+      BRCA_met$met_loc[index]	<-	"Lymph Node"
+      
+      index	<-	BRCA_met$met_loc	==	",Other, specify,Pectoral muscle"
+      BRCA_met$met_loc[index]	<-	"Muscle"
+      
+      index	<-	BRCA_met$met_loc	==	",Other, specify,Rectum"
+      BRCA_met$met_loc[index]	<-	"Rectum"
+      
+      index	<-	BRCA_met$met_loc	==	",Other, specify,Renal"
+      BRCA_met$met_loc[index]	<-	"Renal"
+      
+      index	<-	BRCA_met$met_loc	==	",Other, specify,Right Breast"
+      BRCA_met$met_loc[index]	<-	"Breast"
+      
+      index	<-	BRCA_met$met_loc	==	",Other, specify,right breast cancer contralateral"
+      BRCA_met$met_loc[index]	<-	"Breast"
+      
+      index	<-	BRCA_met$met_loc	==	",Other, specify,Skin and bone"
+      BRCA_met$met_loc[index]	<-	"Bone, Colon"
+      
+      index	<-	BRCA_met$met_loc	==	",Other, specify,Skin left chest wall"
+      BRCA_met$met_loc[index]	<-	"Skin, Chest Wall"
+      
+      index	<-	BRCA_met$met_loc	==	",Other, specify,Skin lesion-Basal Cell Left Lower Lateral Back"
+      BRCA_met$met_loc[index]	<-	"Skin"
+      
+      index	<-	BRCA_met$met_loc	==	",Other, specify,Skin, right leg"
+      BRCA_met$met_loc[index]	<-	"Skin"
+      
+      index	<-	BRCA_met$met_loc	==	",Other, specify|Bone,Breast recurrence|Chest wall|Breast|Chest wall, Breast Recurrence"
+      BRCA_met$met_loc[index]	<-	"Bone, Breast"
+      
+      index	<-	BRCA_met$met_loc	==	",Other, specify|Bone,Left Breast"
+      BRCA_met$met_loc[index]	<-	"Bone, Breast"
+      
+      index	<-	BRCA_met$met_loc	==	",Other, specify|Bone|Lung|Liver,Axilla"
+      BRCA_met$met_loc[index]	<-	"Bone, Liver, Lung"
+      
+      index	<-	BRCA_met$met_loc	==	",Other, specify|Lung|Liver|Bone,chestwall|Adrenal glands|Liver, bone, chest wall, adrenal glands"
+      BRCA_met$met_loc[index]	<-	"Lung, Liver, Bone, Adrenal Gland"
+      
+      index	<-	BRCA_met$met_loc	==	"Bone,"
+      BRCA_met$met_loc[index]	<-	"Bone"
+      
+      index	<-	BRCA_met$met_loc	==	"Bone,,Bone"
+      BRCA_met$met_loc[index]	<-	"Bone"
+      
+      index	<-	BRCA_met$met_loc	==	"Bone,,Bone|Other, specify|Lung,Intrathoracic lymph node"
+      BRCA_met$met_loc[index]	<-	"Bone, Lung, Lymph Node"
+      
+      index	<-	BRCA_met$met_loc	==	"Bone,Liver,Bone,Liver"
+      BRCA_met$met_loc[index]	<-	"Bone, Liver"
+      
+      index	<-	BRCA_met$met_loc	==	"Bone,Liver,Bone|Liver"
+      BRCA_met$met_loc[index]	<-	"Bone, Liver"
+      
+      index	<-	BRCA_met$met_loc	==	"Liver,"
+      BRCA_met$met_loc[index]	<-	"Liver"
+      
+      index	<-	BRCA_met$met_loc	==	"Lung,,Lung"
+      BRCA_met$met_loc[index]	<-	"Lung"
+      
+      index	<-	BRCA_met$met_loc	==	"Lung,Bone,Liver,Other, specify,Lung"
+      BRCA_met$met_loc[index]	<-	"Lung, Liver, Bone"
+      
+      index	<-	BRCA_met$met_loc	==	"Lung,Bone,Lung"
+      BRCA_met$met_loc[index]	<-	"Lung,Bone"
+      
+      index	<-	BRCA_met$met_loc	==	"Lung,Other, specify"
+      BRCA_met$met_loc[index]	<-	"Lung"
+      
+      index	<-	BRCA_met$met_loc	==	"Other, specify,"
+      BRCA_met$met_loc[index]	<-	NA
+      
+      index	<-	BRCA_met$met_loc	==	"Other, specify,,Brain"
+      BRCA_met$met_loc[index]	<-	"Brain"
+      
+      index	<-	BRCA_met$met_loc	==	"Other, specify,,Other, specify,lung, bone, liver"
+      BRCA_met$met_loc[index]	<-	"Lung, Bone, Liver"
+      
+      
+      
+      
       write.csv(BRCA_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus.csv"))
       
       print("BRCA Done")
@@ -426,6 +606,126 @@ for(i in projects){
     index <- is.na(COAD_met$met_loc)
     COAD_met$Metastatic_status[index] <- 0
     
+    index	<-	COAD_met$met_loc	==	",,Liver"
+    COAD_met$met_loc[index]	<-	"Liver"
+    
+    index	<-	COAD_met$met_loc	==	",,Other"
+    COAD_met$met_loc[index]	<-	NA
+    
+    index	<-	COAD_met$met_loc	==	",Ascending colon|Lymphoma,"
+    COAD_met$met_loc[index]	<-	"Colon, Lymphoma"
+    
+    index	<-	COAD_met$met_loc	==	",Back,"
+    COAD_met$met_loc[index]	<-	"Skin"
+    
+    index	<-	COAD_met$met_loc	==	",Back|Breast,"
+    COAD_met$met_loc[index]	<-	"Breast, Skin"
+    
+    index	<-	COAD_met$met_loc	==	",Bladder,"
+    COAD_met$met_loc[index]	<-	"Bladder"
+    
+    index	<-	COAD_met$met_loc	==	",Blood,"
+    COAD_met$met_loc[index]	<-	"Blood"
+    
+    index	<-	COAD_met$met_loc	==	",Breast,"
+    COAD_met$met_loc[index]	<-	"Breast"
+    
+    index	<-	COAD_met$met_loc	==	",Breast|Other,"
+    COAD_met$met_loc[index]	<-	"Breast"
+    
+    index	<-	COAD_met$met_loc	==	",Bronchus and Lung,"
+    COAD_met$met_loc[index]	<-	"Lung"
+    
+    index	<-	COAD_met$met_loc	==	",Cecum,"
+    COAD_met$met_loc[index]	<-	"Cecum"
+    
+    index	<-	COAD_met$met_loc	==	",Colon,"
+    COAD_met$met_loc[index]	<-	"Colon"
+    
+    index	<-	COAD_met$met_loc	==	",Colon|Bladder|Prostate,"
+    COAD_met$met_loc[index]	<-	"Colon, Bladder, Prostate"
+    
+    index	<-	COAD_met$met_loc	==	",Ear,"
+    COAD_met$met_loc[index]	<-	"Head and Neck"
+    
+    index	<-	COAD_met$met_loc	==	",Gum,"
+    COAD_met$met_loc[index]	<-	"Oral Cavity"
+    
+    index	<-	COAD_met$met_loc	==	",Kidney,"
+    COAD_met$met_loc[index]	<-	"Kidney"
+    
+    index	<-	COAD_met$met_loc	==	",Kidney|Bladder,"
+    COAD_met$met_loc[index]	<-	"Kidney, Bladder"
+    
+    index	<-	COAD_met$met_loc	==	",Larynx,"
+    COAD_met$met_loc[index]	<-	"Larynx"
+    
+    index	<-	COAD_met$met_loc	==	",Lung,"
+    COAD_met$met_loc[index]	<-	"Lung"
+    
+    index	<-	COAD_met$met_loc	==	",Lymphoma,"
+    COAD_met$met_loc[index]	<-	"Lymphoma"
+    
+    index	<-	COAD_met$met_loc	==	",Other,"
+    COAD_met$met_loc[index]	<-	NA
+    
+    index	<-	COAD_met$met_loc	==	",Other|Rectum,"
+    COAD_met$met_loc[index]	<-	"Rectum"
+    
+    index	<-	COAD_met$met_loc	==	",Parotid gland,"
+    COAD_met$met_loc[index]	<-	"Parotid"
+    
+    index	<-	COAD_met$met_loc	==	",Prostate,"
+    COAD_met$met_loc[index]	<-	"Prostate"
+    
+    index	<-	COAD_met$met_loc	==	",Prostate|Bone marrow,"
+    COAD_met$met_loc[index]	<-	"Prostate, Bone"
+    
+    index	<-	COAD_met$met_loc	==	",Prostate|Cecum,"
+    COAD_met$met_loc[index]	<-	"Prostate, Cecum"
+    
+    index	<-	COAD_met$met_loc	==	",Rectum,"
+    COAD_met$met_loc[index]	<-	"Rectum"
+    
+    index	<-	COAD_met$met_loc	==	",Scalp,"
+    COAD_met$met_loc[index]	<-	"Head and Neck, Skin"
+    
+    index	<-	COAD_met$met_loc	==	",Sigmoid colon,"
+    COAD_met$met_loc[index]	<-	"Colon"
+    
+    index	<-	COAD_met$met_loc	==	",Sigmoid colon|Other,"
+    COAD_met$met_loc[index]	<-	"Colon"
+    
+    index	<-	COAD_met$met_loc	==	",Stomach,"
+    COAD_met$met_loc[index]	<-	"Stomach"
+    
+    index	<-	COAD_met$met_loc	==	",Testicle,"
+    COAD_met$met_loc[index]	<-	"Testicle"
+    
+    index	<-	COAD_met$met_loc	==	",Thyroid gland,"
+    COAD_met$met_loc[index]	<-	"Thyroid"
+    
+    index	<-	COAD_met$met_loc	==	",Uterus,"
+    COAD_met$met_loc[index]	<-	"Uterus"
+    
+    index	<-	COAD_met$met_loc	==	"Locoregional Disease,,"
+    COAD_met$met_loc[index]	<-	NA
+    
+    index	<-	COAD_met$met_loc	==	"Locoregional Disease|Metastatic,,Liver"
+    COAD_met$met_loc[index]	<-	"Liver"
+    
+    index	<-	COAD_met$met_loc	==	"Metastatic,,Liver"
+    COAD_met$met_loc[index]	<-	"Liver"
+    
+    index	<-	COAD_met$met_loc	==	"Metastatic,,Liver|Lung"
+    COAD_met$met_loc[index]	<-	"Liver, Lung"
+    
+    index	<-	COAD_met$met_loc	==	"Metastatic,,Other"
+    COAD_met$met_loc[index]	<-	NA
+    COAD_met$Metastatic_status[index] <- 1
+    
+    
+  
     
     write.csv(COAD_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus.csv"))
     
