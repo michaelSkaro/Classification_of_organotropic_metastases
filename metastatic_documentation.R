@@ -12,6 +12,11 @@
 
 
 
+
+
+
+
+
 # Clear your workspace
 rm(list=ls(all=TRUE))
 # Load some things
