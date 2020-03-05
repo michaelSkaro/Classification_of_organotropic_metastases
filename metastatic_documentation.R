@@ -1,4 +1,4 @@
-# I would like to start by saying before anyone moves forward with this code:
+# I would liek to start by saying before anyone moves forward with this code:
 
 # I am neither proud nor am I happy with 99% of this code. However,
 # I really have exhausted many of my options in the forms of REGEX to 
@@ -56,7 +56,7 @@ empty_as_na <- function(x){
 
 
 
-i <- projects[1]
+i <- projects[2]
 
 # do the things
 
@@ -349,7 +349,12 @@ for(i in projects){
     BLCA_met$met_loc[index] <- "Urethra,Lymph Node,Lymphoma"
     
     
+    foo <- BLCA_met
+    foo <- foo[order(foo$bcr_patient_barcode),]
     
+    foo <- foo[!duplicated(foo$bcr_patient_barcode),]
+    
+    BLCA_met <- foo
     write.csv(BLCA_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_status.csv"))
     
   
@@ -567,10 +572,15 @@ for(i in projects){
       index	<-	BRCA_met$met_loc	==	"Other, specify,,Other, specify,lung, bone, liver"
       BRCA_met$met_loc[index]	<-	"Lung, Bone, Liver"
       
+      foo <- BRCA_met
+      foo <- foo[order(foo$bcr_patient_barcode),]
+      
+      foo <- foo[!duplicated(foo$bcr_patient_barcode),]
+      
+      BRCA_met <- foo
       
       
-      
-      write.csv(BRCA_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus.csv"))
+      write.csv(BRCA_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_status.csv"))
       
       print("BRCA Done")
       rm(BRCA_met)
@@ -729,10 +739,18 @@ for(i in projects){
     COAD_met$met_loc[index]	<-	NA
     COAD_met$Metastatic_status[index] <- 1
     
+    foo <- COAD_met
+    foo <- foo[order(foo$bcr_patient_barcode),]
+    
+    foo <- foo[!duplicated(foo$bcr_patient_barcode),]
+    
+    COAD_met <- foo
+    
+    
     
   
     
-    write.csv(COAD_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus.csv"))
+    write.csv(COAD_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_status.csv"))
     
     print("COAD Done")
     rm(COAD_met)
@@ -837,9 +855,17 @@ for(i in projects){
     index <- ESCA_met$malignancy_type == "Prior Malignancy"
     ESCA_met$Metastatic_status[index] <- 0
   
+    foo <- ESCA_met
+    foo <- foo[order(foo$bcr_patient_barcode),]
+    
+    foo <- foo[!duplicated(foo$bcr_patient_barcode),]
+    
+    ESCA_met <- foo
     
     
-    write.csv(ESCA_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus.csv"))
+    
+    
+    write.csv(ESCA_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_status.csv"))
     
     print("ESCA Done")
     rm(ESCA_met)
@@ -969,7 +995,15 @@ for(i in projects){
     HNSC_met$Metastatic_status[index] <- 0
     HNSC_met$LymphNodeStatus[index] <- 1
     
-    write.csv(HNSC_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus.csv"))
+    foo <- HNSC_met
+    foo <- foo[order(foo$bcr_patient_barcode),]
+    
+    foo <- foo[!duplicated(foo$bcr_patient_barcode),]
+    
+    HNSC_met <- foo
+    
+    
+    write.csv(HNSC_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_status.csv"))
     
     print("HNSC Done")
     rm(HNSC_met)
@@ -1091,8 +1125,19 @@ for(i in projects){
     index	<-	KIRC_met$met_loc	==	"Other,Skin Cancer"
     KIRC_met$met_loc[index]	<-	"Skin"
     
+    foo <- KIRC_met
+    foo <- foo[order(foo$bcr_patient_barcode),]
     
-    write.csv(KIRC_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
+    foo <- foo[!duplicated(foo$bcr_patient_barcode),]
+    
+    KIRC_met <- foo
+    
+    
+    
+    
+    
+    
+    write.csv(KIRC_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_status.csv"))
     
     print("KIRC Done")
     rm(KIRC_met)
@@ -1167,8 +1212,17 @@ for(i in projects){
     KIRP_met$met_loc[index]	<-	"Colon"
     
     
+    foo <- KIRP_met
+    foo <- foo[order(foo$bcr_patient_barcode),]
     
-    write.csv(KIRP_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
+    foo <- foo[!duplicated(foo$bcr_patient_barcode),]
+    
+    KIRP_met <- foo
+    
+    
+    
+    
+    write.csv(KIRP_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_status.csv"))
     
     print("KIRP Done")
     rm(KIRP_met)
@@ -1293,10 +1347,13 @@ for(i in projects){
     LIHC_met$met_loc[index]	<-	"Colon, Prosate"
     
     
-    View(table(LIHC_met$met_loc))
+    foo <- LIHC_met
+    foo <- foo[order(foo$bcr_patient_barcode),]
+    foo <- foo[!duplicated(foo$bcr_patient_barcode),]
+    LIHC_met <- foo
     
     
-    write.csv(LIHC_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
+    write.csv(LIHC_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_status.csv"))
     
     print("LIHC Done")
     rm(LIHC_met)
@@ -1401,9 +1458,12 @@ for(i in projects){
     index	<-	LUAD_met$met_loc	==	"Throat|Jaw"
     LUAD_met$met_loc[index]	<-	"Esophagus, Bone"
     
-    
+    foo <- LUAD_met
+    foo <- foo[order(foo$bcr_patient_barcode),]
+    foo <- foo[!duplicated(foo$bcr_patient_barcode),]
+    LUAD_met <- foo
   
-    write.csv(LUAD_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
+    write.csv(LUAD_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_status.csv"))
     
     print("LUAD Done")
     rm(LUAD_met)
@@ -1557,10 +1617,13 @@ for(i in projects){
     index	<-	LUSC_met$met_loc	==	"Uterus,"
     LUSC_met$met_loc[index]	<-	"Uterus"
     
+    foo <- LUSC_met
+    foo <- foo[order(foo$bcr_patient_barcode),]
+    foo <- foo[!duplicated(foo$bcr_patient_barcode),]
+    LUSC_met <- foo
     
     
-    
-    write.csv(LUSC_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
+    write.csv(LUSC_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_status.csv"))
     
     print("LUSC Done")
     rm(LUSC_met)
@@ -1683,8 +1746,15 @@ for(i in projects){
     index <- PRAD_met$pathologic_N =="N1"
     PRAD_met$Metastatic_status[index] <- 0
     
+    foo <- PRAD_met
+    foo <- foo[order(foo$bcr_patient_barcode),]
+    foo <- foo[!duplicated(foo$bcr_patient_barcode),]
+    PRAD_met <- foo
     
-    write.csv(PRAD_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
+    
+    
+    
+    write.csv(PRAD_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_status.csv"))
     
     print("PRAD Done")
     rm(PRAD_met)
@@ -1772,9 +1842,13 @@ for(i in projects){
     index <- STAD_met$pathologic_N =="N1"
     STAD_met$Metastatic_status[index] <- 0
     
+    foo <- STAD_met
+    foo <- foo[order(foo$bcr_patient_barcode),]
+    foo <- foo[!duplicated(foo$bcr_patient_barcode),]
+    STAD_met <- foo
     
 
-    write.csv(STAD_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
+    write.csv(STAD_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_status.csv"))
     
     print("STAD Done")
     rm(STAD_met)
@@ -1878,8 +1952,15 @@ for(i in projects){
     index	<-	THCA_met$met_loc	==	"Thyroid gland,"
     THCA_met$met_loc[index]	<-	"Thyroid"
     
+    foo <- THCA_met
+    foo <- foo[order(foo$bcr_patient_barcode),]
+    foo <- foo[!duplicated(foo$bcr_patient_barcode),]
+    THCA_met <- foo
     
-    write.csv(THCA_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_staus_.csv"))
+    
+    
+    
+    write.csv(THCA_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_status.csv"))
     
     print("THCA Done")
     rm(THCA_met)
