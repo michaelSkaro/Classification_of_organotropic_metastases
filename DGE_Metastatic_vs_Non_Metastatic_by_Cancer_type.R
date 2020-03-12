@@ -2,7 +2,7 @@
 
 
 # Differenital expression between normal tissue and primary tumors 
-# Differenital expression between primary tumors that have progressed and those that have not yet. *****DONE***** 
+# Differenital expression between primary tumors that have progressed and those that have not yet. 
 # Differenital expression between seeding loci from one primary location
 # Differenital expression between primary tumors arising in different locations but seed in the same location
 
@@ -116,23 +116,76 @@ for (proj in projects) {
   dds$Metastatic_status <- relevel(dds$Metastatic_status, ref = "0")
 
   dds <- DESeq(dds)
-  res <- results(dds)
-  resOrdered <- res[order(res$pvalue),]
-  resOrdered <- as.data.frame(resOrdered)
-  res <- as.data.frame(res)
   
-  write.csv(resOrdered, file = str_glue("~/storage/Metastatic_Organo_Tropism/metastatic_vs_non_metastatic_DGE_analysis/{proj}_DE.csv"))
+  save(dds, file = str_glue("proj_DE_met.RData"))
+  
+  #res <- results(dds)
+  #resOrdered <- res[order(res$pvalue),]
+  #resOrdered <- as.data.frame(resOrdered)
+  #res <- as.data.frame(res)
+  
+  #write.csv(resOrdered, file = str_glue("~/storage/Metastatic_Organo_Tropism/metastatic_vs_non_metastatic_DGE_analysis/{proj}_DE.csv"))
+
+
+  res <- data.table::fread(file = str_glue("~/storage/Metastatic_Organo_Tropism/metastatic_vs_non_metastatic_DGE_analysis/{proj}_DE.csv"), header = TRUE) %>%
+    column_to_rownames("V1")
+  
+  
+  
+  p <- EnhancedVolcano(res, lab = rep(" ", length(rownames(res))),x = "log2FoldChange", y = "padj", xlab = bquote(~Log[2]~ "fold change"),
+                  ylab = bquote(~-Log[10]~adjusted~italic(P)), pCutoff = 10e-2, FCcutoff = 2.0, ylim=c(0,7.5), xlim = c(-3,3),
+                  transcriptLabSize = 3.0, colAlpha = 0.7,legend=c("NS","Log2 FC","Adjusted p-value", "Adjusted p-value & Log2 FC"),legendPosition = "bottom",
+                  legendLabSize = 10, legendIconSize = 3.0, border = "full", borderWidth = 1.5, borderColour = "black", gridlines.major = FALSE,
+                  gridlines.minor = FALSE)
+  
+  
+  ggsave(filename=paste0(str_glue("~/storage/Metastatic_Organo_Tropism/metastatic_vs_non_metastatic_DGE_analysis/Viz/{proj}"),"_TvsN_Volcano",".png"),
+         plot = p, device = "png", width = 8, height =5, units = "in", dpi = "retina")
+  
+  # pathway enrichment plots
+  
+  
+  dat <- data.table::fread(str_glue("~/storage/Metastatic_Organo_Tropism/metastatic_vs_non_metastatic_DGE_analysis/{proj}_DE.csv"))
+  dat <- as.data.frame(dat)
+  dat <- column_to_rownames(dat, "V1")
+  dat$ENSEMBL <- substr(rownames(dat), 1, 15)
+  
+  dat <- dat[abs(dat$log2FoldChange) > 1.0,] 
+  dat <- dat[dat$padj < 1.0e-3,]
+  dat <- dat[!is.na(dat$ENSEMBL),]
+  
+  
+  
+  ego<- enrichGO(gene = dat$ENSEMBL, OrgDb = org.Hs.eg.db, keyType = "ENSEMBL", ont = "MF", pAdjustMethod = "BH")
+  p<- clusterProfiler::dotplot(ego, showCategory =20)
+  ggsave(filename=paste0(str_glue("~/storage/Metastatic_Organo_Tropism/metastatic_vs_non_metastatic_DGE_analysis/Viz/{proj}"),"_MF_",".png"),
+         plot = p, device = "png", width = 25, height = 25, units = "in", dpi = "retina")
+  ego_vals <- cbind(ego$ID, ego$Description, ego$GeneRatio, ego$BgRatio, ego$qvalue, ego$geneID)
+  write.table(ego_vals, paste0(str_glue("~/storage/Metastatic_Organo_Tropism/metastatic_vs_non_metastatic_DGE_analysis/Pathway_enrichment_flat_files/{proj}"),"_MF_",".txt"))
+  
+  
+  ego<- enrichGO(gene = dat$ENSEMBL, OrgDb = org.Hs.eg.db, keyType = "ENSEMBL", ont = "CC", pAdjustMethod = "BH")
+  p<- clusterProfiler::dotplot(ego, showCategory =20)
+  ggsave(filename=paste0(str_glue("~/storage/Metastatic_Organo_Tropism/metastatic_vs_non_metastatic_DGE_analysis/Viz/{proj}"),"_CC_",".png"),
+         plot = p, device = "png", width = 25, height = 25, units = "in", dpi = "retina")
+  ego_vals <- cbind(ego$ID, ego$Description, ego$GeneRatio, ego$BgRatio, ego$qvalue, ego$geneID)
+  write.table(ego_vals, paste0(str_glue("~/storage/Metastatic_Organo_Tropism/metastatic_vs_non_metastatic_DGE_analysis/Pathway_enrichment_flat_files/{proj}"),"_CC_",".txt"))
+  
+  
+  ego<- enrichGO(gene = dat$ENSEMBL, OrgDb = org.Hs.eg.db, keyType = "ENSEMBL", ont = "BP", pAdjustMethod = "BH")
+  p<- clusterProfiler::dotplot(ego, showCategory =20)
+  ggsave(filename=paste0(str_glue("~/storage/Metastatic_Organo_Tropism/metastatic_vs_non_metastatic_DGE_analysis/Viz/{proj}"),"_BP_",".png"),
+         plot = p, device = "png", width = 25, height = 25, units = "in", dpi = "retina")
+  ego_vals <- cbind(ego$ID, ego$Description, ego$GeneRatio, ego$BgRatio, ego$qvalue, ego$geneID)
+  write.table(ego_vals, paste0(str_glue("~/storage/Metastatic_Organo_Tropism/metastatic_vs_non_metastatic_DGE_analysis/Pathway_enrichment_flat_files/{proj}"),"_BP_",".txt"))
+  
+  
+  
 }
+  
+  
 
-# Learning
 
-# cran doesn't work for this file. You must load it into your working directory which is some what of a pain in the ass
-
-library(RCurl)
-## paste URL to make it easier to read code (cosmetic!)
-dat_url <- paste0("https://github.com/cran/mlDNA/blob/master/data/mlDNA.rda")
-f <- getBinaryURL()
-L <- load(rawConnection(f))
 
 
 
