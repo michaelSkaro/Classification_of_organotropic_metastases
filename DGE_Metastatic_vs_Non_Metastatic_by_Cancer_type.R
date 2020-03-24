@@ -81,7 +81,10 @@ tumor.samples <- left_join(tumor.samples, prog_file, by = "bcr_patient_barcode")
 write.csv(tumor.samples, file = str_glue("~/storage/Metastatic_Organo_Tropism/tumor_samples_annotated_progression.csv"))
 
 
-proj <- projects[1]
+tumor.samples <- data.table::fread("~/storage/Metastatic_Organo_Tropism/tumor_samples_annotated_progression.csv")
+
+
+proj <- projects[12]
 
 for (proj in projects) {
   
@@ -117,8 +120,8 @@ for (proj in projects) {
 
   dds <- DESeq(dds)
   
-  save(dds, file = str_glue("proj_DE_met.RData"))
-  
+  save(dds, file = str_glue("{proj}_DE_met.RData"))
+
   #res <- results(dds)
   #resOrdered <- res[order(res$pvalue),]
   #resOrdered <- as.data.frame(resOrdered)
@@ -159,7 +162,7 @@ for (proj in projects) {
   ego<- enrichGO(gene = dat$ENSEMBL, OrgDb = org.Hs.eg.db, keyType = "ENSEMBL", ont = "MF", pAdjustMethod = "BH")
   p<- clusterProfiler::dotplot(ego, showCategory =20)
   ggsave(filename=paste0(str_glue("~/storage/Metastatic_Organo_Tropism/metastatic_vs_non_metastatic_DGE_analysis/Viz/{proj}"),"_MF_",".png"),
-         plot = p, device = "png", width = 25, height = 25, units = "in", dpi = "retina")
+         plot = p, device = "png", width = 8, height = 8, units = "in", dpi = "retina")
   ego_vals <- cbind(ego$ID, ego$Description, ego$GeneRatio, ego$BgRatio, ego$qvalue, ego$geneID)
   write.table(ego_vals, paste0(str_glue("~/storage/Metastatic_Organo_Tropism/metastatic_vs_non_metastatic_DGE_analysis/Pathway_enrichment_flat_files/{proj}"),"_MF_",".txt"))
   
@@ -167,7 +170,7 @@ for (proj in projects) {
   ego<- enrichGO(gene = dat$ENSEMBL, OrgDb = org.Hs.eg.db, keyType = "ENSEMBL", ont = "CC", pAdjustMethod = "BH")
   p<- clusterProfiler::dotplot(ego, showCategory =20)
   ggsave(filename=paste0(str_glue("~/storage/Metastatic_Organo_Tropism/metastatic_vs_non_metastatic_DGE_analysis/Viz/{proj}"),"_CC_",".png"),
-         plot = p, device = "png", width = 25, height = 25, units = "in", dpi = "retina")
+         plot = p, device = "png", width = 8, height = 8, units = "in", dpi = "retina")
   ego_vals <- cbind(ego$ID, ego$Description, ego$GeneRatio, ego$BgRatio, ego$qvalue, ego$geneID)
   write.table(ego_vals, paste0(str_glue("~/storage/Metastatic_Organo_Tropism/metastatic_vs_non_metastatic_DGE_analysis/Pathway_enrichment_flat_files/{proj}"),"_CC_",".txt"))
   
@@ -175,7 +178,7 @@ for (proj in projects) {
   ego<- enrichGO(gene = dat$ENSEMBL, OrgDb = org.Hs.eg.db, keyType = "ENSEMBL", ont = "BP", pAdjustMethod = "BH")
   p<- clusterProfiler::dotplot(ego, showCategory =20)
   ggsave(filename=paste0(str_glue("~/storage/Metastatic_Organo_Tropism/metastatic_vs_non_metastatic_DGE_analysis/Viz/{proj}"),"_BP_",".png"),
-         plot = p, device = "png", width = 25, height = 25, units = "in", dpi = "retina")
+         plot = p, device = "png", width = 8, height = 8, units = "in", dpi = "retina")
   ego_vals <- cbind(ego$ID, ego$Description, ego$GeneRatio, ego$BgRatio, ego$qvalue, ego$geneID)
   write.table(ego_vals, paste0(str_glue("~/storage/Metastatic_Organo_Tropism/metastatic_vs_non_metastatic_DGE_analysis/Pathway_enrichment_flat_files/{proj}"),"_BP_",".txt"))
   
@@ -183,6 +186,94 @@ for (proj in projects) {
   
 }
   
+# in this analysis we will subset the DEG data into non-metastatic tumor vs normal
+# and metastatic tissues vs normal.
+
+# this will allow us to invesitgate if there are genes/gene sets that are specific for the expansion of the disease
+
+# activate the use the libraries that we will need.
+library(DESeq2)
+library(EnhancedVolcano)
+library(clusterProfiler)
+library(org.Hs.eg.db)
+library(WGCNA)
+library(stringr)
+library(tidyverse)
+library(dplyr)
+
+
+
+#projects <- c("TCGA-BLCA","TCGA-BRCA","TCGA-COAD","TCGA-ESCA","TCGA-HNSC","TCGA-KICH","TCGA-KIRC","TCGA-KIRP","TCGA-LIHC","TCGA-LUAD","TCGA-LUSC","TCGA-PRAD","TCGA-STAD","TCGA-THCA")
+
+projects <- c("TCGA-BLCA","TCGA-BRCA","TCGA-COAD","TCGA-ESCA","TCGA-HNSC","TCGA-KIRC","TCGA-KIRP","TCGA-LIHC","TCGA-LUAD","TCGA-LUSC","TCGA-PRAD","TCGA-STAD","TCGA-THCA")
+
+# gene annotaiton, may need, may not
+annot <- data.table::fread("~/CSBL_shared/ID_mapping/Ensembl_symbol_entrez.csv")
+
+clinical <- data.table::fread(
+  "~/CSBL_shared/RNASeq/TCGA/annotation/counts_annotation.csv")
+
+
+normal.samples <- clinical[sample_type == "Solid Tissue Normal"]
+
+tumor.samples <- data.table::fread("~/storage/Metastatic_Organo_Tropism/tumor_samples_annotated_progression.csv", stringsAsFactors = TRUE) %>%
+  column_to_rownames("V1")
+
+
+proj <- projects[3]
+
+for(proj in projects){
+  df.exp <- data.table::fread(str_glue("~/CSBL_shared/RNASeq/TCGA/counts/{proj}.counts.csv"), stringsAsFactors = TRUE) %>%
+    as_tibble() %>%
+    tibble::column_to_rownames(var = "Ensembl")
+  
+  n<-dim(df.exp)[1]
+  df.exp<-df.exp[1:(n-5),]
+  
+  coldata.t<- tumor.samples %>%
+    dplyr::filter(project == proj) %>%
+    dplyr::filter(Metastatic_status==1)
+  
+  coldata.n <- normal.samples %>%
+    dplyr::filter(normal.samples$project == proj)
+  
+  coldata <- rbind.fill(coldata.t, coldata.n)
+  rownames(coldata) <- coldata$barcode
+  
+  df.exp <- df.exp[ ,colnames(df.exp) %in% coldata$barcode]
+  
+  rownames(coldata) <- sort(rownames(coldata))
+  colnames(df.exp) <- sort(colnames(df.exp))
+  
+  setdiff(rownames(coldata), colnames(df.exp))
+  
+  coldata$sample_type <- gsub(" ", "_", x = coldata$sample_type)
+  
+  dds <- DESeqDataSetFromMatrix(countData = df.exp, colData = coldata, design = ~ sample_type)
+  
+  keep <- rowSums(counts(dds)) >= 10
+  dds <- dds[keep,]
+  
+  dds$sample_type <- relevel(dds$sample_type, ref = "Solid_Tissue_Normal")
+  
+  dds <- DESeq(dds)
+  
+  save(dds, file = str_glue("~/storage/Metastatic_Organo_Tropism/MetTumor_vs_Normal/{proj}_DE_met_vs_normal.RData"))
+  
+  res <- results(dds)
+  resOrdered <- res[order(res$pvalue),]
+  resOrdered <- as.data.frame(resOrdered)
+  res <- as.data.frame(res)
+  
+  write.csv(resOrdered, file = str_glue("~/storage/Metastatic_Organo_Tropism/MetTumor_vs_Normal/{proj}_DE_met_vs_normal_DE_res.csv"))
+  
+  rm(res)
+  rm(resOrdered)
+  rm(dds)
+  rm(keep)
+  
+}
+
   
 
 
