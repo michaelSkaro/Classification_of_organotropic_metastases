@@ -1,4 +1,4 @@
-# I would liek to start by saying before anyone moves forward with this code:
+# I would like to start by saying before anyone moves forward with this code:
 
 # I am neither proud nor am I happy with 99% of this code. However,
 # I really have exhausted many of my options in the forms of REGEX to 
