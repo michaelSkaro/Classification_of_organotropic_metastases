@@ -232,7 +232,7 @@ for(proj in projects){
   
   coldata.t<- tumor.samples %>%
     dplyr::filter(project == proj) %>%
-    dplyr::filter(Metastatic_status==1)
+    dplyr::filter(Metastatic_status==0)
   
   coldata.n <- normal.samples %>%
     dplyr::filter(normal.samples$project == proj)
@@ -258,14 +258,14 @@ for(proj in projects){
   
   dds <- DESeq(dds)
   
-  save(dds, file = str_glue("~/storage/Metastatic_Organo_Tropism/MetTumor_vs_Normal/{proj}_DE_met_vs_normal.RData"))
+  save(dds, file = str_glue("~/storage/Metastatic_Organo_Tropism/MetTumor_vs_Normal/{proj}_DE_No_met_vs_normal.RData"))
   
   res <- results(dds)
   resOrdered <- res[order(res$pvalue),]
   resOrdered <- as.data.frame(resOrdered)
   res <- as.data.frame(res)
   
-  write.csv(resOrdered, file = str_glue("~/storage/Metastatic_Organo_Tropism/MetTumor_vs_Normal/{proj}_DE_met_vs_normal_DE_res.csv"))
+  write.csv(resOrdered, file = str_glue("~/storage/Metastatic_Organo_Tropism/MetTumor_vs_Normal/{proj}_DE_No_met_vs_normal_DE_res.csv"))
   
   rm(res)
   rm(resOrdered)
@@ -274,8 +274,161 @@ for(proj in projects){
   
 }
 
-  
+# in this section we will use the dds objects to produce the intersections of up and down
+# regulated gene sets for cancer vs normal. We will then explre the up and down regulated 
+# gene sets that set them apart. 
+# we will cross referecnce these gene sets with the HRF sets for each cancer type.
 
+
+# In this section we will conduct gene set enrichment analysis on the DEG sets.
+# I like the 4 quadrant pop-art in the TCGAbiolinks viz seciton better than the 
+# clusterProfiler look. 
+
+
+
+library(clusterProfiler)
+library(ggplot2)
+library(tidyverse)
+library(org.Hs.eg.db)
+
+setwd("~/storage/Metastatic_Organo_Tropism/MetTumor_vs_Normal/res")
+
+DE.projects<- list.files()
+
+
+
+
+for(DE.file in DE.projects){
+  
+  dat <- data.table::fread(str_glue("~/storage/Metastatic_Organo_Tropism/MetTumor_vs_Normal/res/{DE.file}"))
+  dat <- as.data.frame(dat)
+  dat <- column_to_rownames(dat, "V1")
+  dat$ENSEMBL <- substr(rownames(dat), 1, 15)
+  
+  dat <- dat[abs(dat$log2FoldChange) > 1.0,] 
+  dat <- dat[dat$padj < 1.0e-1,]
+  dat <- dat[!is.na(dat$ENSEMBL),]
+  
+  
+  
+  ego<- enrichGO(gene = dat$ENSEMBL, OrgDb = org.Hs.eg.db, keyType = "ENSEMBL", ont = "MF", pAdjustMethod = "BH")
+  p1<- clusterProfiler::dotplot(ego, showCategory =20)
+  savR<- substr(DE.file, 1,26)
+  ggsave(filename=paste0("~/storage/Metastatic_Organo_Tropism/MetTumor_vs_Normal/Pathway_Enrichment/",savR,"_MF_",".png"),
+         plot = p1, device = "png", width = 15, height = 8, units = "in", dpi = "retina")
+  ego_vals <- cbind(ego$ID, ego$Description, ego$GeneRatio, ego$BgRatio, ego$qvalue, ego$geneID)
+  #write.table(ego_vals, paste0("~/storage/Metastatic_Organo_Tropism/Pathway_Enrichment/flats/",savR,"_MF_",".txt"))
+  
+  
+  ego<- enrichGO(gene = dat$ENSEMBL, OrgDb = org.Hs.eg.db, keyType = "ENSEMBL", ont = "CC", pAdjustMethod = "BH")
+  p2<- clusterProfiler::dotplot(ego, showCategory =20)
+  savR<- substr(DE.file, 1,26)
+  ggsave(filename=paste0("~/storage/Metastatic_Organo_Tropism/MetTumor_vs_Normal/Pathway_Enrichment/",savR,"_CC_",".png"),
+         plot = p2, device = "png", width = 15, height = 8, units = "in", dpi = "retina")
+  ego_vals <- cbind(ego$ID, ego$Description, ego$GeneRatio, ego$BgRatio, ego$qvalue, ego$geneID)
+  #write.table(ego_vals, paste0("~/storage/Metastatic_Organo_Tropism/Pathway_Enrichment/flats/",savR,"_CC_",".txt"))
+  
+  
+  ego<- enrichGO(gene = dat$ENSEMBL, OrgDb = org.Hs.eg.db, keyType = "ENSEMBL", ont = "BP", pAdjustMethod = "BH")
+  p3<- clusterProfiler::dotplot(ego, showCategory =20)
+  savR<- substr(DE.file, 1,26)
+  ggsave(filename=paste0("~/storage/Metastatic_Organo_Tropism/MetTumor_vs_Normal/Pathway_Enrichment/",savR,"_BP_",".png"),
+         plot = p3, device = "png", width = 15, height = 8, units = "in", dpi = "retina")
+  ego_vals <- cbind(ego$ID, ego$Description, ego$GeneRatio, ego$BgRatio, ego$qvalue, ego$geneID)
+  #write.table(ego_vals, paste0("~/storage/Metastatic_Organo_Tropism/Pathway_Enrichment/flats/",savR,"_BP_",".txt"))
+  
+ 
+  
+  
+}
+
+library(clusterProfiler)
+library(ggplot2)
+library(tidyverse)
+library(org.Hs.eg.db)
+
+setwd("~/storage/Metastatic_Organo_Tropism/MetTumor_vs_Normal/res")
+
+DE.projects<- list.files()
+DE.file <- DE.projects[1]
+
+for(DE.file in DE.projects){
+  
+  dat <- data.table::fread(str_glue("~/storage/Metastatic_Organo_Tropism/MetTumor_vs_Normal/res/{DE.file}"))
+  dat <- as.data.frame(dat)
+  dat <- column_to_rownames(dat, "V1")
+  dat$ENSEMBL <- substr(rownames(dat), 1, 15)
+  
+  dat <- dat[abs(dat$log2FoldChange) > 1.0,] 
+  dat <- dat[dat$padj < 1.0e-1,]
+  dat <- dat[!is.na(dat$ENSEMBL),]
+
+  #library(TCGAbiolinks)
+  # Enrichment Analysis EA
+  # Gene Ontology (GO) and Pathway enrichment by DEGs list
+  #bitr(geneID, fromType, toType, OrgDb, drop = TRUE)
+  Genelist <- clusterProfiler::bitr(dat$ENSEMBL, OrgDb = org.Hs.eg.db ,fromType = "ENSEMBL", toType = "SYMBOL", drop = TRUE)
+  
+  system.time(ansEA <- TCGAanalyze_EAcomplete(TFname="DEA genes Normal Vs Tumor",Genelist$SYMBOL))
+  
+  # Enrichment Analysis EA (TCGAVisualize)
+  # Gene Ontology (GO) and Pathway enrichment barPlot
+  savR<- substr(DE.file, 1,26)
+  TCGAvisualize_EAbarplot(tf = rownames(ansEA$ResBP), 
+                              GOBPTab = ansEA$ResBP,
+                              GOCCTab = ansEA$ResCC,
+                              GOMFTab = ansEA$ResMF,
+                              PathTab = ansEA$ResPat,
+                              nRGTab = Genelist, 
+                              nBar = 10,
+                              filename=paste0("~/storage/Metastatic_Organo_Tropism/MetTumor_vs_Normal/Pathway_Enrichment/",
+                                              savR,"TCGA_viz",".pdf"))
+  
+  #ggsave(filename=paste0("~/storage/Metastatic_Organo_Tropism/MetTumor_vs_Normal/Pathway_Enrichment/",savR,"TCGA_viz",".png"),
+   #      plot = p, device = "png", width = 15, height = 8, units = "in", dpi = "retina")
+  
+}
+
+DE.projects<- list.files()
+DE.file <- DE.projects[1]
+
+
+for(DE.file in DE.projects){
+  
+  dat <- data.table::fread(str_glue("~/storage/Metastatic_Organo_Tropism/NoMetTumor_vs_Normal/res/{DE.file}"))
+  dat <- as.data.frame(dat)
+  dat <- column_to_rownames(dat, "V1")
+  dat$ENSEMBL <- substr(rownames(dat), 1, 15)
+  
+  dat <- dat[abs(dat$log2FoldChange) > 1.0,] 
+  dat <- dat[dat$padj < 1.0e-1,]
+  dat <- dat[!is.na(dat$ENSEMBL),]
+  
+  #library(TCGAbiolinks)
+  # Enrichment Analysis EA
+  # Gene Ontology (GO) and Pathway enrichment by DEGs list
+  #bitr(geneID, fromType, toType, OrgDb, drop = TRUE)
+  Genelist <- clusterProfiler::bitr(dat$ENSEMBL, OrgDb = org.Hs.eg.db ,fromType = "ENSEMBL", toType = "SYMBOL", drop = TRUE)
+  
+  system.time(ansEA <- TCGAanalyze_EAcomplete(TFname="DEA genes Normal Vs Tumor",Genelist$SYMBOL))
+  
+  # Enrichment Analysis EA (TCGAVisualize)
+  # Gene Ontology (GO) and Pathway enrichment barPlot
+  savR<- substr(DE.file, 1,26)
+  TCGAvisualize_EAbarplot(tf = rownames(ansEA$ResBP), 
+                          GOBPTab = ansEA$ResBP,
+                          GOCCTab = ansEA$ResCC,
+                          GOMFTab = ansEA$ResMF,
+                          PathTab = ansEA$ResPat,
+                          nRGTab = Genelist, 
+                          nBar = 10,
+                          filename=paste0("~/storage/Metastatic_Organo_Tropism/NoMetTumor_vs_Normal/Pathway_Enrichment/",
+                                          savR,"TCGA_viz",".pdf"))
+  
+  #ggsave(filename=paste0("~/storage/Metastatic_Organo_Tropism/MetTumor_vs_Normal/Pathway_Enrichment/",savR,"TCGA_viz",".png"),
+  #      plot = p, device = "png", width = 15, height = 8, units = "in", dpi = "retina")
+  
+}
 
 
 
