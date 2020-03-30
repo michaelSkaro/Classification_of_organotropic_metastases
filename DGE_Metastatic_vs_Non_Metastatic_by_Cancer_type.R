@@ -433,6 +433,47 @@ for(DE.file in DE.projects){
 
 
 
+# conduct PCA analysis on metastatic vs normal and non-metastatic vs normal
+
+# set working directory
+setwd("~/storage/Metastatic_Organo_Tropism/metastatic_vs_non_metastatic_DGE_analysis/dds")
+
+# make dds.files list 
+projects <- c("TCGA-BLCA","TCGA-BRCA","TCGA-COAD","TCGA-ESCA","TCGA-HNSC","TCGA-KIRC","TCGA-KIRP","TCGA-LIHC","TCGA-LUAD","TCGA-LUSC","TCGA-PRAD","TCGA-STAD","TCGA-THCA")
+
+proj <- projects[1]
+
+
+for(proj in projects){
+  # read in dds data
+  
+  load(str_glue("~/storage/Metastatic_Organo_Tropism/metastatic_vs_non_metastatic_DGE_analysis/dds/{proj}_DE_met.RData"))
+  
+  # annotate
+  
+  dds <- estimateSizeFactors(dds)
+  
+  se <- SummarizedExperiment(log2(counts(dds, normalized=TRUE) + 1),
+                             colData=colData(dds))
+  
+  p <- plotPCA( DESeqTransform( se ), intgroup = "Metastatic_status")
+  savR<- str_glue("{proj}_Met_vsNormal_PCA")
+  ggsave(filename=paste0("~/storage/Metastatic_Organo_Tropism/metastatic_vs_non_metastatic_DGE_analysis/PCA/",savR,".pdf"),
+         plot = p, device = "pdf", width = 8, height = 8, units = "in", dpi = "retina")
+  
+  
+}  
+  
+  
+  
+  
+
+
+
+
+
+
+
 # R version 3.5.1 (2018-07-02)
 # Platform: x86_64-pc-linux-gnu (64-bit)
 # Running under: Debian GNU/Linux 9 (stretch)
