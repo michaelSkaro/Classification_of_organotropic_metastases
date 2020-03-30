@@ -291,7 +291,7 @@ library(ggplot2)
 library(tidyverse)
 library(org.Hs.eg.db)
 
-setwd("~/storage/Metastatic_Organo_Tropism/MetTumor_vs_Normal/res")
+setwd("~/storage/Metastatic_Organo_Tropism/NoMetTumor_vs_Normal/res")
 
 DE.projects<- list.files()
 
@@ -300,7 +300,7 @@ DE.projects<- list.files()
 
 for(DE.file in DE.projects){
   
-  dat <- data.table::fread(str_glue("~/storage/Metastatic_Organo_Tropism/MetTumor_vs_Normal/res/{DE.file}"))
+  dat <- data.table::fread(str_glue("~/storage/Metastatic_Organo_Tropism/NoMetTumor_vs_Normal/res/{DE.file}"))
   dat <- as.data.frame(dat)
   dat <- column_to_rownames(dat, "V1")
   dat$ENSEMBL <- substr(rownames(dat), 1, 15)
@@ -314,7 +314,7 @@ for(DE.file in DE.projects){
   ego<- enrichGO(gene = dat$ENSEMBL, OrgDb = org.Hs.eg.db, keyType = "ENSEMBL", ont = "MF", pAdjustMethod = "BH")
   p1<- clusterProfiler::dotplot(ego, showCategory =20)
   savR<- substr(DE.file, 1,26)
-  ggsave(filename=paste0("~/storage/Metastatic_Organo_Tropism/MetTumor_vs_Normal/Pathway_Enrichment/",savR,"_MF_",".png"),
+  ggsave(filename=paste0("~/storage/Metastatic_Organo_Tropism/NoMetTumor_vs_Normal/Pathway_Enrichment/",savR,"_MF_",".png"),
          plot = p1, device = "png", width = 15, height = 8, units = "in", dpi = "retina")
   ego_vals <- cbind(ego$ID, ego$Description, ego$GeneRatio, ego$BgRatio, ego$qvalue, ego$geneID)
   #write.table(ego_vals, paste0("~/storage/Metastatic_Organo_Tropism/Pathway_Enrichment/flats/",savR,"_MF_",".txt"))
@@ -323,7 +323,7 @@ for(DE.file in DE.projects){
   ego<- enrichGO(gene = dat$ENSEMBL, OrgDb = org.Hs.eg.db, keyType = "ENSEMBL", ont = "CC", pAdjustMethod = "BH")
   p2<- clusterProfiler::dotplot(ego, showCategory =20)
   savR<- substr(DE.file, 1,26)
-  ggsave(filename=paste0("~/storage/Metastatic_Organo_Tropism/MetTumor_vs_Normal/Pathway_Enrichment/",savR,"_CC_",".png"),
+  ggsave(filename=paste0("~/storage/Metastatic_Organo_Tropism/NoMetTumor_vs_Normal/Pathway_Enrichment/",savR,"_CC_",".png"),
          plot = p2, device = "png", width = 15, height = 8, units = "in", dpi = "retina")
   ego_vals <- cbind(ego$ID, ego$Description, ego$GeneRatio, ego$BgRatio, ego$qvalue, ego$geneID)
   #write.table(ego_vals, paste0("~/storage/Metastatic_Organo_Tropism/Pathway_Enrichment/flats/",savR,"_CC_",".txt"))
@@ -332,7 +332,7 @@ for(DE.file in DE.projects){
   ego<- enrichGO(gene = dat$ENSEMBL, OrgDb = org.Hs.eg.db, keyType = "ENSEMBL", ont = "BP", pAdjustMethod = "BH")
   p3<- clusterProfiler::dotplot(ego, showCategory =20)
   savR<- substr(DE.file, 1,26)
-  ggsave(filename=paste0("~/storage/Metastatic_Organo_Tropism/MetTumor_vs_Normal/Pathway_Enrichment/",savR,"_BP_",".png"),
+  ggsave(filename=paste0("~/storage/Metastatic_Organo_Tropism/NoMetTumor_vs_Normal/Pathway_Enrichment/",savR,"_BP_",".png"),
          plot = p3, device = "png", width = 15, height = 8, units = "in", dpi = "retina")
   ego_vals <- cbind(ego$ID, ego$Description, ego$GeneRatio, ego$BgRatio, ego$qvalue, ego$geneID)
   #write.table(ego_vals, paste0("~/storage/Metastatic_Organo_Tropism/Pathway_Enrichment/flats/",savR,"_BP_",".txt"))
