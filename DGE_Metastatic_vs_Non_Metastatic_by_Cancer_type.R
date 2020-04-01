@@ -467,6 +467,302 @@ for(proj in projects){
   
   
   
+# trying some new things :)
+
+# install and load the packages necessary for learning
+
+#install.packages("randomForest")
+library(randomForest)
+
+
+
+
+
+# activate the use the libraries that we will need.
+library(DESeq2)
+library(EnhancedVolcano)
+library(clusterProfiler)
+library(org.Hs.eg.db)
+library(WGCNA)
+library(stringr)
+library(tidyverse)
+library(dplyr)
+
+library(caret)
+
+#projects <- c("TCGA-BLCA","TCGA-BRCA","TCGA-COAD","TCGA-ESCA","TCGA-HNSC","TCGA-KICH","TCGA-KIRC","TCGA-KIRP","TCGA-LIHC","TCGA-LUAD","TCGA-LUSC","TCGA-PRAD","TCGA-STAD","TCGA-THCA")
+
+projects <- c("TCGA-BLCA","TCGA-BRCA","TCGA-COAD","TCGA-ESCA","TCGA-HNSC","TCGA-KIRC","TCGA-KIRP","TCGA-LIHC","TCGA-LUAD","TCGA-LUSC","TCGA-PRAD","TCGA-STAD","TCGA-THCA")
+
+# gene annotaiton, may need, may not
+annot <- data.table::fread("~/CSBL_shared/ID_mapping/Ensembl_symbol_entrez.csv")
+
+clinical <- data.table::fread(
+  "~/CSBL_shared/RNASeq/TCGA/annotation/counts_annotation.csv")
+
+# add the clinical annotations of progression
+
+# read in the files in one by one and select the correct columns. 
+# concatenate the files and end with one uniform progression file. 
+
+tumor.samples <- data.table::fread("~/storage/Metastatic_Organo_Tropism/tumor_samples_annotated_progression.csv") %>% 
+  tibble::column_to_rownames(var ="V1")
+
+
+proj <- projects[13]
+setwd("~/storage/PanCancerAnalysis/ML_2019")
+for(proj in projects){
+
+  # read in data   
+  dat <- data.table::fread(str_glue("{proj}_learning.csv", header = TRUE))
+  colnames(dat)[1] <- "barcode"
+  
+  # remove the normal samples, in this section we are only classifying the metastatic cases from 
+  # here on out
+  
+  dat <- dat[dat$sample_type == "Primary_Tumor",]
+  
+  
+  # add column annotation for the metastatic staus of the sample's metastatic status
+  
+  dat<- left_join(dat, tumor.samples, by="barcode")
+  
+  # get rid of some of the unnecessary columns that were added, we want the majority
+  # of the data to be numeric with only a few feactorial variables.
+  
+  dat <- dat %>%
+    dplyr::select(-barcode,-sample_type.x,-sample_type.y, -project, -tumor_stage, -caseID, -fileID, -filename, 
+                  -barcode_short, -bcr_patient_barcode,-met_loc, -LymphNodeStatus)
+  
+  
+  
+  # split the datas so that we get some training and some testing shoooorrdd
+  
+  set.seed(2)
+  
+  id <- sample(2, nrow(dat), prob = c(0.8,0.2), replace =TRUE)
+  
+  dat.train <- dat[id ==1,]
+  dat.test <- dat[id ==2,]
+  
+  # tune RF finds the optimal mtry for the learning. We do not want to use all of the 
+  # predictor variables in data set or it may actually learn nothing. We want each tree to be different
+  # and therefore more powerful
+
+  set.seed(1234)
+  
+  # Define the control
+  trControl <- trainControl(method = "cv",
+                            number = 10,
+                            search = "grid")
+  
+  
+  
+  
+  
+  # Search best mtry
+  
+  set.seed(1234)
+  tuneGrid <- expand.grid(.mtry = c(1: 10))
+  rf_mtry <- train(Metastatic_status~.,
+                   data = data.train,
+                   method = "rf",
+                   metric = "Accuracy",
+                   tuneGrid = tuneGrid,
+                   trControl = trControl,
+                   importance = TRUE,
+                   nodesize = 14,
+                   ntree = 1000)
+  
+  best_mtry <- rf_mtry$bestTune$mtry 
+  
+  
+  # Run the model
+
+  dat.forest <- randomForest::randomForest(Metastatic_status~., data= dat.train)
+
+  dat.pred <- stats::predict(dat.forest, newdata = dat.test, type = "class")
+  
+  efficiency <- caret::confusionMatrix(table(dat.pred, dat.test$Metastatic_status))
+  
+  save(efficiency, file = str_glue("~/storage/Metastatic_Organo_Tropism/prediction/{proj}_random_forest_prediction_DLvsNDL.RData"))
+  
+  
+  
+}
+
+
+####### add some random forests.
+
+# random forest training sessions
+
+#https://www.guru99.com/r-random-forest-tutorial.html
+
+
+
+library(dplyr)
+library(randomForest)
+library(caret)
+library(e1071)
+
+# import the data i.e get the training sets
+data_train <- read.csv("https://raw.githubusercontent.com/guru99-edu/R-Programming/master/train.csv")
+glimpse(data_train)
+data_test <- read.csv("https://raw.githubusercontent.com/guru99-edu/R-Programming/master/test.csv") 
+glimpse(data_test)
+
+data_train <- na.exclude(data_train)
+data_test <- na.exclude(data_test)
+
+data_train$Survived <- as.factor(data_train$Survived)
+
+# Define the control
+trControl <- trainControl(method = "cv",
+                          number = 10,
+                          search = "grid")
+
+
+set.seed(1234)
+# Run the model
+rf_default <- train(Survived~.,
+                    data = data_train,
+                    method = "rf",
+                    metric = "Accuracy",
+                    trControl = trControl)
+# Print the results
+print(rf_default)
+
+
+# Search best mtry
+
+set.seed(1234)
+tuneGrid <- expand.grid(.mtry = c(1: 10))
+rf_mtry <- train(Survived~.,
+                 data = data_train,
+                 method = "rf",
+                 metric = "Accuracy",
+                 tuneGrid = tuneGrid,
+                 trControl = trControl,
+                 importance = TRUE,
+                 nodesize = 14,
+                 ntree = 300)
+print(rf_mtry)
+
+
+best_mtry <- rf_mtry$bestTune$mtry 
+
+
+# Search the best maxnodes
+
+Code explanation:
+  
+  # store_maxnode <- list(): The results of the model will be stored in this list
+  # expand.grid(.mtry=best_mtry): Use the best value of mtry
+  # for (maxnodes in c(15:25)) { ... }: Compute the model with values of maxnodes starting from 15 to 25.
+  # maxnodes=maxnodes: For each iteration, maxnodes is equal to the current value of maxnodes. i.e 15, 16, 17, ...
+  # key <- toString(maxnodes): Store as a string variable the value of maxnode.
+  # store_maxnode[[key]] <- rf_maxnode: Save the result of the model in the list.
+  # resamples(store_maxnode): Arrange the results of the model
+  # summary(results_mtry): Print the summary of all the combination
+  
+  
+
+
+store_maxnode <- list()
+tuneGrid <- expand.grid(.mtry = best_mtry)
+for (maxnodes in c(5: 15)) {
+  set.seed(1234)
+  rf_maxnode <- train(Survived~.,
+                      data = data_train,
+                      method = "rf",
+                      metric = "Accuracy",
+                      tuneGrid = tuneGrid,
+                      trControl = trControl,
+                      importance = TRUE,
+                      nodesize = 14,
+                      maxnodes = maxnodes,
+                      ntree = 300)
+  current_iteration <- toString(maxnodes)
+  store_maxnode[[current_iteration]] <- rf_maxnode
+}
+results_mtry <- resamples(store_maxnode)
+summary(results_mtry)
+
+# using the maxnodes
+
+store_maxnode <- list()
+tuneGrid <- expand.grid(.mtry = best_mtry)
+for (maxnodes in c(20: 30)) {
+  set.seed(1234)
+  rf_maxnode <- train(survived~.,
+                      data = data_train,
+                      method = "rf",
+                      metric = "Accuracy",
+                      tuneGrid = tuneGrid,
+                      trControl = trControl,
+                      importance = TRUE,
+                      nodesize = 14,
+                      maxnodes = maxnodes,
+                      ntree = 300)
+  key <- toString(maxnodes)
+  store_maxnode[[key]] <- rf_maxnode
+}
+results_node <- resamples(store_maxnode)
+summary(results_node)
+
+
+#Step 4) Search the best ntrees
+
+store_maxtrees <- list()
+for (ntree in c(250, 300, 350, 400, 450, 500, 550, 600, 800, 1000, 2000)) {
+  set.seed(5678)
+  rf_maxtrees <- train(Survived~.,
+                       data = data_train,
+                       method = "rf",
+                       metric = "Accuracy",
+                       tuneGrid = tuneGrid,
+                       trControl = trControl,
+                       importance = TRUE,
+                       nodesize = 14,
+                       maxnodes = 24,
+                       ntree = ntree)
+  key <- toString(ntree)
+  store_maxtrees[[key]] <- rf_maxtrees
+}
+results_tree <- resamples(store_maxtrees)
+summary(results_tree)
+
+
+# fit with fine tuned model
+
+fit_rf <- train(Survived~.,
+                data_train,
+                method = "rf",
+                metric = "Accuracy",
+                tuneGrid = tuneGrid,
+                trControl = trControl,
+                importance = TRUE,
+                nodesize = 14,
+                ntree = 800,
+                maxnodes = 24)
+
+
+# make your predictions
+
+prediction <-predict(fit_rf, data_test)
+
+
+# assess the model
+
+efficiency<- confusionMatrix(prediction, data_test$survived)
+
+
+
+
+
+
+
+
 
 
 
