@@ -1,15 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[2]:
-
-
 # The objective of this notebook will be to read in the split data the runner has made
 # learn on the split/annotated data and ake predictions using RnadomForest class in SciKitlearn
-
-
-# In[4]:
-
 
 # Load the Libraries
 
@@ -21,33 +14,29 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 
 
-# In[6]:
+# In[751]:
 
 
 # define a random seed to replicate the results
 RSEED = 50
 
 
-# In[10]:
+# In[752]:
 
 
 RSEED
 
 
-# In[ ]:
+# In[753]:
 
 
-df= pd.read_csv("~/storage/PanCancerAnalysis/ML_2019/RF_input/TCGA-BLCA_DL_NDL.csv")
+df= pd.read_csv("~/storage/PanCancerAnalysis/ML_2019/RF_input/TCGA-BRCA_DL_NDL.csv")
 
 
-# In[ ]:
+# In[707]:
 
 
-df.size()
-
-
-# In[16]:
-
+print('We have {} pateints of data with {} variables'.format(*df.shape))
 
 # dataframe.size 
 size = df.size 
@@ -59,43 +48,85 @@ shape = df.shape
 df_ndim = df.ndim 
 
 
-# In[17]:
+# In[708]:
 
 
 size
 
 
-# In[18]:
+# In[709]:
 
 
 shape
 
 
-# In[23]:
+# In[710]:
 
 
 df = df.rename(columns={'lables': 'labels'})
-
-
-# In[24]:
-
-
 df = df.rename(columns={'labels': 'label'})
 
 
-# In[25]:
+# In[711]:
 
 
 labels = np.array(df.pop('label'))
 
 
-# In[26]:
+# In[712]:
 
 
 labels
 
 
-# In[27]:
+# In[713]:
+
+
+type(labels)
+
+
+# In[714]:
+
+
+from numpy import *
+
+
+where_are_NaNs = isnan(labels)
+labels[where_are_NaNs] = 0
+
+
+# In[715]:
+
+
+labels= labels.astype(int)
+
+
+# In[716]:
+
+
+type(labels)
+
+
+# In[717]:
+
+
+type(labels[1])
+
+
+# In[719]:
+
+
+labels.size
+
+
+# In[722]:
+
+
+# List of features for later use
+feature_list = list(df.columns)
+
+
+# In[724]:
 
 
 # 30% examples in test data
@@ -106,7 +137,7 @@ train, test, train_labels, test_labels = train_test_split(df,
                                          random_state = RSEED)
 
 
-# In[29]:
+# In[725]:
 
 
 # Imputation of missing values
@@ -114,7 +145,7 @@ train = train.fillna(train.mean())
 test = test.fillna(test.mean())
 
 
-# In[30]:
+# In[728]:
 
 
 # Create the model with 1000 trees.
@@ -128,7 +159,7 @@ model = RandomForestClassifier(n_estimators=1000,
                                n_jobs=-1, verbose = 1)
 
 
-# In[31]:
+# In[729]:
 
 
 # Fit on training data. This will take some doing but seems viable. 
@@ -139,7 +170,27 @@ model = RandomForestClassifier(n_estimators=1000,
 model.fit(train, train_labels)
 
 
-# In[32]:
+# In[731]:
+
+
+# This is where we will customize the model. We will have to conduct a few tuning methods. 
+# This will include changing the max feature, max depth, n estimators.
+# I would like to also extract the importance features in each of the data. Kappa score might also be nice. 
+
+# the first portion will be to find the best features for each class
+
+# List of features for later use
+# Get numerical feature importances
+importances = list(model.feature_importances_)
+# List of tuples with variable and importance
+feature_importances = [(feature, round(importance, 2)) for feature, importance in zip(feature_list, importances)]
+# Sort the feature importances by most important first
+feature_importances = sorted(feature_importances, key = lambda x: x[1], reverse = True)
+# Print out the feature and importances 
+#[print('Variable: {:200} Importance: {}'.format(*pair)) for pair in feature_importances]
+
+
+# In[638]:
 
 
 n_nodes = []
@@ -154,7 +205,32 @@ print(f'Average number of nodes {int(np.mean(n_nodes))}')
 print(f'Average maximum depth {int(np.mean(max_depths))}')
 
 
-# In[33]:
+# In[740]:
+
+
+# list of x locations for plotting
+x_values = list(range(len(importances)))
+
+# List of features sorted from most to least important
+sorted_importances = [importance[1] for importance in feature_importances]
+sorted_features = [importance[0] for importance in feature_importances]
+# Cumulative importances
+cumulative_importances = np.cumsum(sorted_importances)
+
+#print(np.where(cumulative_importances > 0.95))
+
+# Find number of features for cumulative importance of 95%
+# Add 1 because Python is zero-indexed
+#print('Number of features for 95% importance:', np.where(cumulative_importances > 0.95)[0][0])
+
+
+# In[741]:
+
+
+print(sorted_importances[:10])
+
+
+# In[742]:
 
 
 # Training predictions (to demonstrate overfitting)
@@ -166,7 +242,7 @@ rf_predictions = model.predict(test)
 rf_probs = model.predict_proba(test)[:, 1]
 
 
-# In[34]:
+# In[743]:
 
 
 from sklearn.metrics import precision_score, recall_score, roc_auc_score, roc_curve
@@ -177,7 +253,7 @@ plt.style.use('fivethirtyeight')
 plt.rcParams['font.size'] = 18
 
 
-# In[35]:
+# In[744]:
 
 
 def evaluate_model(predictions, probs, train_predictions, train_probs):
@@ -220,12 +296,24 @@ def evaluate_model(predictions, probs, train_predictions, train_probs):
     plt.xlabel('False Positive Rate'); 
     plt.ylabel('True Positive Rate'); plt.title('ROC Curves');
     plt.show();
-
+    plt.savefig('roc_auc_curve_BLCA.png');
+    
+    
+    # save the results:
+    
+    
+    
 evaluate_model(rf_predictions, rf_probs, train_rf_predictions, train_rf_probs)
-plt.savefig('roc_auc_curve.png')
+#plt.savefig('roc_auc_curve_BLCA.png');
 
 
-# In[36]:
+# In[648]:
+
+
+rf_predictions
+
+
+# In[642]:
 
 
 from sklearn.metrics import confusion_matrix
@@ -276,33 +364,7 @@ cm = confusion_matrix(test_labels, rf_predictions)
 plot_confusion_matrix(cm, classes = ['Metastatic Cancer', 'Non-metastatic Cancer'],
                       title = 'Health Confusion Matrix')
 
-plt.savefig('cm.png')
-
-
-# In[37]:
-
-
-cm
-
-
-# In[38]:
-
-
-train_rf_predictions
-
-
-# In[39]:
-
-
-results
-
-
-# In[40]:
-
-
-evaluate_model(rf_predictions, rf_probs, train_rf_predictions, train_rf_probs)
-
-
+plt.savefig('cm_BRCA.png')
 
 
 
