@@ -423,7 +423,7 @@ clinical$barcode_short <- substr(clinical$barcode, 0,16)
 
 
 setwd("~/CSBL_shared/RNASeq/TCGA/counts")
-proj <- projects[1]
+#proj <- projects[4]
 for(proj in projects){
   
     df.exp <- data.table::fread(str_glue("~/CSBL_shared/RNASeq/TCGA/counts/{proj}.counts.csv"), stringsAsFactors = TRUE) %>%
@@ -433,6 +433,7 @@ for(proj in projects){
     n<-dim(df.exp)[1]
     df.exp<-df.exp[1:(n-5),]
 
+    df.exp.cancertype <- df.exp
     
     coldata.t<- tumor.samples[tumor.samples$project == proj,]
     coldata.n <- normal.samples[normal.samples$project == proj,]
@@ -465,6 +466,8 @@ for(proj in projects){
   coldata.t <- coldata.t[!duplicated(coldata.t),]
   
   coldata <- as.data.frame(rbind(coldata.n, coldata.t))
+  
+  df.exp <- df.exp.cancertype
   
   df.exp <- df.exp[ ,colnames(df.exp) %in% coldata$barcode]
   
