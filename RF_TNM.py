@@ -1,154 +1,131 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# The objecitve of this notebook is to classify the TNM staging information for 8 of the cancer types. 
-# We will add to the analysis the DE genes from each of the analyses completed in R
-
-# We will extract features of the highest importance for each class.
-# The catagorical classification will identify the TNM staging but will also illuminate features that
-# define each class. 
-
-
-# To comeplte the work, we will lean on the analysis completed on 4/7/2020
-# We will construct and tune an RF to classify transcritomic data.
-
-# We will move further and tune hypter paramters in a grid search for optimal mtrys and we will produce 
-# ouput figures to visualize our work. 
-
-# import libraries and packages necessary for analysis
-
-# Load the Libraries
-
-# import some packages thhat may be helpful for us
-
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.utils import resample
+from sklearn.metrics import accuracy_score
+import os, sys
+from sklearn.metrics import confusion_matrix
+import itertools
 
-# define a random seed to replicate the results
-RSEED = 50
+# Open a file
+os.chdir("/home/mskaro1/storage/PanCancerAnalysis/ML_2019/TNM_RF/")
+path = "/home/mskaro1/storage/PanCancerAnalysis/ML_2019/TNM_RF/"
+dirs = os.listdir(path)
 
+# This would print all the files and directories
+for file in dirs:
 
-# Read in the data set
+   #print(file)
+    features= pd.read_csv(file)
+    # Look at the shape of the data to construct the input layer. 
+    print('We have {} instances of data with {} variables'.format(*features.shape))
+    
+    #labels are not balanced, we need to resample to balance them
 
-features= pd.read_csv("/home/mskaro1/storage/PanCancerAnalysis/ML_2019/TNM_RF/TCGA-THCA_TNM.csv")
-
-# Look at the shape of the data to construct the input layer. 
-print('We have {} instances of data with {} variables'.format(*features.shape))
-
-
-
-# dataframe.size 
-size = features.size 
-
-# dataframe.shape 
-shape = features.shape 
-  
-# dataframe.ndim 
-df_ndim = features.ndim 
-
-
-
-size
-
-shape
-
-df_ndim
+    label_pop_values = features['labels'].value_counts()
+    
+    
+    # Look at the above result and see which one is the majority leader. Then up samples to equalize. 
+    # I think there is enough variability in the 60k genes that the up sampled smaller classes will be okay, 
+    # we will invesitgate this intuition to be sure though. 
 
 
-# In[329]:
 
+    #First, we'll separate observations from each class into different DataFrames.
 
-# Labels are the values we want to predict, retrun and pop them off after
-labels = np.array(features.pop('labels'))
-# Saving feature names for later use
-feature_list = list(features.columns)
-# Convert to numpy array
-features = np.array(features)
+    # Separate majority and minority classes
+    df_NX = features[features.labels=="NX"]
+    df_N0 = features[features.labels=="N0"]
+    df_N1 = features[features.labels=="N1"]
+    df_N2 = features[features.labels=="N2"]
+    df_N3 = features[features.labels=="N3"]
+    df_M = features[features.labels=="M"]
+    
+    
+    # This will have to change for each cancer unfortunately
+ 
+    # Upsample minority classes
+    df_NX_upsampled = resample(df_NX, 
+                                     replace=True,     # sample with replacement
+                                     n_samples=,    # to match majority class
+                                     random_state=RSEED) # reproducible results
+    # Upsample minority classes
+    df_N1_upsampled = resample(df_N1, 
+                                     replace=True,     # sample with replacement
+                                     n_samples=,    # to match majority class
+                                     random_state=RSEED) # reproducible results
 
+    # Upsample minority classes
+    df_N2_upsampled = resample(df_N2, 
+                                     replace=True,     # sample with replacement
+                                     n_samples=,    # to match majority class
+                                     random_state=RSEED) # reproducible results
+    # Upsample minority classes
+    df_N3_upsampled = resample(df_N3, 
+                                     replace=True,     # sample with replacement
+                                     n_samples=,    # to match majority class
+                                     random_state=RSEED) # reproducible results
+    # Upsample minority classes
+    df_M_upsampled = resample(df_M, 
+                                     replace=True,     # sample with replacement
+                                     n_samples=,    # to match majority class
+                                     random_state=RSEED) # reproducible results
 
-# In[330]:
+    # Combine majority class with upsampled minority class
+    df_upsampled = pd.concat([df_N0,df_NX_upsampled,df_N1_upsampled,df_N2_upsampled,df_N3_upsampled,df_M_upsampled])
+    
+    # Labels are the values we want to predict, retrun and pop them off after
+    labels = np.array(df_upsampled.pop('labels'))
+    # Saving feature names for later use
+    feature_list = list(df_upsampled.columns)
+    # Convert to numpy array
+    features = np.array(df_upsampled)
+    
+    from numpy import *
+    labels=np.array(['NX' if x is np.nan else x for x in labels])
+    
+    # split the data into train and test.
 
+    # 30% examples in test data
+    train, test, train_labels, test_labels = train_test_split(features,
+                                             labels, 
+                                             stratify = labels,
+                                             test_size = 0.3, 
+                                             random_state = RSEED)
+    # Create the model with 1000 trees.
 
-type(labels)
+    # Lets start with 1000 trees and see where it goes.
+    # We may have to do a grid search for the optimum max features
+    model = RandomForestClassifier(n_estimators=1000, 
+                                   random_state=RSEED, 
+                                   max_features = 'sqrt',
+                                   n_jobs=-1, verbose = 1)
+    # Fit on training data. This will take some doing but seems viable. 
 
+    # from here down it is plug and play. I think fitting the data
+    # into memory may be an issue but we will see. 
 
-# In[331]:
+    model.fit(train, train_labels)
+    
+    
+    # Training predictions (to demonstrate overfitting)
+    train_rf_predictions = model.predict(train)
+    train_rf_probs = model.predict_proba(train)[:, 1]
 
+    # Testing predictions (to determine performance)
+    rf_predictions = model.predict(test)
+    rf_probs = model.predict_proba(test)[:, 1]
+    
+    from sklearn.metrics import precision_score, recall_score, roc_auc_score, roc_curve
+    import matplotlib.pyplot as plt
 
-from numpy import *
-labels=np.array(['NX' if x is np.nan else x for x in labels])
-
-#i think this is turned into a list and not an np array which changes things, we may be able to deal with this
-# earlier. 
-
-
-# In[332]:
-
-
-# split the data into train and test.
-
-# 30% examples in test data
-train, test, train_labels, test_labels = train_test_split(features,
-                                         labels, 
-                                         stratify = labels,
-                                         test_size = 0.3, 
-                                         random_state = RSEED)
-
-
-# In[333]:
-
-
-# Create the model with 1000 trees.
-
-# Lets start with 1000 trees and see where it goes.
-
-
-model = RandomForestClassifier(n_estimators=1000, 
-                               random_state=RSEED, 
-                               max_features = 'sqrt',
-                               n_jobs=-1, verbose = 1)
-
-
-# In[334]:
-
-
-# Fit on training data. This will take some doing but seems viable. 
-
-# from here down it is plug and play. I think fitting the data
-# into memory may be an issue but we will see. 
-
-model.fit(train, train_labels)
-
-
-# In[335]:
-
-
-# Training predictions (to demonstrate overfitting)
-train_rf_predictions = model.predict(train)
-train_rf_probs = model.predict_proba(train)[:, 1]
-
-# Testing predictions (to determine performance)
-rf_predictions = model.predict(test)
-rf_probs = model.predict_proba(test)[:, 1]
-
-
-# In[336]:
-
-
-from sklearn.metrics import precision_score, recall_score, roc_auc_score, roc_curve
-import matplotlib.pyplot as plt
-
-# Plot formatting
-plt.style.use('fivethirtyeight')
-plt.rcParams['font.size'] = 18
-
-
-# In[337]:
-
-
-'''def evaluate_model(predictions, probs, train_predictions, train_probs):
+    # Plot formatting
+    plt.style.use('fivethirtyeight')
+    plt.rcParams['font.size'] = 18
+    
+    # I can't use this yet but we will get there :)
+    '''def evaluate_model(predictions, probs, train_predictions, train_probs):
     """Compare machine learning model to baseline performance.
     Computes statistics and shows ROC curve."""
     
@@ -189,33 +166,21 @@ plt.rcParams['font.size'] = 18
     plt.xlabel('False Positive Rate'); 
     plt.ylabel('True Positive Rate'); plt.title('ROC Curves');
     plt.show();
-    plt.savefig('roc_auc_curve_BLCA.png');
+    
     
     
     # save the results:
     
+    evaluate_model(rf_predictions, rf_probs, train_rf_predictions, train_rf_probs)
+    plt.savefig('roc_auc_curve.png')'''
     
     
-evaluate_model(rf_predictions, rf_probs, train_rf_predictions, train_rf_probs)
-#plt.savefig('roc_auc_curve_BLCA.png');'''
+    
 
-
-# In[338]:
-
-
-range(len(test_labels))
-
-
-# In[339]:
-
-
-from sklearn.metrics import confusion_matrix
-import itertools
-
-def plot_confusion_matrix(cm, classes,
-                          normalize=False,
-                          title='Confusion matrix',
-                          cmap=plt.cm.Oranges):
+    def plot_confusion_matrix(cm, classes,
+                              normalize=False,
+                              title='Confusion matrix',
+                              cmap=plt.cm.Oranges):
     """
     This function prints and plots the confusion matrix.
     Normalization can be applied by setting `normalize=True`.
@@ -252,11 +217,14 @@ def plot_confusion_matrix(cm, classes,
     plt.ylabel('True label', size = 18)
     plt.xlabel('Predicted label', size = 18)
 
-# Confusion matrix
-cm = confusion_matrix(test_labels, rf_predictions)
-plot_confusion_matrix(cm, classes = ['N0','NX','N1','N2','N3','M'])
+    # Confusion matrix
+    cm = confusion_matrix(test_labels, rf_predictions)
+    plot_confusion_matrix(cm, classes = ['N0','NX','N1','N2','N3','M'])
 
-plt.savefig('cm_THCA.png')
+    plt.savefig('TNM_output/cm_LUAD_upsampled.png')
+
+    # Assess the accuracy of the model. Prevent feature dilution and over fitting yayayaya
+    
 
 
 # In[340]:
