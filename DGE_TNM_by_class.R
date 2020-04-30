@@ -600,10 +600,479 @@ for(proj in projects){
   
 }
 
-# use PCA to see separation between clusters
+# split the T stage for TNM staging information
 
-
+proj <- projects[1]
+setwd("~/CSBL_shared/clinical/TCGAbiolinks")
+for(proj in projects){
   
+  # load the R data file
+  
+  load(str_glue("~/CSBL_shared/clinical/TCGAbiolinks/{proj}_clin.Rdata"))
+  
+  if(exists("BLCA_clinical")){
+    
+    # extract barcode + event_stage_tnm_catagories using select command
+    
+    BLCA_clinical <- BLCA_clinical %>%
+      dplyr::select(bcr_patient_barcode,stage_event_tnm_categories)
+    
+    
+    # segregate the TNM staging into N0,N1,N2, N3 and M using mutate
+    # we will want to use the pathologic staging infromation as it includes the most 
+    # information available for the patient. This is the second T
+    BLCA_clinical$T_stage_MS <- stringi::stri_extract_last(BLCA_clinical$stage_event_tnm_categories, regex ="T[[:alnum:]]")
+    #BLCA_clinical$T_stage_MS <- str_extract(BLCA_clinical$stage_event_tnm_categories, "(T[[:alnum:]]){1,2}")
+    #BLCA_clinical$pathologic <- stringi::stri_extract_last(BLCA_clinical$T_stage_MS, regex = "T[[:alnum:]]")
+    View(BLCA_clinical)
+    #BLCA_clinical$M_stage_MS <- str_extract(BLCA_clinical$stage_event_tnm_categories, "M\\w")
+    
+    
+    # add proper column TNM staging for each patient in N0, N1,N2,N3,M
+    #NX means the nearby lymph nodes can't be assessed, for example, if they were previously removed.
+    #N0 means nearby lymph nodes do not contain cancer.
+    #N1, N2, N3: These numbers are based on the number of 
+    #lymph nodes involved and how much cancer is found in them. 
+    #The higher the N number, the greater the extent of the lymph node involvement.
+    
+    #BLCA_clinical <-  BLCA_clinical %>%
+    #  mutate(BLCA_clinical, TNM_stage_MS = ifelse(BLCA_clinical$M_stage_MS == "M1", 
+    #                                              "M", BLCA_clinical$N_stage_MS))
+    
+    BLCA_clinical <- BLCA_clinical %>%
+      dplyr::select(bcr_patient_barcode,T_stage_MS)
+    
+    
+    # write out clincal file as a csv so we can change the project files  
+    
+    write.csv(BLCA_clinical, file = str_glue("~/storage/Machine_Learning/TNM_stage/TNM_T/TCGA-{proj}_TNM.csv"))
+    
+    
+    #remove clincal file
+    
+    rm(BLCA_clinical)
+    
+  }
+  
+  
+  if(exists("BRCA_clinical")){
+    
+    # extract barcode + event_stage_tnm_catagories using select command
+    
+    BRCA_clinical <- BRCA_clinical %>%
+      dplyr::select(bcr_patient_barcode,stage_event_tnm_categories)
+    
+    
+    # segregate the TNM staging into N0,N1,N2, N3 and M using mutate
+    # we will want to use the pathologic staging infromation as it includes the most 
+    # information available for the patient. This is the second T
+    BRCA_clinical$T_stage_MS <- stringi::stri_extract_last(BRCA_clinical$stage_event_tnm_categories, regex ="T[[:alnum:]]")
+    #BRCA_clinical$T_stage_MS <- str_extract(BRCA_clinical$stage_event_tnm_categories, "(T[[:alnum:]]){1,2}")
+    #BRCA_clinical$pathologic <- stringi::stri_extract_last(BRCA_clinical$T_stage_MS, regex = "T[[:alnum:]]")
+    View(BRCA_clinical)
+    #BRCA_clinical$M_stage_MS <- str_extract(BRCA_clinical$stage_event_tnm_categories, "M\\w")
+    
+    
+    # add proper column TNM staging for each patient in N0, N1,N2,N3,M
+    #NX means the nearby lymph nodes can't be assessed, for example, if they were previously removed.
+    #N0 means nearby lymph nodes do not contain cancer.
+    #N1, N2, N3: These numbers are based on the number of 
+    #lymph nodes involved and how much cancer is found in them. 
+    #The higher the N number, the greater the extent of the lymph node involvement.
+    
+    #BRCA_clinical <-  BRCA_clinical %>%
+    #  mutate(BRCA_clinical, TNM_stage_MS = ifelse(BRCA_clinical$M_stage_MS == "M1", 
+    #                                              "M", BRCA_clinical$N_stage_MS))
+    
+    BRCA_clinical <- BRCA_clinical %>%
+      dplyr::select(bcr_patient_barcode,T_stage_MS)
+    
+    
+    # write out clincal file as a csv so we can change the project files  
+    
+    write.csv(BRCA_clinical, file = str_glue("~/storage/Machine_Learning/TNM_stage/TNM_T/TCGA-{proj}_TNM.csv"))
+    
+    
+    #remove clincal file
+    
+    rm(BRCA_clinical)
+  }
+  
+  
+  if(exists("COAD_clinical")){
+    
+    # extract barcode + event_stage_tnm_catagories using select command
+    
+    COAD_clinical <- COAD_clinical %>%
+      dplyr::select(bcr_patient_barcode,stage_event_tnm_categories)
+    
+    
+    # segregate the TNM staging into N0,N1,N2, N3 and M using mutate
+    # we will want to use the pathologic staging infromation as it includes the most 
+    # information available for the patient. This is the second T
+    COAD_clinical$T_stage_MS <- stringi::stri_extract_last(COAD_clinical$stage_event_tnm_categories, regex ="T[[:alnum:]]")
+    #COAD_clinical$T_stage_MS <- str_extract(COAD_clinical$stage_event_tnm_categories, "(T[[:alnum:]]){1,2}")
+    #COAD_clinical$pathologic <- stringi::stri_extract_last(COAD_clinical$T_stage_MS, regex = "T[[:alnum:]]")
+    View(COAD_clinical)
+    #COAD_clinical$M_stage_MS <- str_extract(COAD_clinical$stage_event_tnm_categories, "M\\w")
+    
+    
+    # add proper column TNM staging for each patient in N0, N1,N2,N3,M
+    #NX means the nearby lymph nodes can't be assessed, for example, if they were previously removed.
+    #N0 means nearby lymph nodes do not contain cancer.
+    #N1, N2, N3: These numbers are based on the number of 
+    #lymph nodes involved and how much cancer is found in them. 
+    #The higher the N number, the greater the extent of the lymph node involvement.
+    
+    #COAD_clinical <-  COAD_clinical %>%
+    #  mutate(COAD_clinical, TNM_stage_MS = ifelse(COAD_clinical$M_stage_MS == "M1", 
+    #                                              "M", COAD_clinical$N_stage_MS))
+    
+    COAD_clinical <- COAD_clinical %>%
+      dplyr::select(bcr_patient_barcode,T_stage_MS)
+    
+    
+    # write out clincal file as a csv so we can change the project files  
+    
+    write.csv(COAD_clinical, file = str_glue("~/storage/Machine_Learning/TNM_stage/TNM_T/TCGA-{proj}_TNM.csv"))
+    
+    
+    #remove clincal file
+    
+    rm(COAD_clinical)
+  }
+  
+  
+  if(exists("HNSC_clinical")){
+    
+    # extract barcode + event_stage_tnm_catagories using select command
+    
+    HNSC_clinical <- HNSC_clinical %>%
+      dplyr::select(bcr_patient_barcode,stage_event_tnm_categories)
+    
+    
+    # segregate the TNM staging into N0,N1,N2, N3 and M using mutate
+    # we will want to use the pathologic staging infromation as it includes the most 
+    # information available for the patient. This is the second T
+    HNSC_clinical$T_stage_MS <- stringi::stri_extract_last(HNSC_clinical$stage_event_tnm_categories, regex ="T[[:alnum:]]")
+    #HNSC_clinical$T_stage_MS <- str_extract(HNSC_clinical$stage_event_tnm_categories, "(T[[:alnum:]]){1,2}")
+    #HNSC_clinical$pathologic <- stringi::stri_extract_last(HNSC_clinical$T_stage_MS, regex = "T[[:alnum:]]")
+    View(HNSC_clinical)
+    #HNSC_clinical$M_stage_MS <- str_extract(HNSC_clinical$stage_event_tnm_categories, "M\\w")
+    
+    
+    # add proper column TNM staging for each patient in N0, N1,N2,N3,M
+    #NX means the nearby lymph nodes can't be assessed, for example, if they were previously removed.
+    #N0 means nearby lymph nodes do not contain cancer.
+    #N1, N2, N3: These numbers are based on the number of 
+    #lymph nodes involved and how much cancer is found in them. 
+    #The higher the N number, the greater the extent of the lymph node involvement.
+    
+    #HNSC_clinical <-  HNSC_clinical %>%
+    #  mutate(HNSC_clinical, TNM_stage_MS = ifelse(HNSC_clinical$M_stage_MS == "M1", 
+    #                                              "M", HNSC_clinical$N_stage_MS))
+    
+    HNSC_clinical <- HNSC_clinical %>%
+      dplyr::select(bcr_patient_barcode,T_stage_MS)
+    
+    
+    # write out clincal file as a csv so we can change the project files  
+    
+    write.csv(HNSC_clinical, file = str_glue("~/storage/Machine_Learning/TNM_stage/TNM_T/TCGA-{proj}_TNM.csv"))
+    
+    
+    #remove clincal file
+    
+    rm(HNSC_clinical)
+  }
+  
+  
+  if(exists("LUAD_clinical")){
+    
+    # extract barcode + event_stage_tnm_catagories using select command
+    
+    LUAD_clinical <- LUAD_clinical %>%
+      dplyr::select(bcr_patient_barcode,stage_event_tnm_categories)
+    
+    
+    # segregate the TNM staging into N0,N1,N2, N3 and M using mutate
+    # we will want to use the pathologic staging infromation as it includes the most 
+    # information available for the patient. This is the second T
+    LUAD_clinical$T_stage_MS <- stringi::stri_extract_last(LUAD_clinical$stage_event_tnm_categories, regex ="T[[:alnum:]]")
+    #LUAD_clinical$T_stage_MS <- str_extract(LUAD_clinical$stage_event_tnm_categories, "(T[[:alnum:]]){1,2}")
+    #LUAD_clinical$pathologic <- stringi::stri_extract_last(LUAD_clinical$T_stage_MS, regex = "T[[:alnum:]]")
+    View(LUAD_clinical)
+    #LUAD_clinical$M_stage_MS <- str_extract(LUAD_clinical$stage_event_tnm_categories, "M\\w")
+    
+    
+    # add proper column TNM staging for each patient in N0, N1,N2,N3,M
+    #NX means the nearby lymph nodes can't be assessed, for example, if they were previously removed.
+    #N0 means nearby lymph nodes do not contain cancer.
+    #N1, N2, N3: These numbers are based on the number of 
+    #lymph nodes involved and how much cancer is found in them. 
+    #The higher the N number, the greater the extent of the lymph node involvement.
+    
+    #LUAD_clinical <-  LUAD_clinical %>%
+    #  mutate(LUAD_clinical, TNM_stage_MS = ifelse(LUAD_clinical$M_stage_MS == "M1", 
+    #                                              "M", LUAD_clinical$N_stage_MS))
+    
+    LUAD_clinical <- LUAD_clinical %>%
+      dplyr::select(bcr_patient_barcode,T_stage_MS)
+    
+    
+    # write out clincal file as a csv so we can change the project files  
+    
+    write.csv(LUAD_clinical, file = str_glue("~/storage/Machine_Learning/TNM_stage/TNM_T/TCGA-{proj}_TNM.csv"))
+    
+    
+    #remove clincal file
+    
+    rm(LUAD_clinical)
+  }
+  
+  
+  if(exists("LUSC_clinical")){
+    
+    # extract barcode + event_stage_tnm_catagories using select command
+    
+    LUSC_clinical <- LUSC_clinical %>%
+      dplyr::select(bcr_patient_barcode,stage_event_tnm_categories)
+    
+    
+    # segregate the TNM staging into N0,N1,N2, N3 and M using mutate
+    # we will want to use the pathologic staging infromation as it includes the most 
+    # information available for the patient. This is the second T
+    LUSC_clinical$T_stage_MS <- stringi::stri_extract_last(LUSC_clinical$stage_event_tnm_categories, regex ="T[[:alnum:]]")
+    #LUSC_clinical$T_stage_MS <- str_extract(LUSC_clinical$stage_event_tnm_categories, "(T[[:alnum:]]){1,2}")
+    #LUSC_clinical$pathologic <- stringi::stri_extract_last(LUSC_clinical$T_stage_MS, regex = "T[[:alnum:]]")
+    View(LUSC_clinical)
+    #LUSC_clinical$M_stage_MS <- str_extract(LUSC_clinical$stage_event_tnm_categories, "M\\w")
+    
+    
+    # add proper column TNM staging for each patient in N0, N1,N2,N3,M
+    #NX means the nearby lymph nodes can't be assessed, for example, if they were previously removed.
+    #N0 means nearby lymph nodes do not contain cancer.
+    #N1, N2, N3: These numbers are based on the number of 
+    #lymph nodes involved and how much cancer is found in them. 
+    #The higher the N number, the greater the extent of the lymph node involvement.
+    
+    #LUSC_clinical <-  LUSC_clinical %>%
+    #  mutate(LUSC_clinical, TNM_stage_MS = ifelse(LUSC_clinical$M_stage_MS == "M1", 
+    #                                              "M", LUSC_clinical$N_stage_MS))
+    
+    LUSC_clinical <- LUSC_clinical %>%
+      dplyr::select(bcr_patient_barcode,T_stage_MS)
+    
+    
+    # write out clincal file as a csv so we can change the project files  
+    
+    write.csv(LUSC_clinical, file = str_glue("~/storage/Machine_Learning/TNM_stage/TNM_T/TCGA-{proj}_TNM.csv"))
+    
+    
+    #remove clincal file
+    
+    rm(LUSC_clinical)
+  }
+  
+  
+  if(exists("PRAD_clinical")){
+    
+    # extract barcode + event_stage_tnm_catagories using select command
+    
+    PRAD_clinical <- PRAD_clinical %>%
+      dplyr::select(bcr_patient_barcode,stage_event_tnm_categories)
+    
+    
+    # segregate the TNM staging into N0,N1,N2, N3 and M using mutate
+    # we will want to use the pathologic staging infromation as it includes the most 
+    # information available for the patient. This is the second T
+    PRAD_clinical$T_stage_MS <- stringi::stri_extract_last(PRAD_clinical$stage_event_tnm_categories, regex ="T[[:alnum:]]")
+    #PRAD_clinical$T_stage_MS <- str_extract(PRAD_clinical$stage_event_tnm_categories, "(T[[:alnum:]]){1,2}")
+    #PRAD_clinical$pathologic <- stringi::stri_extract_last(PRAD_clinical$T_stage_MS, regex = "T[[:alnum:]]")
+    View(PRAD_clinical)
+    #PRAD_clinical$M_stage_MS <- str_extract(PRAD_clinical$stage_event_tnm_categories, "M\\w")
+    
+    
+    # add proper column TNM staging for each patient in N0, N1,N2,N3,M
+    #NX means the nearby lymph nodes can't be assessed, for example, if they were previously removed.
+    #N0 means nearby lymph nodes do not contain cancer.
+    #N1, N2, N3: These numbers are based on the number of 
+    #lymph nodes involved and how much cancer is found in them. 
+    #The higher the N number, the greater the extent of the lymph node involvement.
+    
+    #PRAD_clinical <-  PRAD_clinical %>%
+    #  mutate(PRAD_clinical, TNM_stage_MS = ifelse(PRAD_clinical$M_stage_MS == "M1", 
+    #                                              "M", PRAD_clinical$N_stage_MS))
+    
+    PRAD_clinical <- PRAD_clinical %>%
+      dplyr::select(bcr_patient_barcode,T_stage_MS)
+    
+    
+    # write out clincal file as a csv so we can change the project files  
+    
+    write.csv(PRAD_clinical, file = str_glue("~/storage/Machine_Learning/TNM_stage/TNM_T/TCGA-{proj}_TNM.csv"))
+    
+    
+    #remove clincal file
+    
+    rm(PRAD_clinical)
+  }
+  
+  
+  if(exists("STAD_clinical")){
+    
+    # extract barcode + event_stage_tnm_catagories using select command
+    
+    STAD_clinical <- STAD_clinical %>%
+      dplyr::select(bcr_patient_barcode,stage_event_tnm_categories)
+    
+    
+    # segregate the TNM staging into N0,N1,N2, N3 and M using mutate
+    # we will want to use the pathologic staging infromation as it includes the most 
+    # information available for the patient. This is the second T
+    STAD_clinical$T_stage_MS <- stringi::stri_extract_last(STAD_clinical$stage_event_tnm_categories, regex ="T[[:alnum:]]")
+    #STAD_clinical$T_stage_MS <- str_extract(STAD_clinical$stage_event_tnm_categories, "(T[[:alnum:]]){1,2}")
+    #STAD_clinical$pathologic <- stringi::stri_extract_last(STAD_clinical$T_stage_MS, regex = "T[[:alnum:]]")
+    View(STAD_clinical)
+    #STAD_clinical$M_stage_MS <- str_extract(STAD_clinical$stage_event_tnm_categories, "M\\w")
+    
+    
+    # add proper column TNM staging for each patient in N0, N1,N2,N3,M
+    #NX means the nearby lymph nodes can't be assessed, for example, if they were previously removed.
+    #N0 means nearby lymph nodes do not contain cancer.
+    #N1, N2, N3: These numbers are based on the number of 
+    #lymph nodes involved and how much cancer is found in them. 
+    #The higher the N number, the greater the extent of the lymph node involvement.
+    
+    #STAD_clinical <-  STAD_clinical %>%
+    #  mutate(STAD_clinical, TNM_stage_MS = ifelse(STAD_clinical$M_stage_MS == "M1", 
+    #                                              "M", STAD_clinical$N_stage_MS))
+    
+    STAD_clinical <- STAD_clinical %>%
+      dplyr::select(bcr_patient_barcode,T_stage_MS)
+    
+    
+    # write out clincal file as a csv so we can change the project files  
+    
+    write.csv(STAD_clinical, file = str_glue("~/storage/Machine_Learning/TNM_stage/TNM_T/TCGA-{proj}_TNM.csv"))
+    
+    
+    #remove clincal file
+    
+    rm(STAD_clinical)
+  }
+  
+  
+  if(exists("THCA_clinical")){
+    
+    # extract barcode + event_stage_tnm_catagories using select command
+    
+    THCA_clinical <- THCA_clinical %>%
+      dplyr::select(bcr_patient_barcode,stage_event_tnm_categories)
+    
+    
+    # segregate the TNM staging into N0,N1,N2, N3 and M using mutate
+    # we will want to use the pathologic staging infromation as it includes the most 
+    # information available for the patient. This is the second T
+    THCA_clinical$T_stage_MS <- stringi::stri_extract_last(THCA_clinical$stage_event_tnm_categories, regex ="T[[:alnum:]]")
+    #THCA_clinical$T_stage_MS <- str_extract(THCA_clinical$stage_event_tnm_categories, "(T[[:alnum:]]){1,2}")
+    #THCA_clinical$pathologic <- stringi::stri_extract_last(THCA_clinical$T_stage_MS, regex = "T[[:alnum:]]")
+    View(THCA_clinical)
+    #THCA_clinical$M_stage_MS <- str_extract(THCA_clinical$stage_event_tnm_categories, "M\\w")
+    
+    
+    # add proper column TNM staging for each patient in N0, N1,N2,N3,M
+    #NX means the nearby lymph nodes can't be assessed, for example, if they were previously removed.
+    #N0 means nearby lymph nodes do not contain cancer.
+    #N1, N2, N3: These numbers are based on the number of 
+    #lymph nodes involved and how much cancer is found in them. 
+    #The higher the N number, the greater the extent of the lymph node involvement.
+    
+    #THCA_clinical <-  THCA_clinical %>%
+    #  mutate(THCA_clinical, TNM_stage_MS = ifelse(THCA_clinical$M_stage_MS == "M1", 
+    #                                              "M", THCA_clinical$N_stage_MS))
+    
+    THCA_clinical <- THCA_clinical %>%
+      dplyr::select(bcr_patient_barcode,T_stage_MS)
+    
+    
+    # write out clincal file as a csv so we can change the project files  
+    
+    write.csv(THCA_clinical, file = str_glue("~/storage/Machine_Learning/TNM_stage/TNM_T/TCGA-{proj}_TNM.csv"))
+    
+    
+    #remove clincal file
+    
+    rm(THCA_clinical)
+  }
+  
+} 
+
+
+
+
+
+#projects <- c("TCGA-BLCA","TCGA-BRCA","TCGA-COAD","TCGA-ESCA","TCGA-HNSC","TCGA-KIRC","TCGA-KIRP","TCGA-LIHC","TCGA-LUAD","TCGA-LUSC","TCGA-PRAD","TCGA-STAD","TCGA-THCA")
+projects <- c("TCGA-BLCA","TCGA-BRCA","TCGA-COAD","TCGA-HNSC","TCGA-LUAD","TCGA-LUSC","TCGA-PRAD","TCGA-STAD","TCGA-THCA")
+# gene annotaiton, may need, may not
+
+# add the clinical annotations of progression
+
+# read in the files in one by one and select the correct columns. 
+# concatenate the files and end with one uniform progression file. 
+
+setwd("~/storage/Machine_Learning/TNM_stage")
+
+
+proj <- projects[1]
+
+for(proj in projects){
+  # annot 
+  setwd("~/storage/Machine_Learning/TNM_stage/TNM_T/")
+  annot <- as.data.frame(data.table::fread(str_glue("{proj}_TNM.csv"), header = TRUE)) %>%
+    column_to_rownames("V1")
+  
+  
+  
+  setwd("~/storage/PanCancerAnalysis/ML_2019")
+  # read in data
+  
+  dat <- data.table::fread(str_glue("{proj}_learning.csv", header = TRUE))
+  colnames(dat)[1] <- "barcode"
+  
+  dat$bcr_patient_barcode <- substr(dat$barcode,1,12)
+  
+  
+  # remove the normal samples, in this section we are only classifying the metastatic cases from 
+  # here on out
+  
+  dat <- dat[dat$sample_type == "Primary_Tumor",]
+  
+  
+  # add column annotation for the metastatic staus of the sample's metastatic status
+  
+  dat<- left_join(dat, annot, by="bcr_patient_barcode")
+  
+  # get rid of some of the unnecessary columns that were added, we want the majority
+  # of the data to be numeric with only a few feactorial variables.
+  
+  dat <- dat %>%
+    dplyr::select(-barcode, -sample_type, -bcr_patient_barcode)
+  
+  
+  
+  # change name of Metastatic_status to just labels
+  
+  
+  dat <- dat %>%
+    dplyr::rename(labels = T_stage_MS)
+  
+  # write it out
+  
+   
+  write.csv(dat, file = str_glue("~/storage/PanCancerAnalysis/ML_2019/TNM_RF/TNM_T_staging/{proj}_TNM.csv"))
+
+}
 
 # conduct DE analysis for each one of the classes against Normal for each cancer type
 # save dds objects, use old code to make Pathway enrichment
