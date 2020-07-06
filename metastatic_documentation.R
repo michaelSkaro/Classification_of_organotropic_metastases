@@ -1,21 +1,11 @@
 # I would like to start by saying before anyone moves forward with this code:
 
-# I am neither proud nor am I happy with 99% of this code. However,
-# I really have exhausted many of my options in the forms of REGEX to 
+# This code is an almalgamation of 4-5 small REGEX and stringr stuffs to 
 # complete this work. 
-# The files I was given from the database were very terribly organized and for that
-# I hope no one ever tries to use this code. 
+# The files I was given from the database were just simply terrible and for that
+# I hope no one ever tries to use this code. Please do not judge me on this deposit. 
 
-#Thanks. 
-
-
-
-
-
-
-
-
-
+#Thanks...
 
 # Clear your workspace
 rm(list=ls(all=TRUE))
@@ -1131,11 +1121,6 @@ for(i in projects){
     foo <- foo[!duplicated(foo$bcr_patient_barcode),]
     
     KIRC_met <- foo
-    
-    
-    
-    
-    
     
     write.csv(KIRC_met, file = str_glue("~/storage/PanCancerAnalysis/TCGABiolinks/metastatic_clin_info/{i}_metastatic_status.csv"))
     
