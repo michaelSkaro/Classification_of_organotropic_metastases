@@ -83,3 +83,74 @@ for(proj in projects){
 }
 
 
+
+
+
+
+projects <- c("BLCA","BRCA","COAD","ESCA","HNSC","KIRC","KIRP","LIHC","LUAD","LUSC","PRAD","STAD","THCA")
+
+proj <- projects[1]
+for(proj in projects){
+  # prepare the data for the analysis of each data type:
+  
+  load(str_glue("~/storage/MAE_analysis/clinical/{proj}_clin.RData"))
+  
+  #View(as.data.frame(clin@listData))
+  
+  # expand to long format with the Primary tumors or the Helathy tissue Normals
+  
+  annot <- as.data.frame(clin@listData)
+  
+  
+  
+  
+  
+    
+}
+
+
+# methylation
+
+
+# attach the labels for each of the following:
+
+  # Cancer/Normal
+  # Cancer type
+  # pathologic TNM stage
+  # site of progression if there is one
+    # site of progression tumor.samples <- data.table::fread("~/storage/Metastatic_Organo_Tropism/tumor_samples_annotated_progression.csv")
+    # map the samples to the UUID and map the progression to the sample
+
+
+# expression
+
+  # Cancer/Normal
+  # Cancer type
+  # pathologic TNM stage
+  # site of progression if there is one
+    # site of progression tumor.samples <- data.table::fread("~/storage/Metastatic_Organo_Tropism/tumor_samples_annotated_progression.csv")
+    # map the samples to the UUID and map the progression to the sample
+
+# miRNA
+  # Cancer/Normal
+  # Cancer type
+  # pathologic TNM stage
+  # site of progression if there is one
+    # site of progression tumor.samples <- data.table::fread("~/storage/Metastatic_Organo_Tropism/tumor_samples_annotated_progression.csv")
+    # map the samples to the UUID and map the progression to the sample
+
+# mutation
+  # Cancer/Normal
+  # Cancer type
+  # pathologic TNM stage
+  # site of progression if there is one
+    # site of progression tumor.samples <- data.table::fread("~/storage/Metastatic_Organo_Tropism/tumor_samples_annotated_progression.csv")
+    # map the samples to the UUID and map the progression to the sample
+
+
+
+
+
+
+
+
