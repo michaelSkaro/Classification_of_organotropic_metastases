@@ -208,9 +208,11 @@ for(proj in projects){
   
   colnames(patient)[1] <- "submitter_id"
   
-  foo <- left_join(full_map, patient, by ="submitter_id")
+  current <- left_join(full_map, patient, by ="submitter_id")
   
+   
   
+  # write out each one then combine all together again
 }
 
 
