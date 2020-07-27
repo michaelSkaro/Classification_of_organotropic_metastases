@@ -101,7 +101,35 @@ for(proj in projects){
   
   annot <- as.data.frame(clin@listData)
   
+  # attach the labels for each of the following:
   
+  # methylation
+    # Cancer/Normal
+    # Cancer type
+    # pathologic TNM stage
+    # site of progression if there is one
+    # site of progression tumor.samples <- data.table::fread("~/storage/Metastatic_Organo_Tropism/tumor_samples_annotated_progression.csv")
+    # map the samples to the UUID and map the progression to the sample
+  
+  df.exp <- data.table::fread(file = str_glue("/home/mskaro1/storage/MAE_analysis/methylation/{proj}_methly.csv"), header = TRUE) %>%
+    as_tibble() %>% 
+    column_to_rownames("V1")
+  
+  df.exp <- rownames_to_column(df.exp, var = "probe_ids")
+  
+  # convert colnames to a vector
+  
+  cols <- colnames(df.exp[,2:length(colnames(df.exp))])
+  
+  cols.translate <- barcodeToUUID(cols)
+  
+  # translate them to the caseIDs
+  
+  colnames(cols.translate) <- c("submitter_id", "caseID")
+  
+  df.grid<- left_join(cols.translate, tumor.samples, by=  "caseID")
+  
+  # the attach the case IDs and the clincal matches
   
   
   
@@ -109,7 +137,73 @@ for(proj in projects){
 }
 
 
-# methylation
+#complete data annotation
+
+setwd("~/storage/MAE_analysis/Sample_Maps")
+
+projects <- c("BLCA","BRCA","COAD","ESCA","HNSC","KIRC","KIRP","LIHC","LUAD","LUSC","PRAD","STAD","THCA")
+
+
+BLCA <- as_tibble(data.table::fread("BLCA_sample_map.csv", header = TRUE)) %>%
+  column_to_rownames("V1")
+BRCA <- as_tibble(data.table::fread("BRCA_sample_map.csv", header = TRUE)) %>%
+  column_to_rownames("V1")
+COAD <- as_tibble(data.table::fread("COAD_sample_map.csv", header = TRUE)) %>%
+  column_to_rownames("V1")
+ESCA <- as_tibble(data.table::fread("ESCA_sample_map.csv", header = TRUE)) %>%
+  column_to_rownames("V1")
+HNSC <- as_tibble(data.table::fread("HNSC_sample_map.csv", header = TRUE)) %>%
+  column_to_rownames("V1")
+KIRC <- as_tibble(data.table::fread("KIRC_sample_map.csv", header = TRUE)) %>%
+  column_to_rownames("V1")
+KIRP <- as_tibble(data.table::fread("KIRP_sample_map.csv", header = TRUE)) %>%
+  column_to_rownames("V1")
+LIHC <- as_tibble(data.table::fread("LIHC_sample_map.csv", header = TRUE)) %>%
+  column_to_rownames("V1")
+LUAD <- as_tibble(data.table::fread("LUAD_sample_map.csv", header = TRUE)) %>%
+  column_to_rownames("V1")
+LUSC <- as_tibble(data.table::fread("LUSC_sample_map.csv", header = TRUE)) %>%
+  column_to_rownames("V1")
+PRAD <- as_tibble(data.table::fread("PRAD_sample_map.csv", header = TRUE)) %>%
+  column_to_rownames("V1")
+STAD <- as_tibble(data.table::fread("STAD_sample_map.csv", header = TRUE)) %>%
+  column_to_rownames("V1")
+THCA <- as_tibble(data.table::fread("THCA_sample_map.csv", header = TRUE)) %>%
+  column_to_rownames("V1")
+dat <- as.data.frame(rbind(BLCA,BRCA,COAD,ESCA,HNSC,KIRC,KIRP,LIHC,LUAD,LUSC,PRAD,STAD,THCA))
+
+write.csv(dat, "complete_sample_map.csv")
+rm(BLCA)
+rm(BRCA)
+rm(COAD)
+rm(ESCA)
+rm(HNSC)
+rm(KIRC)
+rm(KIRP)
+rm(LIHC)
+rm(LUAD)
+rm(LUSC)
+rm(PRAD)
+rm(STAD)
+rm(THCA)
+
+map_ids <- barcodeToUUID(dat$primary)
+colnames(dat)[2] <- "submitter_id"
+
+full_map <- left_join(dat, map_ids, by = "submitter_id")
+
+
+
+projects <- c("BLCA","BRCA","COAD","ESCA","HNSC","KIRC","KIRP","LIHC","LUAD","LUSC","PRAD","STAD","THCA")
+
+proj <- projects[1]
+
+for(proj in projects){
+  load(str_glue("~/storage/MAE_analysis/clinical/{proj}_clin.RData"))
+  
+  head(colnames(clinicalNames))
+  
+}
 
 
 # attach the labels for each of the following:
