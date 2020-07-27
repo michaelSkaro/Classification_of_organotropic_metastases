@@ -201,7 +201,15 @@ proj <- projects[1]
 for(proj in projects){
   load(str_glue("~/storage/MAE_analysis/clinical/{proj}_clin.RData"))
   
-  head(colnames(clinicalNames))
+  clin <- as.data.frame(clin)
+  
+  patient <- clin %>%
+    dplyr::select(c("patientID","pathology_T_stage","pathology_N_stage","pathology_M_stage","admin.file_uuid","patient.bcr_patient_uuid"))
+  
+  colnames(patient)[1] <- "submitter_id"
+  
+  foo <- left_join(full_map, patient, by ="submitter_id")
+  
   
 }
 
