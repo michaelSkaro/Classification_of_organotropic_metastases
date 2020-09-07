@@ -43,7 +43,26 @@ for(proj in projects){
   dat$barcode <- rownames(dat)
   dat<- left_join(dat, proj_met_samples, by="barcode")
   
-  write.csv2(x = dat, file = str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/RF_input_Metastatic/{proj}_metastatic_data_RNAseq.csv"))
+  #expand the comma separated column met_loc and add samples for each 
+  #one of the unique locations
+  
+  foo <- dat$barcode
+  bar <- dat$met_loc
+  
+  foobar <- as.data.frame(cbind(foo,bar))
+  s <- strsplit(foobar$bar, split = ",")
+  foobar <- data.frame(foo = rep(foobar$foo, sapply(s, length)), bar = unlist(s))
+  
+  colnames(foobar) <- c("barcode","exp.locs")
+  
+  dat2 <- left_join(foobar,dat, by ="barcode")
+  
+  write.csv2(x = dat2, file = str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/RF_input_Metastatic/{proj}_metastatic_data_RNAseq.csv"))
   
   
 }
+
+
+
+dat <- data.table::fread("TCGA-BLCA_metastatic_data_RNAseq.csv", header = TRUE) %>%
+  column_to_rownames("V1")
