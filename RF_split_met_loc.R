@@ -232,7 +232,7 @@ for(proj in projects){
     save(dds, file = str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/Metastatic_cancers_by_location_vs_Normal/{proj}_Bone_DE_met.RData"))
     
     res$ENSEMBL <- substr(rownames(res), 1, 15)
-    res <- res[abs(res$log2FoldChange) > 1.0,] 
+    res <- res[abs(res$log2FoldChange) > 1.5,] 
     res <- res[res$padj < 1.0e-3,]
     res <- res[!is.na(res$ENSEMBL),]
     
@@ -242,12 +242,8 @@ for(proj in projects){
                     y = 'pvalue',
                     xlim = c(-5, 8))
     
-    p <- EnhancedVolcano(res, lab = rep(" ", length(rownames(res))),x = "log2FoldChange", 
-                         y = "padj", xlab = bquote(~Log[2]~ "fold change"), ylab = bquote(~-Log[10]~adjusted~italic(P)), 
-                         pCutoff = 10e-2, FCcutoff = 2.0, ylim=c(0,7.5), xlim = c(-3,3), colAlpha = 0.7,
-                         legend=c("NS","Log2 FC","Adjusted p-value", "Adjusted p-value & Log2 FC"),legendPosition = "bottom",
-                         legendLabSize = 10, legendIconSize = 3.0, border = "full", borderWidth = 1.5, borderColour = "black", 
-                         gridlines.major = FALSE,gridlines.minor = FALSE)
+    ggsave(filename=paste0(str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/Metastatic_cancers_by_location_vs_Normal/{proj}"),"_MF_Bone_volcano_",".png"),
+           plot = p, device = "png", width = 8, height = 8, units = "in", dpi = "retina")
     
     
     res$ENSEMBL <- substr(rownames(res), 1, 15)
@@ -259,9 +255,6 @@ for(proj in projects){
            plot = p, device = "png", width = 8, height = 8, units = "in", dpi = "retina")
     ego_vals <- cbind(ego$ID, ego$Description, ego$GeneRatio, ego$BgRatio, ego$qvalue, ego$geneID)
     write.table(ego_vals, paste0(str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/Metastatic_cancers_by_location_vs_Normal/{proj}"),"_MF_Bone_flat_",".txt"))
-    
-    
-    
     
     ego_vals <- cbind(ego$ID, ego$Description, ego$GeneRatio, ego$BgRatio, ego$qvalue, ego$geneID)
     write.table(ego_vals, paste0(str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/Metastatic_cancers_by_location_vs_Normal/{proj}"),"_CC_Bone_Flat_",".txt"))
@@ -313,7 +306,7 @@ for(proj in projects){
     
     res$ENSEMBL <- substr(rownames(res), 1, 15)
     res <- res[abs(res$log2FoldChange) > 1.5,] 
-    res <- res[res$padj < 1.0e-4,]
+    res <- res[res$padj < 1.0e-3,]
     res <- res[!is.na(res$ENSEMBL),]
     
     p <- EnhancedVolcano(res,
@@ -388,7 +381,7 @@ for(proj in projects){
     
     res$ENSEMBL <- substr(rownames(res), 1, 15)
     res <- res[abs(res$log2FoldChange) > 1.5,] 
-    res <- res[res$padj < 1.0e-4,]
+    res <- res[res$padj < 1.0e-3,]
     res <- res[!is.na(res$ENSEMBL),]
     
     p <- EnhancedVolcano(res,
@@ -411,55 +404,371 @@ for(proj in projects){
     ego_vals <- cbind(ego$ID, ego$Description, ego$GeneRatio, ego$BgRatio, ego$qvalue, ego$geneID)
     write.table(ego_vals, paste0(str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/Metastatic_cancers_by_location_vs_Normal/{proj}"),"_MF_Lung_flat_",".txt"))
     
+
+    # Liver
+    
+  
+    
+    df.exp <- data.table::fread(str_glue("~/CSBL_shared/RNASeq/TCGA/counts/{proj}.counts.csv")) %>%
+      as_tibble() %>%
+      tibble::column_to_rownames(var = "Ensembl")
+    
+    coldata.Liver <- coldata.all.mets %>% dplyr::select(c(barcode, Liver))
+    coldata.Liver$Liver <-  "Advanced_to_Liver"
+    coldata.n$sample_type <-  "Solid_Tissue_Normal"
+    colnames(coldata.Liver) <- c("barcode", "sample_type")
+    coldata.exp <- rbind(coldata.n, coldata.Liver) 
+    rownames(coldata.exp) <- coldata.exp$barcode
+    
+    df.exp <- df.exp %>%
+      dplyr::select(coldata.exp$barcode)
+    
+    dds <- DESeq2::DESeqDataSetFromMatrix(countData = df.exp,colData = coldata.exp, design = ~sample_type)
+    
+    keep <- rowSums(counts(dds)) >= 10
+    dds <- dds[keep,]
+    
+    dds$sample_type <- relevel(dds$sample_type, ref = "Solid_Tissue_Normal")
+    
+    dds <- DESeq(dds)
+    res <- results(dds)
+    resOrdered <- res[order(res$pvalue),]
+    resOrdered <- as.data.frame(resOrdered)
+    res <- as.data.frame(res)
+    
+    write.csv(resOrdered, file = str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/Metastatic_cancers_by_location_vs_Normal/{proj}_Liver_DE.csv"))
+    
+    save(dds, file = str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/Metastatic_cancers_by_location_vs_Normal/{proj}_Liver_DE_met.RData"))
+    
+    res$ENSEMBL <- substr(rownames(res), 1, 15)
+    res <- res[abs(res$log2FoldChange) > 1.5,] 
+    res <- res[res$padj < 1.0e-3,]
+    res <- res[!is.na(res$ENSEMBL),]
+    
+    p <- EnhancedVolcano(res,
+                         lab = rownames(res),
+                         x = 'log2FoldChange',
+                         y = 'pvalue',
+                         xlim = c(-5, 8))
+    
+    
+    ggsave(filename=paste0(str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/Metastatic_cancers_by_location_vs_Normal/{proj}"),"_MF_Liver_volcano_",".png"),
+           plot = p, device = "png", width = 8, height = 8, units = "in", dpi = "retina")
+    
+    res$ENSEMBL <- substr(rownames(res), 1, 15)
+    
+    ego<- enrichGO(gene = res$ENSEMBL, OrgDb = org.Hs.eg.db, keyType = "ENSEMBL", ont = "MF", pAdjustMethod = "BH")
+    p<- clusterProfiler::dotplot(ego, showCategory =20)
+    p
+    ggsave(filename=paste0(str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/Metastatic_cancers_by_location_vs_Normal/{proj}"),"_MF_Liver_",".png"),
+           plot = p, device = "png", width = 8, height = 8, units = "in", dpi = "retina")
+    ego_vals <- cbind(ego$ID, ego$Description, ego$GeneRatio, ego$BgRatio, ego$qvalue, ego$geneID)
+    write.table(ego_vals, paste0(str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/Metastatic_cancers_by_location_vs_Normal/{proj}"),"_MF_Liver_flat_",".txt"))
+    
+    ggsave(filename=paste0(str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/Metastatic_cancers_by_location_vs_Normal/{proj}"),"_CC_",".png"),
+           plot = p, device = "png", width = 8, height = 8, units = "in", dpi = "retina")
+    ego_vals <- cbind(ego$ID, ego$Description, ego$GeneRatio, ego$BgRatio, ego$qvalue, ego$geneID)
+    write.table(ego_vals, paste0(str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/Metastatic_cancers_by_location_vs_Normal/{proj}"),"_CC_Liver_Flat_",".txt"))
+    
+    
+    ego<- enrichGO(gene = res$ENSEMBL, OrgDb = org.Hs.eg.db, keyType = "ENSEMBL", ont = "BP", pAdjustMethod = "BH")
+    p<- clusterProfiler::dotplot(ego, showCategory =20)
+    p
+    ggsave(filename=paste0(str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/Metastatic_cancers_by_location_vs_Normal/{proj}"),"_BP_Liver_",".png"),
+           plot = p, device = "png", width = 8, height = 8, units = "in", dpi = "retina")
+    ego_vals <- cbind(ego$ID, ego$Description, ego$GeneRatio, ego$BgRatio, ego$qvalue, ego$geneID)
+    write.table(ego_vals, paste0(str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/Metastatic_cancers_by_location_vs_Normal/{proj}"),"_BP_Liver_Flat_",".txt"))
+    
+    
+    rm(res,dds,ego,df.exp,resOrdered,coldata.exp, coldata.Liver,egovals)
+     
+  }
+  
+  if(proj =="TCGA-BRCA"){
+    #Bone
+    df.exp <- data.table::fread(str_glue("~/CSBL_shared/RNASeq/TCGA/counts/{proj}.counts.csv")) %>%
+      as_tibble() %>%
+      tibble::column_to_rownames(var = "Ensembl")
+    dat <- data.table::fread("/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/Metastatic_loci_consolidated/one_hot_encoded_labels/TCGA-BRCA_metastatic_data_RNAseq.csv", header = TRUE) %>%
+      column_to_rownames("V1")
+    # cut the columns off to make a coldata draft
+    coldata <- dat %>% dplyr::select(c(barcode,Bone:Liver))
+    coldata.all.mets <- coldata
+    dat <- dat %>% dplyr::select(-c(Bone:Liver))
+    dat <- as.data.frame(t(dat))
+    names(dat) <- dat[1,]
+    dat <- as.data.frame(dat[2:length(dat[,1]),])
+    
+    coldata.n <- normal.samples[normal.samples$project == proj,]
+    coldata.n <- coldata.n %>% dplyr::select(barcode,sample_type)
+    
+    coldata.bone <- dplyr::select(coldata,  c(barcode, Bone)) %>%
+      dplyr::filter(Bone ==1)
+    coldata.bone$Bone <-  "Advanced_to_Bone"
+    coldata.n$sample_type <-  "Solid_Tissue_Normal"
+    colnames(coldata.bone) <- c("barcode", "sample_type")
+    
+    coldata.exp <- rbind(coldata.n, coldata.bone) 
+    
+    
+    rownames(coldata.exp) <- coldata.exp$barcode
+    
+    df.exp <- df.exp %>%
+      dplyr::select(coldata.exp$barcode)
+    
+    # feed coldata.exp and df.exp to the differential experssion analysis with DEseq2
+    
+    dds <- DESeq2::DESeqDataSetFromMatrix(countData = df.exp,colData = coldata.exp, design = ~sample_type)
+    
+    keep <- rowSums(counts(dds)) >= 10
+    dds <- dds[keep,]
+    
+    dds$sample_type <- relevel(dds$sample_type, ref = "Solid_Tissue_Normal")
+    
+    dds <- DESeq(dds)
+    res <- results(dds)
+    resOrdered <- res[order(res$pvalue),]
+    resOrdered <- as.data.frame(resOrdered)
+    res <- as.data.frame(res)
+    
+    write.csv(resOrdered, file = str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/Metastatic_cancers_by_location_vs_Normal/{proj}_Bone_DE.csv"))
+    
+    save(dds, file = str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/Metastatic_cancers_by_location_vs_Normal/{proj}_Bone_DE_met.RData"))
+    
+    res$ENSEMBL <- substr(rownames(res), 1, 15)
+    res <- res[abs(res$log2FoldChange) > 1.5,] 
+    res <- res[res$padj < 1.0e-3,]
+    res <- res[!is.na(res$ENSEMBL),]
+    
+    p <- EnhancedVolcano(res,
+                         lab = rownames(res),
+                         x = 'log2FoldChange',
+                         y = 'pvalue',
+                         xlim = c(-5, 8))
+    
+    ggsave(filename=paste0(str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/Metastatic_cancers_by_location_vs_Normal/{proj}"),"_MF_Bone_volcano_",".png"),
+           plot = p, device = "png", width = 8, height = 8, units = "in", dpi = "retina")
+    
+    
+    res$ENSEMBL <- substr(rownames(res), 1, 15)
+    
+    ego<- enrichGO(gene = res$ENSEMBL, OrgDb = org.Hs.eg.db, keyType = "ENSEMBL", ont = "MF", pAdjustMethod = "BH")
+    p<- clusterProfiler::dotplot(ego, showCategory =20)
+    p
+    ggsave(filename=paste0(str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/Metastatic_cancers_by_location_vs_Normal/{proj}"),"_MF_Bone_",".png"),
+           plot = p, device = "png", width = 8, height = 8, units = "in", dpi = "retina")
+    ego_vals <- cbind(ego$ID, ego$Description, ego$GeneRatio, ego$BgRatio, ego$qvalue, ego$geneID)
+    write.table(ego_vals, paste0(str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/Metastatic_cancers_by_location_vs_Normal/{proj}"),"_MF_Bone_flat_",".txt"))
+    
+    ego_vals <- cbind(ego$ID, ego$Description, ego$GeneRatio, ego$BgRatio, ego$qvalue, ego$geneID)
+    write.table(ego_vals, paste0(str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/Metastatic_cancers_by_location_vs_Normal/{proj}"),"_CC_Bone_Flat_",".txt"))
+    
+    
+    ego<- enrichGO(gene = res$ENSEMBL, OrgDb = org.Hs.eg.db, keyType = "ENSEMBL", ont = "BP", pAdjustMethod = "BH")
+    p<- clusterProfiler::dotplot(ego, showCategory =20)
+    p
+    ggsave(filename=paste0(str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/Metastatic_cancers_by_location_vs_Normal/{proj}"),"_BP_Bone_",".png"),
+           plot = p, device = "png", width = 8, height = 8, units = "in", dpi = "retina")
+    ego_vals <- cbind(ego$ID, ego$Description, ego$GeneRatio, ego$BgRatio, ego$qvalue, ego$geneID)
+    write.table(ego_vals, paste0(str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/Metastatic_cancers_by_location_vs_Normal/{proj}"),"_BP_Bone_Flat_",".txt"))
+    
+    
+    rm(res,dds,ego,df.exp,resOrdered,coldata.exp, coldata.bone)
+    
+    
+    #Liver
+    
+    
+    df.exp <- data.table::fread(str_glue("~/CSBL_shared/RNASeq/TCGA/counts/{proj}.counts.csv")) %>%
+      as_tibble() %>%
+      tibble::column_to_rownames(var = "Ensembl")
+    dat <- data.table::fread("/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/Metastatic_loci_consolidated/one_hot_encoded_labels/TCGA-BRCA_metastatic_data_RNAseq.csv", header = TRUE) %>%
+      column_to_rownames("V1")
+    # cut the columns off to make a coldata draft
+    coldata <- dat %>% dplyr::select(c(barcode,Bone:Liver))
+    coldata.all.mets <- coldata
+    dat <- dat %>% dplyr::select(-c(Bone:Liver))
+    dat <- as.data.frame(t(dat))
+    names(dat) <- dat[1,]
+    dat <- as.data.frame(dat[2:length(dat[,1]),])
+    
+    coldata.n <- normal.samples[normal.samples$project == proj,]
+    coldata.n <- coldata.n %>% dplyr::select(barcode,sample_type)
+    
+    coldata.liver <- dplyr::select(coldata,  c(barcode, Liver)) %>%
+      dplyr::filter(Liver ==1)
+    coldata.Liver$Liver <-  "Advanced_to_Liver"
+    coldata.n$sample_type <-  "Solid_Tissue_Normal"
+    colnames(coldata.liver) <- c("barcode", "sample_type")
+    
+    coldata.exp <- rbind(coldata.n, coldata.liver) 
+    
+    
+    rownames(coldata.exp) <- coldata.exp$barcode
+    
+    df.exp <- df.exp %>%
+      dplyr::select(coldata.exp$barcode)
+    
+    # feed coldata.exp and df.exp to the differential experssion analysis with DEseq2
+    
+    dds <- DESeq2::DESeqDataSetFromMatrix(countData = df.exp,colData = coldata.exp, design = ~sample_type)
+    
+    keep <- rowSums(counts(dds)) >= 10
+    dds <- dds[keep,]
+    
+    dds$sample_type <- relevel(dds$sample_type, ref = "Solid_Tissue_Normal")
+    
+    dds <- DESeq(dds)
+    res <- results(dds)
+    resOrdered <- res[order(res$pvalue),]
+    resOrdered <- as.data.frame(resOrdered)
+    res <- as.data.frame(res)
+    
+    write.csv(resOrdered, file = str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/Metastatic_cancers_by_location_vs_Normal/{proj}_liver_DE.csv"))
+    
+    save(dds, file = str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/Metastatic_cancers_by_location_vs_Normal/{proj}_liver_DE_met.RData"))
+    
+    res$ENSEMBL <- substr(rownames(res), 1, 15)
+    res <- res[abs(res$log2FoldChange) > 1.5,] 
+    res <- res[res$padj < 1.0e-3,]
+    res <- res[!is.na(res$ENSEMBL),]
+    
+    p <- EnhancedVolcano(res,
+                         lab = rownames(res),
+                         x = 'log2FoldChange',
+                         y = 'pvalue',
+                         xlim = c(-5, 8))
+    
+    ggsave(filename=paste0(str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/Metastatic_cancers_by_location_vs_Normal/{proj}"),"_MF_liver_volcano_",".png"),
+           plot = p, device = "png", width = 8, height = 8, units = "in", dpi = "retina")
+    
+    
+    res$ENSEMBL <- substr(rownames(res), 1, 15)
+    
+    ego<- enrichGO(gene = res$ENSEMBL, OrgDb = org.Hs.eg.db, keyType = "ENSEMBL", ont = "MF", pAdjustMethod = "BH")
+    p<- clusterProfiler::dotplot(ego, showCategory =20)
+    p
+    ggsave(filename=paste0(str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/Metastatic_cancers_by_location_vs_Normal/{proj}"),"_MF_liver_",".png"),
+           plot = p, device = "png", width = 8, height = 8, units = "in", dpi = "retina")
+    ego_vals <- cbind(ego$ID, ego$Description, ego$GeneRatio, ego$BgRatio, ego$qvalue, ego$geneID)
+    write.table(ego_vals, paste0(str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/Metastatic_cancers_by_location_vs_Normal/{proj}"),"_MF_liver_flat_",".txt"))
+    
+    ego_vals <- cbind(ego$ID, ego$Description, ego$GeneRatio, ego$BgRatio, ego$qvalue, ego$geneID)
+    write.table(ego_vals, paste0(str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/Metastatic_cancers_by_location_vs_Normal/{proj}"),"_CC_liver_Flat_",".txt"))
+    
+    
+    ego<- enrichGO(gene = res$ENSEMBL, OrgDb = org.Hs.eg.db, keyType = "ENSEMBL", ont = "BP", pAdjustMethod = "BH")
+    p<- clusterProfiler::dotplot(ego, showCategory =20)
+    p
+    ggsave(filename=paste0(str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/Metastatic_cancers_by_location_vs_Normal/{proj}"),"_BP_liver_",".png"),
+           plot = p, device = "png", width = 8, height = 8, units = "in", dpi = "retina")
+    ego_vals <- cbind(ego$ID, ego$Description, ego$GeneRatio, ego$BgRatio, ego$qvalue, ego$geneID)
+    write.table(ego_vals, paste0(str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/Metastatic_cancers_by_location_vs_Normal/{proj}"),"_BP_liver_Flat_",".txt"))
+    
+    
+    rm(res,dds,ego,df.exp,resOrdered,coldata.exp, coldata.liver)
+    
+    
+    # Lung
+    
+    df.exp <- data.table::fread(str_glue("~/CSBL_shared/RNASeq/TCGA/counts/{proj}.counts.csv")) %>%
+      as_tibble() %>%
+      tibble::column_to_rownames(var = "Ensembl")
+    dat <- data.table::fread("/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/Metastatic_loci_consolidated/one_hot_encoded_labels/TCGA-BRCA_metastatic_data_RNAseq.csv", header = TRUE) %>%
+      column_to_rownames("V1")
+    # cut the columns off to make a coldata draft
+    coldata <- dat %>% dplyr::select(c(barcode,Bone:Liver))
+    coldata.all.mets <- coldata
+    dat <- dat %>% dplyr::select(-c(Bone:Liver))
+    dat <- as.data.frame(t(dat))
+    names(dat) <- dat[1,]
+    dat <- as.data.frame(dat[2:length(dat[,1]),])
+    
+    coldata.n <- normal.samples[normal.samples$project == proj,]
+    coldata.n <- coldata.n %>% dplyr::select(barcode,sample_type)
     
     
     
+    coldata.lung <- dplyr::select(coldata,  c(barcode, Lung)) %>%
+      dplyr::filter(Lung ==1)
+    coldata.lung$Lung <-  "Advanced_to_lung"
+    coldata.n$sample_type <-  "Solid_Tissue_Normal"
+    colnames(coldata.lung) <- c("barcode", "sample_type")
+    
+    coldata.exp <- rbind(coldata.n, coldata.lung) 
+    
+    
+    rownames(coldata.exp) <- coldata.exp$barcode
+    
+    df.exp <- df.exp %>%
+      dplyr::select(coldata.exp$barcode)
+    
+    # feed coldata.exp and df.exp to the differential experssion analysis with DEseq2
+    
+    dds <- DESeq2::DESeqDataSetFromMatrix(countData = df.exp,colData = coldata.exp, design = ~sample_type)
+    
+    keep <- rowSums(counts(dds)) >= 10
+    dds <- dds[keep,]
+    
+    dds$sample_type <- relevel(dds$sample_type, ref = "Solid_Tissue_Normal")
+    
+    dds <- DESeq(dds)
+    res <- results(dds)
+    resOrdered <- res[order(res$pvalue),]
+    resOrdered <- as.data.frame(resOrdered)
+    res <- as.data.frame(res)
+    
+    write.csv(resOrdered, file = str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/Metastatic_cancers_by_location_vs_Normal/{proj}_lung_DE.csv"))
+    
+    save(dds, file = str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/Metastatic_cancers_by_location_vs_Normal/{proj}_lung_DE_met.RData"))
+    
+    res$ENSEMBL <- substr(rownames(res), 1, 15)
+    res <- res[abs(res$log2FoldChange) > 1.5,] 
+    res <- res[res$padj < 1.0e-3,]
+    res <- res[!is.na(res$ENSEMBL),]
+    
+    p <- EnhancedVolcano(res,
+                         lab = rownames(res),
+                         x = 'log2FoldChange',
+                         y = 'pvalue',
+                         xlim = c(-5, 8))
+    
+    ggsave(filename=paste0(str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/Metastatic_cancers_by_location_vs_Normal/{proj}"),"_MF_lung_volcano_",".png"),
+           plot = p, device = "png", width = 8, height = 8, units = "in", dpi = "retina")
+    
+    
+    res$ENSEMBL <- substr(rownames(res), 1, 15)
+    
+    ego<- enrichGO(gene = res$ENSEMBL, OrgDb = org.Hs.eg.db, keyType = "ENSEMBL", ont = "MF", pAdjustMethod = "BH")
+    p<- clusterProfiler::dotplot(ego, showCategory =20)
+    p
+    ggsave(filename=paste0(str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/Metastatic_cancers_by_location_vs_Normal/{proj}"),"_MF_lung_",".png"),
+           plot = p, device = "png", width = 8, height = 8, units = "in", dpi = "retina")
+    ego_vals <- cbind(ego$ID, ego$Description, ego$GeneRatio, ego$BgRatio, ego$qvalue, ego$geneID)
+    write.table(ego_vals, paste0(str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/Metastatic_cancers_by_location_vs_Normal/{proj}"),"_MF_lung_flat_",".txt"))
+    
+    ego_vals <- cbind(ego$ID, ego$Description, ego$GeneRatio, ego$BgRatio, ego$qvalue, ego$geneID)
+    write.table(ego_vals, paste0(str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/Metastatic_cancers_by_location_vs_Normal/{proj}"),"_CC_lung_Flat_",".txt"))
+    
+    
+    ego<- enrichGO(gene = res$ENSEMBL, OrgDb = org.Hs.eg.db, keyType = "ENSEMBL", ont = "BP", pAdjustMethod = "BH")
+    p<- clusterProfiler::dotplot(ego, showCategory =20)
+    p
+    ggsave(filename=paste0(str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/Metastatic_cancers_by_location_vs_Normal/{proj}"),"_BP_lung_",".png"),
+           plot = p, device = "png", width = 8, height = 8, units = "in", dpi = "retina")
+    ego_vals <- cbind(ego$ID, ego$Description, ego$GeneRatio, ego$BgRatio, ego$qvalue, ego$geneID)
+    write.table(ego_vals, paste0(str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/Metastatic_cancers_by_location_vs_Normal/{proj}"),"_BP_lung_Flat_",".txt"))
+    
+    
+    rm(res,dds,ego,df.exp,resOrdered,coldata.exp, coldata.lung)
+    
+    
+    
+    
+    
+    }
   
   }
-  # get healthy data
-  
-  
-  
-
-  
-  
-  
-  
-  # transpose
-  
-  # use clinical files to pull healthy
-  
-  # attach healthy
-  
-  # DeSeq2 each seeding location against the metastatic loci
-  
-  # GSEA / Cluster profiler for each location
-  
-  # output them in a style that will allow for them to be publishable
-  
-  # possibly compare features in the One.vs.Rest RF feature selection (sorted by vals)
-  # enrichment to the enrichment of the DEseq2 DEGs
-  
-}
-
-
-  
-  #For:
-  
-  # Bone 
-    # Make pretty confusion plot or combine data from early classification to make all
-    # one figure?
-    # Bone seeding vs. Normal DEseq2
-    # Upregulated vs. Down Regulated pathways
-    # Draw features from random forest
-
-  # Brain
-  
-  # Lung
-  
-  # Liver 
-  
-  # Lymph
   
   
   
