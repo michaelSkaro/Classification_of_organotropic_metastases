@@ -13,7 +13,6 @@
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
 
 
 # In[39]:
@@ -34,7 +33,7 @@ RSEED = 50
 X= pd.read_csv("~/storage/PanCancerAnalysis/ML_2019/Metastatic_loci_consolidated/one_hot_encoded_labels/TCGA-BRCA_metastatic_data_RNAseq.csv")
 
 # Look at the shape of the data to construct the input layer. 
-print('We have {} instances of data with {} variables'.format(*features.shape))
+print('We have {} instances of data with {} variables'.format(*X.shape))
 
 
 # In[68]:
@@ -77,6 +76,8 @@ from scipy import interp
 from sklearn.metrics import roc_auc_score
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=.3,
                                                     random_state=0)
+
+#train, test, train_labels, test_labels
 
 classifier = OneVsRestClassifier(svm.SVC(kernel='linear', probability=True,
                                  random_state=random_state))
