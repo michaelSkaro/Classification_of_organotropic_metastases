@@ -770,7 +770,73 @@ for(proj in projects){
   
   }
   
+  # dealing with RCC data
+
+# read in output files from the star_alignment.sh
+# cut column one and make an analysis file for the classification
+library(stringr)
+library(dplyr)
+library(tibble)
+library(tidyverse)
+
+
+setwd("~/Desktop/rcc/counts")
+
+
+counts_data <- counts_data %>%
+  dplyr::select(-c("PM316_Z8_1ReadsPerGene.out.tab","PM351_Z6_1ReadsPerGene.out.tab"))
+
+counts_data <- list.files()
+counts_data <- counts_data[3:29]
+counts_data <- counts_data[c(1:16,19:27)]
+df <- counts_data[1]
+for(df in counts_data){
+  # read in data and cut needed column for counts,
+  # extract coldata, and paste next so sorted data from 
+  dat <- data.table::fread(df, header = FALSE)
+  x <- str_split(df, fixed("_"))
+  pat <- paste0(x[[1]][1] ,"_" ,x[[1]][2])
+  colnames(dat) <- c("ENSEMBL",pat,"c2","c3")
+  dat <- dat[-c(1:4),]
+  dat <- dat %>%
+    dplyr::select(c(ENSEMBL,pat))
+  if(exists("foo")){
+    # left join
+    df.exp <- dplyr::left_join(foo, dat, by = "ENSEMBL")
+    # update value of foo
+    foo <- df.exp
+    
+    
+    
+  }else{
+    foo <- dat
+    rm(dat)
+    
+  }
   
+  
+  
+}
+annot <- data.table::fread("annot.txt", header = TRUE)
+ENSEMBL <- df.exp%>% dplyr::select("ENSEMBL")
+
+# put them in rownames
+
+df.exp <- df.exp %>%
+  tibble::column_to_rownames("ENSEMBL")
+df.exp <- rbind(df.exp, "labels" = c("LYMPH NODE","ADRENAL GLAND","SOFT TISSUE","Unkown","KIDNEY","ADRENAL GLAND",
+                                     "SOFT TISSUE","BONE","BONE","KIDNEY","LUNG","LUNG","LIVER","LYMPH NODE","LYMPH NODE",
+                                     "KIDNEY","LUNG","LIVER","PANCREAS","LYMPH NODE","Unkown","LUNG","BRAIN","KIDNEY","LIVER"))
+
+df.exp2 <- t(df.exp)
+
+write.csv(df.exp2, "RCC_metastatic_data.csv")
+
+
+dat <- data.table::fread("RCC_metastatic_data.csv", header = TRUE) %>%
+  column_to_rownames("V1")
+
+
   
   
 
