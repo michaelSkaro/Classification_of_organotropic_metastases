@@ -38,127 +38,125 @@ for(proj in projects){
     } 
   }
   
-# lets make some venn diagrams
+#Fisher's test within Cancer
 
-# Load library
-library(VennDiagram)
-# Prepare a palette of 3 colors with R colorbrewer:
-library(RColorBrewer)
+BiocManager::install("GeneOverlap")
+library(GeneOverlap)
 
-setwd("/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/ranked_features/Ranked_transcripts")
+BLCA <- data.table::fread("BLCA.txt", header = TRUE)%>%
+  dplyr::select(-Rank)
+BRCA <- data.table::fread("BRCA.txt", header = TRUE)%>%
+  dplyr::select(-Rank)
+COAD <- data.table::fread("COAD.txt", header = TRUE)%>%
+  dplyr::select(-Rank)
+LIHC <- data.table::fread("LIHC.txt", header = TRUE)%>%
+  dplyr::select(-Rank)
+HNSC <- data.table::fread("HNSC.txt", header = TRUE)%>%
+  dplyr::select(-Rank)
+LUAD <- data.table::fread("LUAD.txt", header = TRUE)%>%
+  dplyr::select(-Rank)
+
+BLCA <- as.data.frame(BLCA)
+BRCA <- as.data.frame(BRCA)
+COAD <- as.data.frame(COAD)
+HNSC <- as.data.frame(HNSC)
+LIHC <- as.data.frame(LIHC)
+LUAD <- as.data.frame(LUAD)
+
+
+
 projects <- c("BLCA", "BRCA", "COAD","HNSC","LIHC","LUAD")
-proj <- "BLCA"
+proj <- projects[1]
+
+# within cancer overlap: transcripts driving distant metastasis
+for(proj in projects){
+  dat <- as.data.frame(data.table::fread(str_glue("{proj}.txt", header = TRUE))) %>%
+    dplyr::select(-Rank)
+  combos <- combn(ncol(dat),2)
+  out <- adply(combos, 2, function(x) {
+    go.obj <- newGeneOverlap(dat[,x[1]],dat[,x[2]],genome.size = 60483)
+    go.obj <- testGeneOverlap(go.obj)
+    data.frame("CancerType"=proj,
+                    "listA"=names(dat)[x[1]],
+                    "listB"=names(dat)[x[2]],
+                    "odds.ratio" = sprintf("%.3f", go.obj@odds.ratio),
+                    "intersection"= length(go.obj@intersection),
+                    "p.value" = go.obj@pval)
+  })
+  out <- out %>%
+    dplyr::select(-"X1")
+  write.csv(out, file = str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/ranked_features/Ranked_transcripts_10_20_20/Fisher_exact_test_within_cancer_{proj}.csv"))
+} 
+
+# between cancer types comparisons
+
+# within cancer overlap: transcripts driving distant metastasis
+
+f <- function(x,y){
+  
+  go.obj <- newGeneOverlap(x,y,genome.size = 60483)
+  go.obj <- testGeneOverlap(go.obj)
+  data.frame( "CancerType1" = deparse(substitute(x)),
+              "CancerType2" = deparse(substitute(y)),
+              "odds.ratio" = sprintf("%.3f", go.obj@odds.ratio),
+             "intersection"= length(go.obj@intersection),
+             "p.value" = go.obj@pval)
+}
+# BLCA vs BRCA
+out<- t(sapply(intersect(colnames(BLCA),colnames(BRCA)), function(x) f(BLCA[,x], BRCA[,x])))
+write.csv(out, file = "/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/ranked_features/Ranked_transcripts_10_20_20/BLCA_BRCA_FE.csv")
+# BLCA vs COAD
+out<- t(sapply(intersect(colnames(BLCA),colnames(COAD)), function(x) f(BLCA[,x], COAD[,x])))
+write.csv(out, file = "/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/ranked_features/Ranked_transcripts_10_20_20/BLCA_COAD_FE.csv")
+# BLCA vs HNSC
+out<- t(sapply(intersect(colnames(BLCA),colnames(HNSC)), function(x) f(BLCA[,x], HNSC[,x])))
+write.csv(out, file = "/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/ranked_features/Ranked_transcripts_10_20_20/BLCA_HNSC_FE.csv")
+# BLCA vs LIHC
+out<- t(sapply(intersect(colnames(BLCA),colnames(LIHC)), function(x) f(BLCA[,x], LIHC[,x])))
+write.csv(out, file = "/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/ranked_features/Ranked_transcripts_10_20_20/BLCA_LIHC_FE.csv")
+# BLCA VS LUAD
+out<- t(sapply(intersect(colnames(BLCA),colnames(LUAD)), function(x) f(BLCA[,x], LUAD[,x])))
+write.csv(out, file = "/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/ranked_features/Ranked_transcripts_10_20_20/BLCA_LUAD_FE.csv")
+# BRCA vs COAD
+out<- t(sapply(intersect(colnames(BRCA),colnames(COAD)), function(x) f(BRCA[,x], COAD[,x])))
+write.csv(out, file = "/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/ranked_features/Ranked_transcripts_10_20_20/BRCA_COAD_FE.csv")
+# BRCA vs HNSC
+out<- t(sapply(intersect(colnames(BRCA),colnames(HNSC)), function(x) f(BRCA[,x], HNSC[,x])))
+write.csv(out, file = "/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/ranked_features/Ranked_transcripts_10_20_20/BRCA_HNSC_FE.csv")
+# BRCA vs LIHC
+out<- t(sapply(intersect(colnames(BRCA),colnames(LIHC)), function(x) f(BRCA[,x], LIHC[,x])))
+write.csv(out, file = "/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/ranked_features/Ranked_transcripts_10_20_20/BRCA_LIHC_FE.csv")
+# BRCA vs LUAD
+out<- t(sapply(intersect(colnames(BRCA),colnames(LUAD)), function(x) f(BRCA[,x], LUAD[,x])))
+write.csv(out, file = "/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/ranked_features/Ranked_transcripts_10_20_20/BRCA_LUAD_FE.csv")
+# COAD vs HNSC
+out<- t(sapply(intersect(colnames(COAD),colnames(HNSC)), function(x) f(COAD[,x], HNSC[,x])))
+write.csv(out, file = "/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/ranked_features/Ranked_transcripts_10_20_20/COAD_HNSC_FE.csv")
+# COAD vs LIHC
+out<- t(sapply(intersect(colnames(COAD),colnames(LIHC)), function(x) f(COAD[,x], LIHC[,x])))
+write.csv(out, file = "/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/ranked_features/Ranked_transcripts_10_20_20/COAD_LIHC_FE.csv")
+# COAD vs LUAD
+out<- t(sapply(intersect(colnames(COAD),colnames(LUAD)), function(x) f(COAD[,x], LUAD[,x])))
+write.csv(out, file = "/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/ranked_features/Ranked_transcripts_10_20_20/COAD_LUAD_FE.csv")
+# HNSC vs LIHC
+out<- t(sapply(intersect(colnames(HNSC),colnames(LIHC)), function(x) f(HNSC[,x], LIHC[,x])))
+write.csv(out, file = "/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/ranked_features/Ranked_transcripts_10_20_20/HNSC_LIHC_FE.csv")
+# HNSC vs LUAD 
+out<- t(sapply(intersect(colnames(HNSC),colnames(LUAD)), function(x) f(HNSC[,x], LUAD[,x])))
+write.csv(out, file = "/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/ranked_features/Ranked_transcripts_10_20_20/HNSC_LUAD_FE.csv")
+# LIHC vs LUAD
+out<- t(sapply(intersect(colnames(HNSC),colnames(LUAD)), function(x) f(HNSC[,x], LUAD[,x])))
+write.csv(out, file = "/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/ranked_features/Ranked_transcripts_10_20_20/LIHC_LUAD_FE.csv")
 
 
-dat1 <- data.table::fread(str_glue("BLCA.txt", header = TRUE))
-organs1 <- names(dat1)
-proj2 <- "BRCA"
-dat2 <- data.table::fread(str_glue("BRCA.txt", header = TRUE))
-
-dat1 <- dat1 %>%
-  dplyr::select(names(dat2))
-
-BLCA_Bone <- as.list(na.omit(dat1$Bone))
-BLCA_Liver <- as.list(na.omit(dat1$Liver))
-BLCA_Lung <- as.list(na.omit(dat1$Lung))
-
-BRCA_Bone <- as.list(na.omit(dat2$Bone))
-BRCA_Liver <- as.list(na.omit(dat2$Liver))
-BRCA_Lung <- as.list(na.omit(dat2$Lung))
-
-# Load library
-library(VennDiagram)
-
-# Generate 3 sets of 200 words
-BLCA_Bone
-BLCA_Liver
-BLCA_Lung
-BRCA_Bone
-BRCA_Liver
-BRCA_Lung
-
-#package VennDiagram
-install.packages("VennDiagram") # only necessary 1st time
-library(VennDiagram)
-overlap <- intersect(BLCA_Bone, BRCA_Bone)  # easy/useful - 625 proteins
-#draw the Venn diagram using the venn.plot() function
-grid.newpage()
-venn.plot <- draw.pairwise.venn(area1 = length(BLCA_Bone),#no MCP set
-                                area2 = length(BRCA_Bone),#no JPR set
-                                cross.area = length(overlap),
-                                c("BLCA_Bone", "BRCA_Bone"), scaled = TRUE,
-                                fill = c("green", "blue"),
-                                cex = 1.5,
-                                cat.cex = 1.5,
-                                cat.pos = c(320, 25),
-                                cat.dist = .05) 
 
 
-overlap <- intersect(BLCA_Liver, BRCA_Liver)  # easy/useful - 625 proteins
-#draw the Venn diagram using the venn.plot() function
-grid.newpage()
-venn.plot <- draw.pairwise.venn(area1 = length(BLCA_Liver),#no MCP set
-                                area2 = length(BRCA_Liver),#no JPR set
-                                cross.area = length(overlap),
-                                c("BLCA_Liver", "BRCA_Liver"), scaled = TRUE,
-                                fill = c("green", "blue"),
-                                cex = 1.5,
-                                cat.cex = 1.5,
-                                cat.pos = c(320, 25),
-                                cat.dist = .05) 
 
-overlap <- intersect(BLCA_Lung, BRCA_Lung)  # easy/useful - 625 proteins
-#draw the Venn diagram using the venn.plot() function
-grid.newpage()
-venn.plot <- draw.pairwise.venn(area1 = length(BLCA_Lung),#no MCP set
-                                area2 = length(BRCA_Lung),#no JPR set
-                                cross.area = length(overlap),
-                                c("BLCA_Lung", "BRCA_Lung"), scaled = TRUE,
-                                fill = c("green", "blue"),
-                                cex = 1.5,
-                                cat.cex = 1.5,
-                                cat.pos = c(320, 25),
-                                cat.dist = .05) 
 
-#OR Upset may work best
-
-listInput <- list(BRCA_Bone = na.omit(dat2$Bone),BRCA_Lung = na.omit(dat2$Lung),BRCA_Liver = na.omit(dat2$Liver),
-                  BLCA_Bone = na.omit(dat1$Bone), BLCA_Lung = na.omit(dat1$Lung), 
-                  BLCA_Liver = na.omit(dat1$Liver))
-upset(fromList(listInput), order.by = "freq",nsets = 6)
-
-listInput <- list(BRCA_Bone = na.omit(dat2$Bone),
-                  BLCA_Bone = na.omit(dat1$Bone))
+listInput <- list(BRCA_Bone = na.omit(BRCA$Bone),
+                BLCA_Bone = na.omit(BLCA$Bone))
 upset(fromList(listInput), order.by = "freq",nsets = 2)
 
-
-setwd("/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/ranked_features/Ranked_transcripts")
-projects <- c("BLCA", "BRCA", "COAD","HNSC","LIHC","LUAD")
-
-dat1 <- data.table::fread("BLCA.txt", header = TRUE)
-dat2 <- data.table::fread("COAD.txt", header = TRUE)
-
-listInput <- list(BLCA_Prostate = na.omit(dat1$Prostate),COAD_Postate = na.omit(dat2$Prostate))
-upset(fromList(listInput), order.by = "freq",nsets = 2)
-
-dat1 <- data.table::fread("BLCA.txt", header = TRUE)
-dat2 <- data.table::fread("BRCA.txt", header = TRUE)
-dat3 <- data.table::fread("LIHC.txt", header = TRUE)
-
-listInput <- list(BLCA_Liver = na.omit(dat1$Liver),BRCA_Liver = na.omit(dat2$Liver), 
-                  LIHC_Liver = na.omit(dat3$Liver))
-upset(fromList(listInput), order.by = "freq",nsets = 3)
-
-dat1 <- data.table::fread("BLCA.txt", header = TRUE)
-dat2 <- data.table::fread("BRCA.txt", header = TRUE)
-dat3 <- data.table::fread("HNSC.txt", header = TRUE)
-dat4 <- data.table::fread("LIHC.txt", header = TRUE)
-dat5 <- data.table::fread("LUAD.txt", header = TRUE)
-
-listInput <- list(BLCA_Lung = na.omit(dat1$Lung), BRCA_Lung = na.omit(dat2$Lung), 
-HNSC_Lung = na.omit(dat3$Lung), LIHC_Lung = na.omit(dat4$Lung), 
-LUAD_Lung = na.omit(dat5$Lung))
-upset(fromList(listInput), order.by = "freq")
 
 
 # lets make some heatmaps
@@ -205,38 +203,81 @@ for(proj in projects){
   
 }
 
-# pull the correct case ids for miRNAseq learning
-# pull the correct case ids somatic variation learning
+# Lets do some fishers exact tests for the data sets
 
 
 
 
 
 
+# ranked analysis then clustering
 
-# plot the scores, plot the heatmaps for each of the genes
+BiocManager::install("RRHO")
 
-#drafts
-set.seed(123)
-mat1 = matrix(rnorm(80, 2), 8, 10)
-mat1 = rbind(mat1, matrix(rnorm(40, -2), 4, 10))
-rownames(mat1) = paste0("R", 1:12)
-colnames(mat1) = paste0("C", 1:10)
+setwd("/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/ranked_features/Ranked_transcripts/Features_sorted_for_each_class")
 
-mat2 = matrix(runif(60, max = 3, min = 1), 6, 10)
-mat2 = rbind(mat2, matrix(runif(60, max = 2, min = 0), 6, 10))
-rownames(mat2) = paste0("R", 1:12)
-colnames(mat2) = paste0("C", 1:10)
+file_list <- list.files()
+met_samples <- data.table::fread("/mnt/storage/mskaro1/Metastatic_Organo_Tropism/tumor_samples_annotated_progression.csv")
+met_samples <- met_samples[,2:13]
+projects <- unique(met_samples$project)
+projects <- sort(projects)
+proj <- projects[1]
+fil <- 
+for(proj in projects){
+  dat <- data.table::fread(str_glue("{proj}_metastatic_data_RNAseq_important_features.csv"))
+  View(dat)
+  
+  if(proj =="TCGA-BLCA"){
+    Bone <- as.data.frame(dat) %>%
+      dplyr::select("Bone","Bone Importance Score")
+    # give a rank
+    Bone$rank <- NA
+    order.scores<-order(Bone$`Bone Importance Score`,Bone$Bone, decreasing = TRUE)
+    Bone$rank[order.scores] <- 1:nrow(dat)
+    
+    # sort by score importance
+    Bone <- Bone[order(Bone$`Bone Importance Score`, decreasing = TRUE),]
+    
+    
+      
+  }
+  
+  
+}
 
-le = sample(letters[1:3], 12, replace = TRUE)
-names(le) = paste0("R", 1:12)
 
-ind = sample(12, 12)
-mat1 = mat1[ind, ]
-mat2 = mat2[ind, ]
-le = le[ind]
 
-ht1 = Heatmap(mat1, name = "rnorm")
-ht2 = Heatmap(mat2, name = "runif")
-ht3 = Heatmap(le, name = "letters")
+# library(RRHO)
+# BLCA_bone <- unique(as.data.frame(BLCA$Bone))
+# colnames(BLCA_bone) <- "Bone"
+# BRCA_bone <- unique(as.data.frame(BRCA$Bone))
+# colnames(BRCA_bone) <- "Bone"
+# 
+# RRHO.Bone <- RRHO(BRCA_bone$Bone[1:250], BLCA_bone$Bone[1:250], BY =TRUE, alternative='enrichment')
+# 
+# 
+# list.length <- 100
+# list.names <- paste('Gene',1:list.length, sep='')
+# gene.list1<- data.frame(list.names, sample(100))
+# gene.list2<- data.frame(list.names, sample(100))
+# #Compute overlap and significance
+# RRHO.example <- RRHO(gene.list1, gene.list2,BY=TRUE, alternative='enrichment')
+
+
+
+BiocManager::install("GeneOverlap")
+library(GeneOverlap)
+
+
+
+BLCA <- data.table::fread("BLCA.txt", header = TRUE)%>%
+  dplyr::select(-Rank)
+BRCA <- data.table::fread("BRCA.txt", header = TRUE)%>%
+  dplyr::select(-Rank)
+COAD <- data.table::fread("COAD.txt", header = TRUE)%>%
+  dplyr::select(-Rank)
+LIHC <- data.table::fread("LIHC.txt", header = TRUE)%>%
+  dplyr::select(-Rank)
+HNSC <- data.table::fread("HNSC.txt", header = TRUE)%>%
+  dplyr::select(-Rank)
 
