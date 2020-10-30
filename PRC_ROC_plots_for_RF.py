@@ -26,20 +26,21 @@ from sklearn.ensemble import RandomForestClassifier
 # import whatever DF you need too, must have labels as last column, features across the topp and 
 # the instances down the side, get rid of row names if you need too
 
-df= pd.read_csv("") #*****************MUST CHANGE DEPENDING ON STAGE OF CLASSIFICATION*****************
-df.size()
-size = df.size 
-shape = df.shape 
-df_ndim = df.ndim 
-# may not need to do this anymore, i think I corrected this line...
-df = df.rename(columns={'lables': 'labels'})
+X= pd.read_csv("~/storage/PanCancerAnalysis/ML_2019/Metastatic_loci_consolidated/one_hot_encoded_labels/TCGA-BRCA_metastatic_data_RNAseq.csv")
+X.drop(X.columns[0], axis=1)
+# Look at the shape of the data to construct the input layer. 
+print('We have {} instances of data with {} variables'.format(*X.shape))
 
-# Labels are the values we want to predict, retrun and pop them off after
-labels = np.array(df.pop('labels'))
+y = X[["Bone","Lung","Liver"]].to_numpy()
+n_classes = y.shape[1]
+patients = np.array(X.pop('barcode'))
+# remove the features labels
+X = X.drop(["Bone","Lung","Liver"], axis = 1) 
+
 # Saving feature names for later use
-feature_list = list(df.columns)
+feature_list = list(X.columns)
 # Convert to numpy array
-features = np.array(df)
+features = np.array(X)
 
 #X_train, X_test, y_train, y_test
 
