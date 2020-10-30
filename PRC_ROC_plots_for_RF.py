@@ -66,6 +66,7 @@ model.fit(X_train, y_train) # or do we wrap before fit, or is it a different fit
 # Compute the average precision score
 
 from sklearn.metrics import average_precision_score
+y_score= score(score(X_test, y_test, sample_weight=None))
 average_precision = average_precision_score(y_test, y_score)
 
 print('Average precision-recall score: {0:0.2f}'.format(
@@ -270,5 +271,3 @@ plt.ylabel('True Positive Rate')
 plt.title('Receiver operating characteristic to multi-class')
 plt.legend(loc="lower right")
 plt.show()
-
-# Done
