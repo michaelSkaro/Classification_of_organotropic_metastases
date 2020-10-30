@@ -31,30 +31,34 @@ X.drop(X.columns[0], axis=1)
 # Look at the shape of the data to construct the input layer. 
 print('We have {} instances of data with {} variables'.format(*X.shape))
 
+
 y = X[["Bone","Lung","Liver"]].to_numpy()
 n_classes = y.shape[1]
 patients = np.array(X.pop('barcode'))
 # remove the features labels
 X = X.drop(["Bone","Lung","Liver"], axis = 1) 
 
-# Saving feature names for later use
+# Labels are the values we want to predict, retrun and pop them off after
+# List of features for later use
 feature_list = list(X.columns)
 # Convert to numpy array
 features = np.array(X)
 
-#X_train, X_test, y_train, y_test
 
-X_train, X_test, y_train, y_test = train_test_split(features,
-                                         labels, 
+X_train, X_test, y_train, y_test = train_test_split(X,
+                                         y, 
                                          stratify = labels,
                                          test_size = 0.3, 
                                          random_state = RSEED)
+# choose the model:RF classification
 import random
 RSEED = random.randint()
 model = RandomForestClassifier(n_estimators=100, 
                                random_state=RSEED, 
                                max_features = 'sqrt', 
-                               n_jobs=-1, verbose = 1)# this may change once marcus uses the IG algo, gpotta discuss today/tomorrow?, Also are we wrapping in Onevs rest or what?
+                               n_jobs=-1, verbose = 1)
+# Fit training data
+# this may change once marcus uses the IG algo, gpotta discuss today/tomorrow?, Also are we wrapping in Onevs rest or what?
 model.fit(X_train, y_train) # or do we wrap before fit, or is it a different fit call? look at sklearn.documentation
 
 ###############################################################################
