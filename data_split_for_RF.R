@@ -59,31 +59,18 @@ dat<- left_join(dat, tumor.samples, by="barcode")
 
 dat <- dat %>%
   dplyr::select(-barcode,-sample_type.x,-sample_type.y, -project, -tumor_stage, -caseID, -fileID, -filename, 
-                -barcode_short, -bcr_patient_barcode,-met_loc, -LymphNodeStatus)
+                -barcode_short, -bcr_patient_barcode,-Metastatic_status, -LymphNodeStatus)
 
 
-# change name of Metastatic_status to just labels
+# change name of Met_loc to just labels
 
 
 dat <- dat %>%
-  dplyr::rename(lables = Metastatic_status)
+  dplyr::rename(lables = met_loc)
 
 
-# split the datas so that we get some training and some testing shoooorrdd
+write.csv(dat, file = str_glue("~/storage/PanCancerAnalysis/ML_2019/RF_input/{proj}_met_loc.csv"))
 
-set.seed(2)
-
-id <- sample(2, nrow(dat), prob = c(0.8,0.2), replace =TRUE)
-
-dat.train <- dat[id ==1,]
-dat.test <- dat[id ==2,]
-
-# write it out
-
-
-write.csv(dat, file = str_glue("~/storage/PanCancerAnalysis/ML_2019/RF_input/{proj}_DL_NDL.csv"))
-write.csv(dat.train, file = str_glue("~/storage/PanCancerAnalysis/ML_2019/RF_input/{proj}_DL_NDL_train.csv"))
-write.csv(dat.test, file = str_glue("~/storage/PanCancerAnalysis/ML_2019/RF_input/{proj}_DL_NDL_test.csv"))
 
 }
 
