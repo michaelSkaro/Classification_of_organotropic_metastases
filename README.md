@@ -20,4 +20,5 @@ This repository is the code base for the classification of organotropic metastas
     - [undersample.py](cancer-vs-normal-classification/undersample.py): Creates a new dataset of equal cancer and normal class proportions from TCGA data.
     - [RandomForestClassifier.java](cancer-vs-normal-classification/RandomForestClassifier.java): Constructs a Random Forest, performs 10-Fold cross-validation, and saves the results.
 2. [Cancer vs. Cancer Classification](cancer-vs-cancer-classification)
+    - [multiclass_cancer_sampling.py](cancer-vs-cancer-classification/multi_class_cancer_sampling.py): Generates either a single balanced, multiclass dataset containing samples from each cancer tissue type or multiple balanced, binary datasets of all pairwise cancer type combinations.
 3. [Metastases Classification](metastases-classification)
