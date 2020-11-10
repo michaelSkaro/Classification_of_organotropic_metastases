@@ -1,5 +1,5 @@
 /**
- * Constructs a Random Forest, perform 10-Fold 
+ * Constructs a Random Forest, performs 10-Fold 
  * cross-validation, and saves the results.
  * Intended for pairwise classifications.
  *
