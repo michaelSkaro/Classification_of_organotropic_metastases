@@ -23,7 +23,7 @@ This repository is the code base for the classification of organotropic metastas
     - [multiclass_cancer_sampling.py](cancer-vs-cancer-classification/multiclass_cancer_sampling.py): Generates either a single balanced, multiclass dataset containing samples from each cancer tissue type or multiple balanced, binary datasets of all pairwise cancer type combinations.
 3. [Metastases Classification](metastases-classification)
     - [create_binary_datasets.py](metastases-classification/create_binary_datasets.py): Creates binary datasets from multilabel data.
-    - [smote.py](synthetic_sampling/smote.py): SMOTE implementation for oversampling a minority class for binary classification.
+    - [smote.py](synthetic-sampling/smote.py): SMOTE implementation for oversampling a minority class for binary classification.
     - [GainRatio.java](metastases-classification/GainRatio.java): Ranks the attributes of a dataset by their gain ratio.
     - [gain_ratio_feature_selection.py](metastases-classification/gain_ratio_feature_selection.py): Creates datasets using the features with the highest gain ratio scores.
     - [rf_binary.py](metastases-classification/rf_binary.py): Random Forest implementation with code for hyper-parameter tuning.
