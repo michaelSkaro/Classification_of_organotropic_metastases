@@ -22,3 +22,10 @@ This repository is the code base for the classification of organotropic metastas
 2. [Cancer vs. Cancer Classification](cancer-vs-cancer-classification)
     - [multiclass_cancer_sampling.py](cancer-vs-cancer-classification/multi_class_cancer_sampling.py): Generates either a single balanced, multiclass dataset containing samples from each cancer tissue type or multiple balanced, binary datasets of all pairwise cancer type combinations.
 3. [Metastases Classification](metastases-classification)
+    - [create_binary_datasets.py](metastases-classification/create_binary_datasets.py)
+    - [smote.py](metastases-classification/smote.py)
+    - [gain_ratio_feature_selection.py](metastases-classification/gain_ratio_feature_selection.py)
+    - [rf_binary.py](metastases-classification/rf_binary.py)
+    - [metastasis_pipeline.py](metastases-classification/metastasis_pipeline.py)
+    
+    
