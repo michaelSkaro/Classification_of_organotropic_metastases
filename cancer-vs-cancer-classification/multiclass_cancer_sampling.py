@@ -1,6 +1,8 @@
 '''
-Generates balanced, supervised datasets of all 
-pair-wise cancer type combinations.
+Generates either a single balanced, multiclass dataset
+containing samples from each cancer tissue type, or 
+multiple balanced, binary datasets of all pairwise
+cancer type combinations.
 '''
 
 import os
@@ -114,6 +116,26 @@ def cancer_pairs(tcga_dir, out_dir, count, label):
 
 def comprehensive(input_dir, outfile, counts):
     '''
+    Extracts the labels necessary to distinguish 
+    cancer tissue samples from normal
+    tissue samples (i.e. Primary_Tumor and 
+    Solid_Tissue_Normal). Then the all_cancers function
+    is called using the labels to sample each dataset
+    for the appropriate instances.
+
+    Parameters
+    ----------
+    input_dir: string
+        Path to the directory containing TCGA read counts.
+    outfile: string
+        Path to save the dataset.
+    counts: int
+        The number of instances of each class type to be in
+        the dataset.
+
+    Returns
+    -------
+    None
     '''
 
     #Determine the labels
