@@ -16,6 +16,6 @@ This repository is the code base for the classification of organotropic metastas
 ## Classification Stages
 "Summary of all the classification stages"
 
-- [Cancer vs. Normal Classification](cancer-vs-normal)
+- [Cancer vs. Normal Classification](cancer-vs-normal-classification)
 - [Multiclass Cancer Classification](multiclass-cancer-classification)
 - [Metastases Classification](metastases-classification)
