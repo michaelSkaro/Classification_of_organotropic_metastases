@@ -28,4 +28,3 @@ This repository is the code base for the classification of organotropic metastas
     - [MOT.ipynb](metastases-classification/MOT.ipynb): Classification of positive and negative progression to seeding locations in 6 cancer types
     - [metastasis_pipeline.py](metastases-classification/metastasis_pipeline.py): A supervisory script to run all data through the metastatic loci classificaiton pipeline.
     
-    
