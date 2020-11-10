@@ -1,6 +1,6 @@
 '''
-Generate balanced supervised datasets of different cancer
-types.
+Generates balanced, supervised datasets of all 
+pair-wise cancer type combinations.
 '''
 
 import os
