@@ -138,7 +138,7 @@ def create_oversampled_datasets(binary_dir_path, oversampled_dir_path,
     None
     '''
 
-    smote_script_path = './smote.py'
+    smote_script_path = '../synthetic-sampling/smote.py'
     for binary_file_name in os.listdir(binary_dir_path):
         if multilabel_file_name in binary_file_name:
             binary_file_path = os.path.join(binary_dir_path, binary_file_name)
