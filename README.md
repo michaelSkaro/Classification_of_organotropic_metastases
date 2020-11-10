@@ -19,6 +19,7 @@ This repository is the code base for the classification of organotropic metastas
     - [RandomForestClassifier.java](cancer-vs-normal-classification/RandomForestClassifier.java): Constructs a Random Forest, performs 10-Fold cross-validation, and saves the results.
 2. [Cancer vs. Cancer Classification](cancer-vs-cancer-classification)
     - [multiclass_cancer_sampling.py](cancer-vs-cancer-classification/multiclass_cancer_sampling.py): Generates either a single balanced, multiclass dataset containing samples from each cancer tissue type or multiple balanced, binary datasets of all pairwise cancer type combinations.
+    - [RandomForestClassifier.java](cancer-vs-normal-classification/RandomForestClassifier.java): Constructs a Random Forest, performs 10-Fold cross-validation, and saves the results. (The same code used during the 1st Stage was used during this stage as well.)
 3. [Metastases Classification](metastases-classification)
     - [create_binary_datasets.py](metastases-classification/create_binary_datasets.py): Creates binary datasets from multilabel data.
     - [smote.py](synthetic-sampling/smote.py): SMOTE implementation for oversampling a minority class for binary classification.
