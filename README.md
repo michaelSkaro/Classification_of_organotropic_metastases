@@ -28,7 +28,9 @@ This repository is the code base for the classification of organotropic metastas
     - [rf_binary.py](metastases-classification/rf_binary.py): Random Forest implementation with code for hyper-parameter tuning.
     - [MOT.ipynb](metastases-classification/MOT.ipynb): Classification of positive and negative progression to seeding locations in 6 cancer types
     - [metastasis_pipeline.py](metastases-classification/metastasis_pipeline.py): A supervisory script to run all data through the metastatic loci classificaiton pipeline.
-    
+4.  [Feature recapture and analysis](feature-recapture)
+    - [Enriched_features_Fisher_recap.R](feature-recapture/Enriched_features_Fisher_recap.R): Statistical analysis of recaptured features in independent lists.
+    - [Gene_Set_enrichment_and_semantic_analysis.R](feature-recapture/Gene_Set_enrichment_and_semantic_analysis.R): Gene set enrichment analysis in GO Database. Sematic analysis of GO biological processes.  
 ## Submission:
 
 Our research is currently in submission for publication. A draft of this publication, a doi, and pre-print will be made available upon acceptance. Stay tuned!
