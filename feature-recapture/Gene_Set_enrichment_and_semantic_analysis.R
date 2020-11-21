@@ -152,6 +152,84 @@ out <- out[sort(out$p.value),]
 write.csv2(out, file = "/mnt/storage/mskaro1/Machine_Learning/All_MOT_selected_features/feature-selected-datasets/Fisher_exact_test_semantic.csv")
   
 sessionInfo()
+
+library(simplifyEnrichment)
+library(stringr)
+library(tibble)
+dat <- data.table::fread("ego_TCGA-HNSC_Lymph_Node.csv", header = TRUE) %>%
+  column_to_rownames("V1")
+
+mat = GO_similarity(dat$ID, ont = "BP")
+simplifyGO(mat, method = "binary_cut",column_title = "Biological Processes clustered by Sematic Similarity", plot = TRUE)
+
+dat <- data.table::fread("ego_TCGA-BLCA_Lymph_Node.csv",header = TRUE) %>%
+  column_to_rownames("V1")
+mat = GO_similarity(dat$ID, ont = "BP")
+simplifyGO(mat, method = "binary_cut",column_title = "Biological Processes clustered by Sematic Similarity", plot = TRUE)
+
+# make upsetR plot to finish it off
+
+library(UpSetR)
+seed_loc <- c("Lymph_Node","Lung","Bone","Lung")
+
+#Bone
+BLCA_Bone <- data.table::fread("ego_TCGA-BLCA_Bone.csv", header = TRUE) %>%
+  column_to_rownames("V1")
+BRCA_Bone <- data.table::fread("ego_TCGA-BRCA_Bone.csv", header = TRUE) %>%
+  column_to_rownames("V1")
+listInput <- list('BLCA Bone' = BLCA_Bone$ID ,'BRCA Bone' = BRCA_Bone$ID)
+
+
+
+
+# Liver 
+BLCA_Liver <- data.table::fread("ego_TCGA-BLCA_Liver.csv", header = TRUE) %>%
+  column_to_rownames("V1")
+BRCA_Liver <- data.table::fread("ego_TCGA-BRCA_Liver.csv", header = TRUE) %>%
+  column_to_rownames("V1")
+LIHC_Liver <- data.table::fread("ego_TCGA-LIHC_Liver.csv", header = TRUE) %>%
+  column_to_rownames("V1")
+COAD_Liver <- data.table::fread("ego_TCGA-COAD_Liver.csv", header = TRUE) %>%
+  column_to_rownames("V1")
+
+
+library(UpSetR)
+listInput <- list('BLCA Liver' = BLCA_Liver$ID ,'BRCA Liver' = BRCA_Liver$ID ,
+                  'LIHC Liver' = LIHC_Liver$ID,'COAD Liver' = COAD_Liver$ID)
+
+UpSetR::upset(fromList(listInput), order.by ="freq")
+
+
+# Lung
+BLCA<- data.table::fread("ego_TCGA-BLCA_Lung.csv", header = TRUE) %>%
+  column_to_rownames("V1")
+BRCA<- data.table::fread("ego_TCGA-BRCA_Lung.csv", header = TRUE) %>%
+  column_to_rownames("V1")
+LIHC<- data.table::fread("ego_TCGA-LIHC_Lung.csv", header = TRUE) %>%
+  column_to_rownames("V1")
+HNSC<- data.table::fread("ego_TCGA-HNSC_Lung.csv", header = TRUE) %>%
+  column_to_rownames("V1")
+LUAD<- data.table::fread("ego_TCGA-LUAD_Lung.csv", header = TRUE) %>%
+  column_to_rownames("V1")
+
+library(UpSetR)
+listInput <- list('BLCA Lung' = BLCA$ID ,'BRCA Lung' = BRCA$ID , "HNSC Lung"=HNSC$ID,
+                  'LIHC Lung' = LIHC$ID,'LUAD Liver' = LUAD$ID)
+
+
+#Lymph_Node
+BLCA_Lymph_Node <- data.table::fread("ego_TCGA-BLCA_Lymph_Node.csv", header = TRUE) %>%
+  column_to_rownames("V1")
+HNSC_Lymph_Node <- data.table::fread("ego_TCGA-HNSC_Lymph_Node.csv", header = TRUE) %>%
+  column_to_rownames("V1")
+listInput <- list('BLCA Lymph_Node' = BLCA_Lymph_Node$ID ,'HNSC Lymph_Node' = HNSC_Lymph_Node$ID)
+
+UpSetR::upset(fromList(listInput), order.by ="freq")
+
+
+
+
+
 # R version 4.0.2 (2020-06-22)
 # Platform: x86_64-pc-linux-gnu (64-bit)
 # Running under: Ubuntu 20.04 LTS
