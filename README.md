@@ -14,7 +14,7 @@ This repository is the code base for the classification of organotropic metastas
   - [Weka](https://www.cs.waikato.ac.nz/ml/weka/index.html) >= 3.8.3
 ### R
 - **Version:** Python >= 4.o
-- **Packages:** All sisession.info() R packages are listed at the bottom of [Gene_Set_enrichment_and_semantic_analysis.R](feature-recapture/Gene_Set_enrichment_and_semantic_analysis.R).
+- **Packages:** All session.info() R packages are listed at the bottom of [Gene_Set_enrichment_and_semantic_analysis.R](feature-recapture/Gene_Set_enrichment_and_semantic_analysis.R).
 
 ## Classification Stages
 1. [Cancer vs. Normal Classification](cancer-vs-normal-classification)
