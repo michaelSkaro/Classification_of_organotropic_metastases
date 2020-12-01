@@ -34,7 +34,7 @@ This repository is the code base for the classification of organotropic metastas
 4.  [Feature recapture and analysis](feature-recapture)
     - [Enriched_features_Fisher_recap.R](feature-recapture/Enriched_features_Fisher_recap.R): Statistical analysis of recaptured features in independent lists.
     - [Gene_Set_enrichment_and_semantic_analysis.R](feature-recapture/Gene_Set_enrichment_and_semantic_analysis.R): Gene set enrichment analysis in GO Database. Sematic analysis of GO biological processes.  
-## Submission:
+## Reviewing:
 
-Our research is currently in submission for publication. A draft of this publication, a doi, and pre-print will be made available upon acceptance. Stay tuned!
+We are making this pipeline into a pypi project. Stay tuned!
 Thanks!
