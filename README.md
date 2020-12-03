@@ -29,7 +29,7 @@ This repository is the code base for the classification of organotropic metastas
     - [GainRatio.java](metastases-classification/GainRatio.java): Ranks the attributes of a dataset by their gain ratio.
     - [gain_ratio_feature_selection.py](metastases-classification/gain_ratio_feature_selection.py): Creates datasets using the features with the highest gain ratio scores.
     - [rf_binary.py](metastases-classification/rf_binary.py): Random Forest implementation with code for hyper-parameter tuning.
-    - [MOT.ipynb](metastases-classification/MOT.ipynb): Classification of positive and negative progression to seeding locations in 6 cancer types
+    - [Viz_MOT.ipynb](metastases-classification/Visualization_for_MOT.ipynb): Classification of positive and negative progression to seeding locations in 6 cancer types
     - [metastasis_pipeline.py](metastases-classification/metastasis_pipeline.py): A supervisory script to run all data through the metastatic loci classificaiton pipeline.
 4.  [Feature recapture and analysis](feature-recapture)
     - [Enriched_features_Fisher_recap.R](feature-recapture/Enriched_features_Fisher_recap.R): Statistical analysis of recaptured features in independent lists.
