@@ -1,0 +1,81 @@
+# Analyzing the selected features for the MOT project in context to
+ # the selected features
+
+
+library(stringr)
+library(tidyverse)
+library(ComplexHeatmap)
+library(circlize)
+library(ggplot2)
+setwd("/mnt/storage/mskaro1/Machine_Learning/All_MOT_selected_features/feature-selected-datasets")
+clinical <- data.table::fread(
+  "~/CSBL_shared/RNASeq/TCGA/annotation/counts_annotation.csv")
+projects <- c("TCGA-BLCA","TCGA-BRCA","TCGA-COAD", "TCGA-HNSC", "TCGA-LUAD", "TCGA-LIHC")
+proj <- projects[1]
+organs <- c("Bladder", "Liver", "Lung", "Bone", "Lymph_Node", "Pelvis", "Prostate")
+files_in_dir <- list.files()
+org <- organs[1]
+library(ComplexHeatmap)
+projects <- c("TCGA-BLCA","TCGA-BRCA","TCGA-COAD", "TCGA-HNSC", "TCGA-LUAD", "TCGA-LIHC")
+
+proj <- projects[1]
+organs <- c("Bladder", "Liver", "Lung", "Bone", "Lymph_Node", "Pelvis", "Prostate")
+org <- organs[1]
+for(proj in projects){
+  
+  for(org in organs){
+    if(file.exists(str_glue("{proj}_metastatic_data_RNAseq_{org}_feature_selected_train.csv"))){
+      train <- as.data.frame(data.table::fread(str_glue("{proj}_metastatic_data_RNAseq_{org}_feature_selected_train.csv")))
+      test <- as.data.frame(data.table::fread(str_glue("{proj}_metastatic_data_RNAseq_{org}_feature_selected_test.csv")))
+      # complete data set of IG selected features. The train test splits will be merged 
+      val <- str_sub(proj, 6,9)
+      dat <- as.data.frame(t(rbind(train, test)))
+      
+      header.true <- function(df) {
+        names(df) <- as.character(unlist(df[1001,]))
+        df[-1001,]
+      }
+      dat <- header.true(dat)
+      
+      # sort the column headers, add numbering
+      design.mat <- as.data.frame(sort(colnames(dat)))
+      colnames(design.mat) <- "condition"
+      dat <- dat[order(colnames(dat))]
+      rownames(design.mat) <- colnames(dat)
+      
+      # load the normal data for the project 
+      
+      normal.samples <- clinical[sample_type == "Solid Tissue Normal"]
+      normal.samples <- normal.samples[project == proj]
+      # read in the counts data, filter for just normal data and the selected genes
+      df.exp <- data.table::fread(str_glue("~/CSBL_shared/RNASeq/TCGA/counts/{proj}.counts.csv"), stringsAsFactors = TRUE) %>%
+        as_tibble() %>%
+        tibble::column_to_rownames(var = "Ensembl")
+      coldata.n <- normal.samples[normal.samples$project == proj,]
+      df.exp <- df.exp[ ,colnames(df.exp) %in% coldata.n$barcode]
+      df.exp <- df.exp[rownames(df.exp) %in% rownames(dat),]
+      
+      # make the design matrix
+      
+      
+      
+      # DEanalysis with DEseq2, use contrasts to find up and down regulated transcripts
+      
+      # write the Rdata file,the csv from results
+      
+      # look for bone, liver and lung and Lymph Node tropisms in each cancer type
+      
+  
+      # GSEA with transcripts and ranked by fold change
+      
+      }
+    }
+  }
+  
+  
+  
+  
+  
+  
+  
+  
