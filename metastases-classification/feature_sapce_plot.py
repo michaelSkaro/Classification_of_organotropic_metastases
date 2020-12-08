@@ -1,5 +1,5 @@
 '''
-Creates PCA plots of the metastatic data pre-, post-feature-selection.
+Creates MDS plots of the metastatic data pre-, post-feature-selection.
 '''
 
 import os
