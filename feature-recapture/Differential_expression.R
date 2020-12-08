@@ -7,6 +7,8 @@ library(tidyverse)
 library(ComplexHeatmap)
 library(circlize)
 library(ggplot2)
+library(tibble)
+library(DESeq2)
 setwd("/mnt/storage/mskaro1/Machine_Learning/All_MOT_selected_features/feature-selected-datasets")
 clinical <- data.table::fread(
   "~/CSBL_shared/RNASeq/TCGA/annotation/counts_annotation.csv")
@@ -18,6 +20,18 @@ org <- organs[1]
 library(ComplexHeatmap)
 projects <- c("TCGA-BLCA","TCGA-BRCA","TCGA-COAD", "TCGA-HNSC", "TCGA-LUAD", "TCGA-LIHC")
 
+annot <- data.table::fread("~/CSBL_shared/ID_mapping/Ensembl_symbol_entrez.csv")
+
+clinical <- data.table::fread(
+  "~/CSBL_shared/RNASeq/TCGA/annotation/counts_annotation.csv")
+
+
+normal.samples <- clinical[sample_type == "Solid Tissue Normal"]
+
+tumor.samples <- data.table::fread("~/storage/Metastatic_Organo_Tropism/tumor_samples_annotated_progression.csv", stringsAsFactors = TRUE) %>%
+  tibble::column_to_rownames("V1")
+
+
 proj <- projects[1]
 organs <- c("Bladder", "Liver", "Lung", "Bone", "Lymph_Node", "Pelvis", "Prostate")
 org <- organs[1]
@@ -25,23 +39,20 @@ for(proj in projects){
   
   for(org in organs){
     if(file.exists(str_glue("{proj}_metastatic_data_RNAseq_{org}_feature_selected_train.csv"))){
+      
+      
+      
+      # just need the features
       train <- as.data.frame(data.table::fread(str_glue("{proj}_metastatic_data_RNAseq_{org}_feature_selected_train.csv")))
-      test <- as.data.frame(data.table::fread(str_glue("{proj}_metastatic_data_RNAseq_{org}_feature_selected_test.csv")))
-      # complete data set of IG selected features. The train test splits will be merged 
-      val <- str_sub(proj, 6,9)
-      dat <- as.data.frame(t(rbind(train, test)))
       
-      header.true <- function(df) {
-        names(df) <- as.character(unlist(df[1001,]))
-        df[-1001,]
-      }
-      dat <- header.true(dat)
+      # read in the values
+      dat <- data.table::fread((str_glue("~/storage/PanCancerAnalysis/ML_2019/Metastatic_loci_consolidated/one_hot_encoded_labels/{proj}_metastatic_data_RNAseq.csv")))
       
-      # sort the column headers, add numbering
-      design.mat <- as.data.frame(sort(colnames(dat)))
-      colnames(design.mat) <- "condition"
-      dat <- dat[order(colnames(dat))]
-      rownames(design.mat) <- colnames(dat)
+     
+      
+      # select barcode and the organ columns to make the tumor design matrix
+      
+     
       
       # load the normal data for the project 
       
@@ -56,10 +67,58 @@ for(proj in projects){
       df.exp <- df.exp[rownames(df.exp) %in% rownames(dat),]
       
       # make the design matrix
+      coldata.n <- as.data.frame(t(coldata.n[,1:2]))
+      header.true <- function(df) {
+        names(df) <- as.character(unlist(df[2,]))
+        df[-2,]
+      }
       
+      coldata.n <- header.true(coldata.n)
+      metastatic_status <- colnames(coldata.n)
+      coldata.n <- as.data.frame(sort(coldata.n))
+      coldata.n <- as.data.frame(t(coldata.n))
+      coldata.n$Metastatic_status <- metastatic_status
+      coldata.n <- coldata.n %>%
+        select(-project)
+      design.mat <- rbind(design.mat,coldata.n)
       
+      design.mat$disease_status <- ifelse(design.mat$Metastatic_status == "Solid Tissue Normal", "Normal", 
+                                          "Tumor") 
+      
+      # make the df.exp r bind the normal samples to the tumors and make sure the columns and rownames match
+      
+      colnames(df.exp) <- rownames(coldata.n)
+      
+      # rownames to column called ENSEMBL to join on
+      
+      df.exp <- df.exp %>%
+        tibble::rownames_to_column("ENSEMBL")
+      dat <- dat %>%
+        tibble::rownames_to_column("ENSEMBL")
+      
+      df.exp <- dplyr::left_join(df.exp, dat, by = "ENSEMBL") %>%
+        column_to_rownames("ENSEMBL")
       
       # DEanalysis with DEseq2, use contrasts to find up and down regulated transcripts
+      rownames(design.mat) <- str_replace_all(rownames(design.mat), " ", "")
+      rownames(design.mat) <- str_replace_all(rownames(design.mat), "\\.", "")
+      colnames(df.exp) <- str_replace_all(colnames(df.exp), " ", "")
+      colnames(df.exp) <- str_replace_all(colnames(df.exp), "\\.", "")
+      
+      df.exp <- df.exp[sort(colnames(df.exp))]
+      design.mat <- design.mat[sort(rownames(design.mat)),]
+      
+      dds <- DESeq2::DESeqDataSetFromMatrix(countData = df.exp, colData = design.mat, design = ~ Metastatic_status + disease_status)
+
+      keep <- rowSums(counts(dds)) >= 10
+      dds <- dds[keep,]
+      
+      dds$Metastatic_status <- relevel(dds$Metastatic_status, ref = "0")
+      
+      dds <- DESeq(dds)
+      
+      save(dds, file = str_glue("{proj}_DE_met.RData"))
+      
       
       # write the Rdata file,the csv from results
       
@@ -72,6 +131,10 @@ for(proj in projects){
     }
   }
   
+dat <- data.table::fread("~/storage/PanCancerAnalysis/ML_2019/Metastatic_loci_consolidated/one_hot_encoded_labels/TCGA-BRCA_metastatic_data_RNAseq.csv")
+
+
+
 # R version 4.0.2 (2020-06-22)
 # Platform: x86_64-pc-linux-gnu (64-bit)
 # Running under: Ubuntu 20.04 LTS
@@ -125,4 +188,4 @@ for(proj in projects){
 # [97] R6_2.5.0               gridExtra_2.3          MASS_7.3-53            assertthat_0.2.1      
 # [101] rjson_0.2.20           withr_2.3.0            hms_0.5.3              clusterProfiler_3.16.1
 # [105] rmarkdown_2.5          rvcheck_0.1.8          Cairo_1.5-12.2         ggforce_0.3.2         
-# [109] NLP_0.2-1 
+# [109] NLP_0.2-1   
