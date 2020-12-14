@@ -37,5 +37,5 @@ This repository is the code base for the classification of organotropic metastas
     - [Gene_Set_enrichment_and_semantic_analysis.R](feature-recapture/Gene_Set_enrichment_and_semantic_analysis.R): Gene set enrichment analysis in GO Database. Sematic analysis of GO biological processes.  
 ## Reviewing:
 
-We are making this pipeline Docker image. Stay tuned!
+We are making this pipeline into a Docker image. Stay tuned!
 Thanks!
