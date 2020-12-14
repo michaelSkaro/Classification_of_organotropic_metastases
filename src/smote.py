@@ -186,8 +186,8 @@ def write_datasets(train_dataset, test_dataset, file_name, outdir_path):
             writer.writerow(row)
 
 
-def main():
-    args = parse_cli(sys.argv[1:])
+def main(cli_args=sys.argv[1:]):
+    args = parse_cli(cli_args)
     with open(args['input']) as fp:
         reader = csv.reader(fp)
         data = list(reader)

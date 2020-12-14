@@ -113,9 +113,9 @@ def plot_training_oob(x_train, y_train):
     sns.lineplot(x=n_leaves, y=errors, ax=ax)
     plt.show()
 
-def main():
+def main(cli_args=sys.argv[1:]):
 
-    args = parse_cli(sys.argv[1:])
+    args = parse_cli(cli_args)
     train_path = args['train']
     test_path = args['test']
     outdir_path = args['outdir']

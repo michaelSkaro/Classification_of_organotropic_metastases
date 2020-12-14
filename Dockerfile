@@ -1,5 +1,4 @@
-FROM ubuntu
-COPY  ./ /mot
+FROM ubuntu:latest
 ENV DEBIAN_FRONTEND=noninteractive
 RUN ["apt-get", "update"]
 RUN ["apt-get", "install", "--assume-yes", "--no-install-recommends", \
@@ -7,6 +6,7 @@ RUN ["apt-get", "install", "--assume-yes", "--no-install-recommends", \
 #RUN ["git", "clone", \
 #     "https://github.com/michaelSkaro/Classification_of_organotropic_metastases/tree/package-branch", \
 #     "/mot"]
+COPY ./ /mot
 WORKDIR /mot
 RUN ["pip3", "install", "-r", "requirements.txt"]
 ENTRYPOINT ["/bin/bash"]

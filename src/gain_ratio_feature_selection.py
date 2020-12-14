@@ -30,9 +30,9 @@ def parse_cli(args):
                         help='Path to output directory.')
     return vars(parser.parse_args(args))
 
-def main():
+def main(cli_args=sys.argv[1:]):
 
-    args = parse_cli(sys.argv[1:])
+    args = parse_cli(cli_args)
     with open(args['features']) as fp:
         reader = csv.reader(fp)
         features = list(reader)

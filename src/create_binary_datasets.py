@@ -23,12 +23,12 @@ def parse_cli(args):
 
     return vars(parser.parse_args(args))
 
-def main():
+def main(cli_args=sys.argv[1:]):
 
-    args = parse_cli(sys.argv[1:])
+    args = parse_cli(cli_args)
     indir_path = args['input']
     outdir_path = args['output']
-    for file_name in os.listdir(indir_path):
+    for file_name in os.listdir(indir_path): #tqdm
         data_path = os.path.join(indir_path, file_name)
         with open(data_path) as fp:
             reader = csv.reader(fp)
