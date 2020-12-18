@@ -23,7 +23,7 @@ import weka.classifiers.Evaluation;
 import weka.classifiers.trees.RandomForest;
 import weka.core.converters.ConverterUtils.DataSource;
 
-public class CancerClassifiers
+public class RandomForestClassifier
 {
     public static void main(String[] args) 
     {
