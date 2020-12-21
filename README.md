@@ -74,6 +74,18 @@ Note: This command should be run in the base directory of the project, and `<out
 - classification-results: Directory contains the classification results of our Random Forest model on the feature-selected datasets.
 
 ## General Usage:
+The entire metastatic pipeline can be ran using the [metastasis_pipeline script](./src/metastasis_pipeline.py). This script is callable from the command line interface using the following command: 
+
+```python -m mot.metastasis_pipeline``` 
+
+The `-h` flag to understand all available options. 
+
+Additionally, each component of the pipeline can be called individually from the command line. For more information read our [wiki](./) for a breakdown of each script's role in the pipeleine.
+
+**Note:** For those seeking to use the docker image to interact with our framework, run the following command to gain access to the shell of the docker image:
+```
+docker run --rm -it --entrypoint="" marcdh3/mot bash
+```
 
 ## Classification Stages
 1. [Cancer vs. Normal Classification](cancer-vs-normal-classification)
@@ -93,9 +105,6 @@ Note: This command should be run in the base directory of the project, and `<out
 4.  [Feature recapture and analysis](feature-recapture)
     - [Enriched_features_Fisher_recap.R](feature-recapture/Enriched_features_Fisher_recap.R): Statistical analysis of recaptured features in independent lists.
     - [Gene_Set_enrichment_and_semantic_analysis.R](feature-recapture/Gene_Set_enrichment_and_semantic_analysis.R): Gene set enrichment analysis in GO Database. Sematic analysis of GO biological processes.  
-
-
-
     
 ## Reviewing:
 
