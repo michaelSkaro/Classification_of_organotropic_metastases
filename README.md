@@ -4,17 +4,48 @@
 
 This repository is the code base for the classification of organotropic metastases. Transcriptomic profiles of 7,011 cancer patients in the TCGA database were used to classify and analyze the seeding location of primary tumors. The sequencing data and all clinicopatholigic reports for all of these patients were publicly available for bulk data mining through TCGA Biolinks.
 
-## Dependencies
-### Python
-- **Version:** Python >= 3.5
-- **Packages:** All required Python packages are listed in the [requirements.txt](./requirements.txt).
-### Java
-- **Version:** Java >= 8
-- **Packages:**
-  - [Weka](https://www.cs.waikato.ac.nz/ml/weka/index.html) >= 3.8.3
-### R
-- **Version:** >= 4.0
-- **Packages:** All session.info() R packages are listed at the bottom of [Gene_Set_enrichment_and_semantic_analysis.R](feature-recapture/Gene_Set_enrichment_and_semantic_analysis.R).
+## Installation
+We utilized multiple programming languages (i.e. Java, Python, and R) to construct learning models and to perform biological analyses. As a result, this created many dependencie so we have provided two different ways to install our framework -- a manual installation and a docker installation.
+
+**Docker Installation**
+
+The docker image for this project can be pulled from the online Docker Hub [repository](https://hub.docker.com/r/marcdh3/mot) or can be built using the Dockerfile included in the base directory of this project.
+
+To pull the image from the Docker Hub repo, run the following command:
+```
+docker pull marcdh3/mot
+```
+
+To build the image using the Dockerfile, run the following command in the base directory of this project:
+```
+docker build --tag mot .
+```
+
+**Manual Installation**
+
+For those seeking to manually install the project, all of the following dependencies must be satisfied prior to attempting the installation:
+
+Python
+- Version: Python >= 3.5
+- Packages: All required Python packages are listed in the [requirements.txt](./requirements.txt).
+
+Java
+- Version: Java >= 8
+- Packages:
+  - [Weka](https://www.cs.waikato.ac.nz/ml/weka/index.html) >= 3.8.3 (Note: The jar file is already included [here](./lib/weka.jar))
+  
+R
+- Version: >= 4.0
+- Packages: All session.info() R packages are listed at the bottom of [Gene_Set_enrichment_and_semantic_analysis.R](feature-recapture/Gene_Set_enrichment_and_semantic_analysis.R).
+
+Once all of the required depenedencies are satisfied, run the following command in the base directory to install the project as a python package:
+```
+pip install .
+```
+
+## Metastatic Classification Demo:
+
+## General Usage:
 
 ## Classification Stages
 1. [Cancer vs. Normal Classification](cancer-vs-normal-classification)
@@ -34,6 +65,10 @@ This repository is the code base for the classification of organotropic metastas
 4.  [Feature recapture and analysis](feature-recapture)
     - [Enriched_features_Fisher_recap.R](feature-recapture/Enriched_features_Fisher_recap.R): Statistical analysis of recaptured features in independent lists.
     - [Gene_Set_enrichment_and_semantic_analysis.R](feature-recapture/Gene_Set_enrichment_and_semantic_analysis.R): Gene set enrichment analysis in GO Database. Sematic analysis of GO biological processes.  
+
+
+
+    
 ## Reviewing:
 
 We are making this pipeline into a pypi project. Stay tuned!
