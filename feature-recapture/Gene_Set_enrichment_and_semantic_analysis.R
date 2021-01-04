@@ -227,6 +227,148 @@ listInput <- list('BLCA Lymph_Node' = BLCA_Lymph_Node$ID ,'HNSC Lymph_Node' = HN
 UpSetR::upset(fromList(listInput), order.by ="freq")
 
 
+# Analyzing the selected features for the MOT project in context to
+ # the selected features
+
+
+library(stringr)
+library(tidyverse)
+library(ComplexHeatmap)
+library(circlize)
+library(ggplot2)
+library(tibble)
+library(DESeq2)
+library(fgsea)
+setwd("/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/Metastatic_loci_consolidated/one_hot_encoded_labels")
+clinical <- data.table::fread(
+  "~/CSBL_shared/RNASeq/TCGA/annotation/counts_annotation.csv")
+projects <- c("TCGA-BLCA","TCGA-BRCA","TCGA-COAD", "TCGA-HNSC", "TCGA-LUAD", "TCGA-LIHC")
+proj <- projects[1]
+organs <- c("Bladder", "Liver", "Lung", "Bone", "Lymph_Node", "Pelvis", "Prostate")
+files_in_dir <- list.files()
+org <- organs[1]
+library(ComplexHeatmap)
+
+
+annot <- data.table::fread("~/CSBL_shared/ID_mapping/Ensembl_symbol_entrez.csv")
+
+
+normal.samples <- clinical[sample_type == "Solid Tissue Normal"]
+tumor.samples <- data.table::fread("~/storage/Metastatic_Organo_Tropism/tumor_samples_annotated_progression.csv", stringsAsFactors = TRUE) %>%
+  tibble::column_to_rownames("V1")
+
+for(proj in projects){
+    if(file.exists(str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/Metastatic_loci_consolidated/one_hot_encoded_labels/{proj}_metastatic_data_RNAseq.csv"))){
+      
+      met_annot <- data.table::fread(str_glue("{proj}_metastatic_data_RNAseq.csv"))
+      
+      coldata.m <- met_annot %>%
+        dplyr::select(c(barcode,colnames(met_annot)[colnames(met_annot) %in% organs]))
+      
+      # read in counts data, subset counts data to the met tumors for each comparison
+      df.exp <- data.table::fread(str_glue("~/CSBL_shared/RNASeq/TCGA/counts/{proj}.counts.csv"), stringsAsFactors = TRUE) %>%
+        as_tibble() %>%
+        tibble::column_to_rownames(var = "Ensembl")
+      
+      n<-dim(df.exp)[1]
+      df.exp<-df.exp[1:(n-5),]
+      
+      coldata.t<- tumor.samples[tumor.samples$project == proj,]
+      coldata.n <- normal.samples[normal.samples$project == proj,]
+      coldata <- rbind(coldata.n, coldata.t, fill = TRUE)
+      coldata <- left_join(coldata, coldata.m, by = "barcode")
+      coldata[is.na(coldata)] <- 0
+      
+      
+      df.exp <- df.exp[ ,colnames(df.exp) %in% coldata$barcode]
+      rownames(coldata) <- coldata$barcode
+      coldata$sample_type <- gsub(" ", "_", x = coldata$sample_type)
+      
+      rownames(coldata) <- sort(rownames(coldata))
+      colnames(df.exp) <- sort(colnames(df.exp))
+      
+      
+      met_locs <- colnames(coldata.m)[-1]
+      
+      
+      for(i in 1:length(met_locs)){
+        
+        # Customize df.exp and cioldata
+        print(proj)
+        print(met_locs[i])
+        org_til<- met_locs[i]
+        
+        coldata.m.l <- coldata %>%
+          filter(
+            .data[[met_locs[[1]]]] == 1)
+        coldata.n <- coldata %>%
+         filter(sample_type == "Solid_Tissue_Normal")
+        
+        coldata.n.m. <- rbind(coldata.n, coldata.m.l)
+        
+        df.exp.t <- df.exp[ ,colnames(df.exp) %in% coldata.n.m.$barcode]
+        rownames(coldata.n.m.) <- sort(rownames(coldata.n.m.))
+        colnames(df.exp.t) <- sort(colnames(df.exp.t))
+        
+        dds <- DESeqDataSetFromMatrix(countData = df.exp.t, colData = coldata.n.m., design = ~ sample_type)
+        
+        keep <- rowSums(counts(dds)) >= 10
+        dds <- dds[keep,]
+        dds$sample_type <- relevel(dds$sample_type, ref = "Solid_Tissue_Normal")
+        
+        dds <- DESeq(dds)
+        
+        res <- results(dds)
+        
+        resOrdered <- res[order(res$pvalue),]
+        resOrdered <- as.data.frame(resOrdered)
+        
+        
+        
+        res <- as.data.frame(res)
+        
+        write.csv(resOrdered, file = str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/Metastatic_loci_consolidated/one_hot_encoded_labels/{proj}_met_{org_til}_RNAseq.csv"))
+        save(dds, file = str_glue("{proj}_{org_til}_DE_met.RData"))
+        
+      }
+    }
+}
+
+# overlap the up and down regulated processes in tumors metastasizing to the locations 
+
+setwd("/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/Metastatic_loci_consolidated/one_hot_encoded_labels")
+proj <- projects[1]
+org <- organs[1]
+for(proj in projects){
+  for(org in organs){
+  if(file.exists(str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/Metastatic_loci_consolidated/one_hot_encoded_labels/{proj}_met_{org}_RNAseq.csv"))){
+    res <- data.table::fread(str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/Metastatic_loci_consolidated/one_hot_encoded_labels/{proj}_met_{org}_RNAseq.csv")) %>%
+      tibble::column_to_rownames("V1")
+    
+    # filter for FC ≥ |1.0|
+  
+    res <- res %>%
+      filter(abs(log2FoldChange) >1) %>%
+      filter(padj <= .05) %>%
+      rownames_to_column("ENSEMBL")
+  
+    # GSEA with Transcript,Rank,FC for Biological Processes
+    # Extract the list of significantly enriched Biological Processes 
+    # Split to up regulated and down regulated processes
+    # Save it as a list of {proj}_{metOrg}_{Pathways}.csv
+    # Intersect the processes within each class
+    # Test the intersection of the Enriched Biological Processes within class
+    # Test the intersection of the Enriched Biological processes between classes metastasizing to the same place
+    }
+  }  
+}
+
+# DE synthetic data and real positive cases: overlap up regulated and downregulated pathways 
+  # round all of the train data to the closest integer
+# Overlap synthetic positive vs real positive
+
+# Cluster positive and negative prior to feature selection to show high degree of overlap
+
 
 
 
