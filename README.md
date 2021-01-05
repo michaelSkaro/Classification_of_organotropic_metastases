@@ -13,12 +13,12 @@ The docker image for this project can be pulled from the online Docker Hub [repo
 
 To pull the image from the Docker Hub repo, run the following command:
 ```
-docker pull marcdh3/mot
+docker pull mskaro1/mot
 ```
 
 To build the image using the Dockerfile, run the following command in the base directory of this project:
 ```
-docker build --tag marcdh3/mot .
+docker build --tag mskaro1/mot .
 ```
 
 **Manual Installation**
@@ -48,7 +48,7 @@ We have provided a sample dataset of TCGA data to demonstrate the effectiveness 
 
 **Recommneded: Docker Approach**
 ```
-docker run --rm -it -v <output-directory>:/demo-outputs marcdh3/mot
+docker run --rm -it -v <output-directory>:/demo-outputs mskaro1/mot
 ```
 Note: `<output-directory>` should be replaced with the path of a directory on the user's local machine, and it is where the outputs of the demo will be stored.
   
@@ -84,7 +84,7 @@ Additionally, each component of the pipeline can be called individually from the
 
 **Note:** For those seeking to use the docker image to interact with our framework, run the following command to gain access to the shell of the docker image:
 ```
-docker run --rm -it --entrypoint="" marcdh3/mot bash
+docker run --rm -it --entrypoint="" mskaro1/mot bash
 ```
 
 ## Classification Stages
