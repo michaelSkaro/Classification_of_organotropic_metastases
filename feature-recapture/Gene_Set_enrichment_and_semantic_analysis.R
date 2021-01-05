@@ -108,128 +108,8 @@ for(proj in projects){
   }
 }
 
-# semantic analysis of pathways and the overlaps
-library(tibble)
-library(dplyr)
-library(plyr)
-compare_list <- as.data.frame(data.table::fread("compare_list.csv", header = TRUE))
-
-i <- 1
-out <- as.data.frame(t(c("CancerType1"= NA,
-                         "CancerType2"= NA,
-                         "Seeding_Location" = NA,
-                         "odds.ratio" = NA,
-                         "Enriched Processes CT1" = NA,
-                         "Enriched Processes CT2" = NA,
-                         "intersection"= NA,
-                         "p.value" = NA)))
-for(i in 1:length(CT1)){
-  print(i)
-  print(paste0("ego","_",compare_list[i,1],"_",compare_list[i,3],".csv"))
-  print(paste0("ego","_",compare_list[i,2],"_",compare_list[i,3],".csv"))
-  c1 <- data.table::fread(paste0("ego","_",compare_list[i,1],"_",compare_list[i,3],".csv"))
-  c2 <- data.table::fread(paste0("ego","_",compare_list[i,2],"_",compare_list[i,3],".csv"))
-  
-  # add all of the metric to a dataframe. 
-  
-  
-    go.obj <- newGeneOverlap(listA = c1$ID, listB = c2$ID, genome.size = 23393)
-    go.obj <- testGeneOverlap(go.obj)
-    df <- as.data.frame(t(c("CancerType1"= compare_list[i,1],
-               "CancerType2"= compare_list[i,2],
-               "Seeding_Location" = compare_list[i,3],
-               "Enriched Processes CT1" = length(c1$ID),
-               "Enriched Processes CT2" = length(c2$ID),
-               "odds.ratio" = sprintf("%.3f", go.obj@odds.ratio),
-               "intersection"= length(go.obj@intersection),
-               "p.value" = go.obj@pval)))
-    out <- rbind(out,df)
-    
-    
-}
-out <- out[2:length(out$CancerType1),]
-out <- out[sort(out$p.value),]  
-write.csv2(out, file = "/mnt/storage/mskaro1/Machine_Learning/All_MOT_selected_features/feature-selected-datasets/Fisher_exact_test_semantic.csv")
-  
-sessionInfo()
-
-library(simplifyEnrichment)
-library(stringr)
-library(tibble)
-dat <- data.table::fread("ego_TCGA-HNSC_Lymph_Node.csv", header = TRUE) %>%
-  column_to_rownames("V1")
-
-mat = GO_similarity(dat$ID, ont = "BP")
-simplifyGO(mat, method = "binary_cut",column_title = "Biological Processes clustered by Sematic Similarity", plot = TRUE)
-
-dat <- data.table::fread("ego_TCGA-BLCA_Lymph_Node.csv",header = TRUE) %>%
-  column_to_rownames("V1")
-mat = GO_similarity(dat$ID, ont = "BP")
-simplifyGO(mat, method = "binary_cut",column_title = "Biological Processes clustered by Sematic Similarity", plot = TRUE)
-
-# make upsetR plot to finish it off
-
-library(UpSetR)
-seed_loc <- c("Lymph_Node","Lung","Bone","Lung")
-
-#Bone
-BLCA_Bone <- data.table::fread("ego_TCGA-BLCA_Bone.csv", header = TRUE) %>%
-  column_to_rownames("V1")
-BRCA_Bone <- data.table::fread("ego_TCGA-BRCA_Bone.csv", header = TRUE) %>%
-  column_to_rownames("V1")
-listInput <- list('BLCA Bone' = BLCA_Bone$ID ,'BRCA Bone' = BRCA_Bone$ID)
-
-
-
-
-# Liver 
-BLCA_Liver <- data.table::fread("ego_TCGA-BLCA_Liver.csv", header = TRUE) %>%
-  column_to_rownames("V1")
-BRCA_Liver <- data.table::fread("ego_TCGA-BRCA_Liver.csv", header = TRUE) %>%
-  column_to_rownames("V1")
-LIHC_Liver <- data.table::fread("ego_TCGA-LIHC_Liver.csv", header = TRUE) %>%
-  column_to_rownames("V1")
-COAD_Liver <- data.table::fread("ego_TCGA-COAD_Liver.csv", header = TRUE) %>%
-  column_to_rownames("V1")
-
-
-library(UpSetR)
-listInput <- list('BLCA Liver' = BLCA_Liver$ID ,'BRCA Liver' = BRCA_Liver$ID ,
-                  'LIHC Liver' = LIHC_Liver$ID,'COAD Liver' = COAD_Liver$ID)
-
-UpSetR::upset(fromList(listInput), order.by ="freq")
-
-
-# Lung
-BLCA<- data.table::fread("ego_TCGA-BLCA_Lung.csv", header = TRUE) %>%
-  column_to_rownames("V1")
-BRCA<- data.table::fread("ego_TCGA-BRCA_Lung.csv", header = TRUE) %>%
-  column_to_rownames("V1")
-LIHC<- data.table::fread("ego_TCGA-LIHC_Lung.csv", header = TRUE) %>%
-  column_to_rownames("V1")
-HNSC<- data.table::fread("ego_TCGA-HNSC_Lung.csv", header = TRUE) %>%
-  column_to_rownames("V1")
-LUAD<- data.table::fread("ego_TCGA-LUAD_Lung.csv", header = TRUE) %>%
-  column_to_rownames("V1")
-
-library(UpSetR)
-listInput <- list('BLCA Lung' = BLCA$ID ,'BRCA Lung' = BRCA$ID , "HNSC Lung"=HNSC$ID,
-                  'LIHC Lung' = LIHC$ID,'LUAD Liver' = LUAD$ID)
-
-
-#Lymph_Node
-BLCA_Lymph_Node <- data.table::fread("ego_TCGA-BLCA_Lymph_Node.csv", header = TRUE) %>%
-  column_to_rownames("V1")
-HNSC_Lymph_Node <- data.table::fread("ego_TCGA-HNSC_Lymph_Node.csv", header = TRUE) %>%
-  column_to_rownames("V1")
-listInput <- list('BLCA Lymph_Node' = BLCA_Lymph_Node$ID ,'HNSC Lymph_Node' = HNSC_Lymph_Node$ID)
-
-UpSetR::upset(fromList(listInput), order.by ="freq")
-
-
 # Analyzing the selected features for the MOT project in context to
  # the selected features
-
 
 library(stringr)
 library(tidyverse)
@@ -243,10 +123,10 @@ setwd("/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/Metastatic_loci_consolidat
 clinical <- data.table::fread(
   "~/CSBL_shared/RNASeq/TCGA/annotation/counts_annotation.csv")
 projects <- c("TCGA-BLCA","TCGA-BRCA","TCGA-COAD", "TCGA-HNSC", "TCGA-LUAD", "TCGA-LIHC")
-proj <- projects[1]
-organs <- c("Bladder", "Liver", "Lung", "Bone", "Lymph_Node", "Pelvis", "Prostate")
+proj <- projects[4]
+organs <- c("Bladder", "Liver", "Lung", "Bone", "Lymph Node", "Pelvis", "Prostate")
 files_in_dir <- list.files()
-org <- organs[1]
+org <- organs[5]
 library(ComplexHeatmap)
 
 
@@ -256,6 +136,12 @@ annot <- data.table::fread("~/CSBL_shared/ID_mapping/Ensembl_symbol_entrez.csv")
 normal.samples <- clinical[sample_type == "Solid Tissue Normal"]
 tumor.samples <- data.table::fread("~/storage/Metastatic_Organo_Tropism/tumor_samples_annotated_progression.csv", stringsAsFactors = TRUE) %>%
   tibble::column_to_rownames("V1")
+
+# Oncogenic pathways for enrichment analysis
+m_t2g <- msigdbr(species = "Homo sapiens", category = "C4") %>% 
+  dplyr::select(gs_name, entrez_gene)
+
+
 
 for(proj in projects){
     if(file.exists(str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/Metastatic_loci_consolidated/one_hot_encoded_labels/{proj}_metastatic_data_RNAseq.csv"))){
@@ -296,7 +182,7 @@ for(proj in projects){
         # Customize df.exp and cioldata
         print(proj)
         print(met_locs[i])
-        org_til<- met_locs[i]
+        org_til<- met_locs[2]
         
         coldata.m.l <- coldata %>%
           filter(
@@ -334,11 +220,20 @@ for(proj in projects){
     }
 }
 
-# overlap the up and down regulated processes in tumors metastasizing to the locations 
+# Build a superRes object that add the Project and Org columns as annotation. 
+# This will allow us to iteratively complete all of the intersections, both by 
+# project and by seeding locaiton 
 
 setwd("/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/Metastatic_loci_consolidated/one_hot_encoded_labels")
 proj <- projects[1]
 org <- organs[1]
+organs[5] <- "Lymph_Node"
+# make a dataframe with the same columns as the res object + 2 columns will have
+# add an empty line that will be removed later on
+#read in a res then just fall into the for loop
+superRes <- res[1,]
+superRes[1,] <- NA
+
 for(proj in projects){
   for(org in organs){
   if(file.exists(str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/Metastatic_loci_consolidated/one_hot_encoded_labels/{proj}_met_{org}_RNAseq.csv"))){
@@ -348,28 +243,75 @@ for(proj in projects){
     # filter for FC ≥ |1.0|
   
     res <- res %>%
-      filter(abs(log2FoldChange) >1) %>%
+      filter(abs(log2FoldChange) >.5) %>%
       filter(padj <= .05) %>%
       rownames_to_column("ENSEMBL")
-  
-    # GSEA with Transcript,Rank,FC for Biological Processes
-    # Extract the list of significantly enriched Biological Processes 
-    # Split to up regulated and down regulated processes
-    # Save it as a list of {proj}_{metOrg}_{Pathways}.csv
-    # Intersect the processes within each class
-    # Test the intersection of the Enriched Biological Processes within class
-    # Test the intersection of the Enriched Biological processes between classes metastasizing to the same place
+    res$ENSEMBL <- substr(res$ENSEMBL,1,15)
+    
+    res$proj <- rep(x = proj, times = length(res$ENSEMBL))
+    res$org <- rep(x = org, times = length(res$ENSEMBL))
+    # add the columns to the res object as annotation
+    
+    # rbind the res object to the SuperRes.
+    
+    superRes <- as.data.frame(rbind(superRes,res))
+    superRes <- superRes[complete.cases(superRes),]
+    
     }
   }  
 }
 
-# DE synthetic data and real positive cases: overlap up regulated and downregulated pathways 
-  # round all of the train data to the closest integer
-# Overlap synthetic positive vs real positive
-
-# Cluster positive and negative prior to feature selection to show high degree of overlap
 
 
+
+# complete the intersections.
+# iterate over the projects
+# make each of the of the comparisons
+library(tibble)
+library(dplyr)
+library(plyr)
+compare_list <- as.data.frame(data.table::fread("/mnt/storage/mskaro1/Machine_Learning/All_MOT_selected_features/feature-selected-datasets/compare_list.csv", header = TRUE))
+
+out <- as.data.frame(t(c("CancerType1"= NA,
+                         "CancerType2"= NA,
+                         "Seeding_Location" = NA,
+                         "odds.ratio" = NA,
+                         "DE genes CT1" = NA,
+                         "DE genes CT2" = NA,
+                         "intersection"= NA,
+                         "p.value" = NA)))
+
+
+library(UpSetR)
+library(stringr)
+library(GeneOverlap)
+for(i in 1:length(compare_list$CancerType1)){
+  
+  comp <- superRes %>%
+    filter(proj %in% compare_list[i,1:2]) %>%
+    filter(org %in% compare_list[i,3])
+  c1 <- comp[comp$proj==compare_list[i,1],]
+  c2 <- comp[comp$proj==compare_list[i,2],]
+  go.obj <- newGeneOverlap(listA = c1$ENSEMBL, 
+                           listB = c2$ENSEMBL, 
+                           genome.size = 60483)
+  go.obj <- testGeneOverlap(go.obj)
+  df <- as.data.frame(t(c("CancerType1"= compare_list[i,1],
+                          "CancerType2"= compare_list[i,2],
+                          "Seeding_Location" = compare_list[i,3],
+                          "DE genes CT1" = length(c1$ENSEMBL),
+                          "DE genes CT2" = length(c2$ENSEMBL),
+                          "odds.ratio" = sprintf("%.3f", go.obj@odds.ratio),
+                          "intersection"= length(go.obj@intersection),
+                          "p.value" = go.obj@pval)))
+  out <- rbind(out,df)
+  out <- out[complete.cases(out),]
+  
+}
+
+out$p.value <- as.numeric(out$p.value)
+out <- out[order(out$p.value),] 
+write.csv2(out, file = "/mnt/storage/mskaro1/Machine_Learning/Fisher_Exact_testDE_genes_tumors_met_same_loc.csv")
 
 
 # R version 4.0.2 (2020-06-22)
@@ -380,39 +322,50 @@ for(proj in projects){
 # BLAS/LAPACK: /usr/lib/x86_64-linux-gnu/openblas-openmp/libopenblasp-r0.3.8.so
 # 
 # locale:
-#   [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
-# [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=C              LC_PAPER=en_US.UTF-8       LC_NAME=C                 
-# [9] LC_ADDRESS=C               LC_TELEPHONE=C             LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+#   [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=en_US.UTF-8       
+# [4] LC_COLLATE=en_US.UTF-8     LC_MONETARY=en_US.UTF-8    LC_MESSAGES=C             
+# [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                  LC_ADDRESS=C              
+# [10] LC_TELEPHONE=C             LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
 # 
 # attached base packages:
 #   [1] stats4    grid      parallel  stats     graphics  grDevices utils     datasets  methods   base     
 # 
 # other attached packages:
-#   [1] UpSetR_1.4.0              ComplexHeatmap_2.7.1      plyr_1.8.6                stringr_1.4.0            
-# [5] GeneOverlap_1.24.0        org.Hs.eg.db_3.11.4       AnnotationDbi_1.50.3      IRanges_2.22.2           
-# [9] S4Vectors_0.26.1          Biobase_2.48.0            simplifyEnrichment_0.99.5 BiocGenerics_0.34.0      
-# [13] tibble_3.0.4              dplyr_1.0.2              
+#   [1] circlize_0.4.11           ComplexHeatmap_2.7.1      forcats_0.5.0            
+# [4] dplyr_1.0.2               purrr_0.3.4               readr_1.4.0              
+# [7] tidyr_1.1.2               ggplot2_3.3.2             tidyverse_1.3.0          
+# [10] UpSetR_1.4.0              tibble_3.0.4              stringr_1.4.0            
+# [13] org.Hs.eg.db_3.11.4       AnnotationDbi_1.50.3      IRanges_2.22.2           
+# [16] S4Vectors_0.26.1          Biobase_2.48.0            simplifyEnrichment_0.99.5
+# [19] BiocGenerics_0.34.0      
 # 
 # loaded via a namespace (and not attached):
-#   [1] fgsea_1.14.0           colorspace_2.0-0       rjson_0.2.20           ellipsis_0.3.1         ggridges_0.5.2        
-# [6] circlize_0.4.11        qvalue_2.20.0          GlobalOptions_0.1.2    clue_0.3-57            rstudioapi_0.13       
-# [11] farver_2.0.3           urltools_1.7.3         graphlayouts_0.7.1     ggrepel_0.8.2          bit64_4.0.5           
-# [16] fansi_0.4.1            scatterpie_0.1.5       xml2_1.3.2             splines_4.0.2          GOSemSim_2.14.2       
-# [21] knitr_1.30             polyclip_1.10-0        jsonlite_1.7.1         Cairo_1.5-12.2         cluster_2.1.0         
-# [26] GO.db_3.11.4           png_0.1-7              ggforce_0.3.2          BiocManager_1.30.10    compiler_4.0.2        
-# [31] httr_1.4.2             rvcheck_0.1.8          assertthat_0.2.1       Matrix_1.2-18          cli_2.1.0             
-# [36] tweenr_1.0.1           htmltools_0.5.0        prettyunits_1.1.1      tools_4.0.2            igraph_1.2.6          
-# [41] NLP_0.2-1              gtable_0.3.0           glue_1.4.2             reshape2_1.4.4         DO.db_2.9             
-# [46] tinytex_0.27           fastmatch_1.1-0        Rcpp_1.0.5             enrichplot_1.8.1       slam_0.1-47           
-# [51] vctrs_0.3.4            ggraph_2.0.3           xfun_0.19              lifecycle_0.2.0        clusterProfiler_3.16.1
-# [56] gtools_3.8.2           DOSE_3.14.0            europepmc_0.4          MASS_7.3-53            scales_1.1.1          
-# [61] tidygraph_1.2.0        hms_0.5.3              RColorBrewer_1.1-2     yaml_2.2.1             memoise_1.1.0         
-# [66] gridExtra_2.3          ggplot2_3.3.2          downloader_0.4         triebeard_0.3.0        stringi_1.5.3         
-# [71] RSQLite_2.2.1          caTools_1.18.0         BiocParallel_1.22.0    shape_1.4.5            bitops_1.0-6          
-# [76] rlang_0.4.8            pkgconfig_2.0.3        matrixStats_0.57.0     evaluate_0.14          lattice_0.20-41       
-# [81] purrr_0.3.4            cowplot_1.1.0          bit_4.0.4              tidyselect_1.1.0       magrittr_1.5          
-# [86] R6_2.5.0               gplots_3.1.0           generics_0.1.0         DBI_1.1.0              pillar_1.4.6          
-# [91] proxyC_0.1.5           crayon_1.3.4           KernSmooth_2.23-17     rmarkdown_2.5          viridis_0.5.1         
-# [96] GetoptLong_1.0.4       progress_1.2.2         data.table_1.13.2      blob_1.2.1             digest_0.6.27         
-# [101] tm_0.7-7               tidyr_1.1.2            gridGraphics_0.5-0     RcppParallel_5.0.2     munsell_0.5.0         
-# [106] viridisLite_0.3.0      ggplotify_0.0.5 
+#   [1] readxl_1.3.1           backports_1.2.0        fastmatch_1.1-0        plyr_1.8.6            
+# [5] igraph_1.2.6           proxyC_0.1.5           splines_4.0.2          BiocParallel_1.22.0   
+# [9] urltools_1.7.3         digest_0.6.27          htmltools_0.5.0        GOSemSim_2.14.2       
+# [13] viridis_0.5.1          GO.db_3.11.4           fansi_0.4.1            magrittr_1.5          
+# [17] memoise_1.1.0          tm_0.7-7               cluster_2.1.0          graphlayouts_0.7.1    
+# [21] modelr_0.1.8           RcppParallel_5.0.2     matrixStats_0.57.0     enrichplot_1.8.1      
+# [25] prettyunits_1.1.1      colorspace_2.0-0       blob_1.2.1             rvest_0.3.6           
+# [29] ggrepel_0.8.2          haven_2.3.1            xfun_0.19              crayon_1.3.4          
+# [33] jsonlite_1.7.1         scatterpie_0.1.5       glue_1.4.2             polyclip_1.10-0       
+# [37] gtable_0.3.0           GetoptLong_1.0.4       shape_1.4.5            scales_1.1.1          
+# [41] DOSE_3.14.0            DBI_1.1.0              Rcpp_1.0.5             viridisLite_0.3.0     
+# [45] progress_1.2.2         clue_0.3-57            gridGraphics_0.5-0     bit_4.0.4             
+# [49] europepmc_0.4          httr_1.4.2             fgsea_1.14.0           RColorBrewer_1.1-2    
+# [53] ellipsis_0.3.1         pkgconfig_2.0.3        farver_2.0.3           dbplyr_2.0.0          
+# [57] ggplotify_0.0.5        tidyselect_1.1.0       rlang_0.4.8            reshape2_1.4.4        
+# [61] munsell_0.5.0          cellranger_1.1.0       tools_4.0.2            downloader_0.4        
+# [65] cli_2.1.0              generics_0.1.0         RSQLite_2.2.1          broom_0.7.2           
+# [69] ggridges_0.5.2         evaluate_0.14          yaml_2.2.1             knitr_1.30            
+# [73] bit64_4.0.5            fs_1.5.0               tidygraph_1.2.0        ggraph_2.0.3          
+# [77] slam_0.1-47            DO.db_2.9              xml2_1.3.2             compiler_4.0.2        
+# [81] rstudioapi_0.13        png_0.1-7              reprex_0.3.0           tweenr_1.0.1          
+# [85] stringi_1.5.3          lattice_0.20-41        Matrix_1.2-18          vctrs_0.3.4           
+# [89] pillar_1.4.6           lifecycle_0.2.0        BiocManager_1.30.10    triebeard_0.3.0       
+# [93] GlobalOptions_0.1.2    data.table_1.13.2      cowplot_1.1.0          qvalue_2.20.0         
+# [97] R6_2.5.0               gridExtra_2.3          MASS_7.3-53            assertthat_0.2.1      
+# [101] rjson_0.2.20           withr_2.3.0            hms_0.5.3              clusterProfiler_3.16.1
+# [105] rmarkdown_2.5          rvcheck_0.1.8          Cairo_1.5-12.2         ggforce_0.3.2         
+# [109] NLP_0.2-1   
+  
