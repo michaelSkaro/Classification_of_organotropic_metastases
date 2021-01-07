@@ -313,6 +313,56 @@ out$p.value <- as.numeric(out$p.value)
 out <- out[order(out$p.value),] 
 write.csv2(out, file = "/mnt/storage/mskaro1/Machine_Learning/Fisher_Exact_testDE_genes_tumors_met_same_loc.csv")
 
+# make a TSNE of all the cancer types RNAexpression data then add the RNA expression from the 6 cancer types
+# Show 1 or cluster topologies before and after synthetic sample generation.
+
+for(proj in projects){
+  # read in the project RNAexpression
+  df.exp <- data.table::fread(str_glue("~/CSBL_shared/RNASeq/TCGA/counts/{proj}.counts.csv"), stringsAsFactors = TRUE) %>%
+    as_tibble() %>%
+    tibble::column_to_rownames(var = "Ensembl")
+  # get rid of the metric rows
+  n<-dim(df.exp)[1]
+  df.exp<-df.exp[1:(n-5),]
+  
+  # tranpose the data set to be concatenated with data
+  df.exp <- as.data.frame(t(df.exp))
+  
+  df.exp$label <- proj
+  
+  # save as the temp, if temp cat to temp
+  
+  if(proj =="TCGA-BLCA"){
+    print(proj)
+    temp <- df.exp
+    
+  }
+  else{
+    temp <- rbind(temp,df.exp)
+    print(proj)
+  }
+  
+}
+df.exp <- temp
+
+# make TSNE using the label, pop the label column
+## Curating the database for analysis with both t-SNE and PCA
+library(Rtsne)
+Labels<-df.exp$label
+df.exp$label<-as.factor(df.exp$label)
+## for plotting
+colors = rainbow(length(unique(df.exp$label)))
+names(colors) = unique(df.exp$label)
+
+## Executing the algorithm on curated data
+tsne <- Rtsne(df.exp[,-1], dims = 2, perplexity=30, verbose=TRUE, max_iter = 500)
+exeTimeTsne<- system.time(Rtsne(df.exp[,-1], dims = 2, perplexity=30, verbose=TRUE, max_iter = 500))
+
+## Plotting
+plot(tsne$Y, t='n', main="tsne")
+text(tsne$Y, labels=df.exp$label, col=colors[df.exp$label])
+
+
 
 # R version 4.0.2 (2020-06-22)
 # Platform: x86_64-pc-linux-gnu (64-bit)
