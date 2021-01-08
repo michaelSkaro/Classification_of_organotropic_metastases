@@ -80,7 +80,7 @@ The entire metastatic pipeline can be ran using the [metastasis_pipeline script]
 
 The `-h` flag to understand all available options. 
 
-Additionally, each component of the pipeline can be called individually from the command line. For more information read our [wiki](./) for a breakdown of each script's role in the pipeleine.
+Additionally, each component of the pipeline can be called individually from the command line. For more information read our [wiki](https://github.com/michaelSkaro/Classification_of_organotropic_metastases/wiki) for a breakdown of each script's role in the pipeleine.
 
 **Note:** For those seeking to use the docker image to interact with our framework, run the following command to gain access to the shell of the docker image:
 ```
