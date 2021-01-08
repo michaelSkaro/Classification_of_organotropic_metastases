@@ -9,7 +9,7 @@ We utilized multiple programming languages (i.e. Java, Python, and R) to constru
 
 **Docker Installation**
 
-The docker image for this project can be pulled from the online Docker Hub [repository](https://hub.docker.com/r/marcdh3/mot) or can be built using the Dockerfile included in the base directory of this project.
+The docker image for this project can be pulled from the online Docker Hub [repository](https://hub.docker.com/r/mskaro1/mot) or can be built using the Dockerfile included in the base directory of this project.
 
 To pull the image from the Docker Hub repo, run the following command:
 ```
