@@ -88,5 +88,5 @@ docker run --rm -it --entrypoint="" mskaro1/mot bash
 ```
 ## Reviewing:
 
-We are making this pipeline into a Docker image. Stay tuned!
+Docker image avaialable now ! Wiki incoming!
 Thanks!
