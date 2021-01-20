@@ -225,6 +225,188 @@ for(proj in projects){
 }
 
 
+###############################################
+###############################################
+###############################################
+
+setwd("/mnt/storage/mskaro1/Machine_Learning/All_MOT_selected_features/feature-selected-datasets")
+
+files_in_dir <- list.files()
+projects <- c("TCGA-BLCA","TCGA-BRCA","TCGA-COAD", "TCGA-HNSC", "TCGA-LUAD", "TCGA-LIHC")
+proj <- projects[1]
+organs <- c("Bladder", "Liver", "Lung", "Bone", "Lymph_Node", "Pelvis", "Prostate")
+org <- organs[1]
+
+clinical <- data.table::fread(
+  "~/CSBL_shared/RNASeq/TCGA/annotation/counts_annotation.csv")
+normal.samples <- clinical[sample_type == "Solid Tissue Normal"]
+tumor.samples <- clinical[sample_type != "Solid Tissue Normal"]
+tumor.samples <- tumor.samples[tumor.samples$sample_type == "Primary Tumor",]
+tumor.samples <- tumor.samples[tumor.samples$project %in% projects,]
+
+tumor.samples$bcr_patient_barcode <- substr(tumor.samples$barcode_short, 0, 12)
+clinical$barcode_short <- substr(clinical$barcode, 0,16)
+
+
+
+# Up and down regulated pathways in positive tumors
+for(proj in projects){
+  for(org in organs){
+    if(file.exists(str_glue("{proj}_metastatic_data_RNAseq_{org}_feature_selected_train.csv"))){
+      train <- as.data.frame(data.table::fread(str_glue("{proj}_metastatic_data_RNAseq_{org}_feature_selected_train.csv")))
+      test <- as.data.frame(data.table::fread(str_glue("{proj}_metastatic_data_RNAseq_{org}_feature_selected_test.csv")))
+      # complete data set of IG selected features. The train test splits will be merged 
+      val <- str_sub(proj, 6,9)
+      dat <- rbind(train, test)
+      organ_labels <- dat %>%dplyr::select(org)
+      
+      dat <- dat %>%
+        dplyr::select(-org)
+      dat <- as.data.frame(t(dat))
+      names(dat) <- organ_labels[,1]
+      
+      dat[mapply(is.infinite, dat)] <- 0
+      dat <- ceiling(dat)
+      
+      drop <- c("Negative")
+      dat = dat[,!(names(dat) %in% drop)]
+      
+      # replace the period in the colnames for an underscore
+      
+      newNames <- str_replace_all(colnames(dat), pattern = "\\.", replacement = "_")
+      colnames(dat) <- newNames
+      colnames(dat)
+      # read in the normal data
+      
+      df.exp <- data.table::fread(str_glue("~/CSBL_shared/RNASeq/TCGA/counts/{proj}.counts.csv"), stringsAsFactors = TRUE) %>%
+        as_tibble() %>%
+        tibble::column_to_rownames(var = "Ensembl")
+      
+      n<-dim(df.exp)[1]
+      df.exp<-df.exp[1:(n-5),]
+      
+      # subset to only normal samples
+     
+      
+      coldata.n <- normal.samples[normal.samples$project == proj,]
+      
+      df.exp <- df.exp[ ,colnames(df.exp) %in% coldata.n$barcode]
+      rownames(coldata.n) <- coldata.n$barcode
+      coldata.n$sample_type <- gsub(" ", "_", x = coldata.n$sample_type)
+      
+      # make a coldata for the current dat file
+      
+      coldata.t <- as.data.frame(colnames(dat))
+      coldata.t$sample_type <- "Primary_Tumor"
+      colnames(coldata.t)[1] <- "Samples"
+      # mthe the rownames match the samples column names 
+      rownames(coldata.t) <- coldata.t$Samples
+      
+      # extract only the rows we need for the selected features
+      
+      df.exp <- df.exp[rownames(df.exp) %in% rownames(dat),]
+      
+      # make a column value to left join the two data sets
+      
+      df.exp <- df.exp %>%
+        tibble::rownames_to_column("ENSEMBL")
+      dat <- dat %>%
+        tibble::rownames_to_column("ENSEMBL")
+      
+      df.exp <- left_join(df.exp,dat, by ="ENSEMBL")
+      
+      df.exp <- df.exp %>%
+        column_to_rownames("ENSEMBL")
+      
+      
+      # merge the coldata files
+      # I think there is something with ordering the columns as well
+      
+      coldata.n <- coldata.n %>%
+        dplyr::select(barcode,sample_type)
+      colnames(coldata.n)[1] <- "Samples"
+      
+      
+      coldata <- rbind(coldata.n,coldata.t)
+      
+      coldata <- coldata[order(coldata$Samples)]
+      df.exp <- df.exp[order(colnames(df.exp))]
+      
+      rownames(coldata) %in% colnames(df.exp)
+      
+      # Differential expression for just selected features
+      # DEseq2
+      dds <- DESeqDataSetFromMatrix(countData = df.exp, colData = coldata, design = ~ sample_type)
+      
+      dds$sample_type <- relevel(dds$sample_type, ref = "Solid_Tissue_Normal")
+      
+      dds <- DESeq(dds)
+      
+      save(dds, file = str_glue("/mnt/storage/mskaro1/Machine_Learning/All_MOT_selected_features/feature-selected-datasets/Rdata/{proj}_DE_met_{org}.RData"))
+      
+      res <- results(dds)
+      resOrdered <- res[order(res$pvalue),]
+      resOrdered <- as.data.frame(resOrdered)
+      res <- as.data.frame(res)
+      
+      write.csv(resOrdered, file = str_glue("/mnt/storage/mskaro1/Machine_Learning/All_MOT_selected_features/feature-selected-datasets/res/{proj}_DE_met_{org}.csv"))
+      
+      # volcano, enrichment for the DE genes
+      
+      res <- res %>%
+        tibble::rownames_to_column("ENSEMBL")
+      
+      
+      res <- res[complete.cases(res),]
+      
+      # add a column of NAs
+      res$diffexpressed <- "NO"
+      # if log2Foldchange > 0.6 and pvalue < 0.05, set as "UP" 
+      res$diffexpressed[res$log2FoldChange > 0.5 & res$padj < 0.05] <- "UP"
+      # if log2Foldchange < -0.6 and pvalue < 0.05, set as "DOWN"
+      res$diffexpressed[res$log2FoldChange < -0.5 & res$padj < 0.05] <- "DOWN"
+      
+      # make the 
+      res$delabel <- NA
+      res$delabel[res$diffexpressed != "NO"] <- res$ENSEMBL[res$diffexpressed != "NO"]
+      
+      ggplot(data=res, aes(x=log2FoldChange, y=-log10(pvalue), col=diffexpressed, label=delabel)) + 
+        geom_point() + 
+        theme_minimal() +
+        geom_text()
+      
+      
+      # Finally, we can organize the labels nicely using the "ggrepel" package and the geom_text_repel() function
+      # load library
+      library(ggrepel)
+      # plot adding up all layers we have seen so far
+      p1 <- ggplot(data=res, aes(x=log2FoldChange, y=-log10(pvalue), col=diffexpressed, label="")) +
+        geom_point() + 
+        theme_minimal() +
+        geom_text_repel() +
+        scale_color_manual(values=c("blue", "gray", "red")) +
+        geom_vline(xintercept=c(-0.5, 0.5), col="red") +
+        geom_hline(yintercept=-log10(0.001), col="red") +
+        labs(title = str_glue("{proj} tumors metastasize to {org}"))
+      
+      p2 <- ggplot(data=res, aes(x=log2FoldChange, y=-log10(pvalue), col=diffexpressed, label="")) +
+        geom_point() + 
+        theme_minimal() +
+        geom_text_repel() +
+        scale_color_manual(values=c("purple", "black", "orange")) +
+        geom_vline(xintercept=c(-0.5, 0.5), col="red") +
+        geom_hline(yintercept=-log10(0.001), col="red") +
+        labs(title = str_glue("{proj} tumors metastasize to {org}"))
+      ggsave(filename=paste0(str_glue("/mnt/storage/mskaro1/Machine_Learning/All_MOT_selected_features/feature-selected-datasets/Volcano/{proj}_{org}"),"_DE_vol_",".pdf"),
+             plot = p1, device = "pdf", width = 5, height = 3, units = "in", dpi = "retina")
+      ggsave(filename=paste0(str_glue("/mnt/storage/mskaro1/Machine_Learning/All_MOT_selected_features/feature-selected-datasets/Volcano/{proj}_{org}_2"),"_DE_vol_",".pdf"),
+             plot = p2, device = "pdf", width = 5, height = 3, units = "in", dpi = "retina")
+      
+      
+      
+    }
+  }
+}
 
 
 
