@@ -11,18 +11,24 @@ library(tidyverse)
 library(ComplexHeatmap)
 library(circlize)
 library(ggplot2)
-setwd("/mnt/storage/mskaro1/Machine_Learning/All_MOT_selected_features/feature-selected-datasets")
-projects <- c("TCGA-BLCA","TCGA-BRCA","TCGA-COAD", "TCGA-HNSC", "TCGA-LUAD", "TCGA-LIHC")
-proj <- projects[1]
-organs <- c("Bladder", "Liver", "Lung", "Bone", "Lymph_Node", "Pelvis", "Prostate")
-files_in_dir <- list.files()
-org <- organs[1]
 library(ComplexHeatmap)
+setwd("/mnt/storage/mskaro1/Machine_Learning/All_MOT_selected_features/feature-selected-datasets")
+files_in_dir <- list.files()
 projects <- c("TCGA-BLCA","TCGA-BRCA","TCGA-COAD", "TCGA-HNSC", "TCGA-LUAD", "TCGA-LIHC")
-
 proj <- projects[1]
 organs <- c("Bladder", "Liver", "Lung", "Bone", "Lymph_Node", "Pelvis", "Prostate")
 org <- organs[1]
+
+clinical <- data.table::fread(
+  "~/CSBL_shared/RNASeq/TCGA/annotation/counts_annotation.csv")
+normal.samples <- clinical[sample_type == "Solid Tissue Normal"]
+tumor.samples <- clinical[sample_type != "Solid Tissue Normal"]
+tumor.samples <- tumor.samples[tumor.samples$sample_type == "Primary Tumor",]
+tumor.samples <- tumor.samples[tumor.samples$project %in% projects,]
+
+tumor.samples$bcr_patient_barcode <- substr(tumor.samples$barcode_short, 0, 12)
+clinical$barcode_short <- substr(clinical$barcode, 0,16)
+
 for(proj in projects){
   
   for(org in organs){
@@ -108,50 +114,378 @@ for(proj in projects){
   }
 }
 
-# Analyzing the selected features for the MOT project in context to
- # the selected features
-
-library(stringr)
-library(tidyverse)
-library(ComplexHeatmap)
-library(circlize)
-library(ggplot2)
+# semantic analysis of pathways and the overlaps
 library(tibble)
-library(DESeq2)
-library(fgsea)
+library(dplyr)
+library(plyr)
+compare_list <- as.data.frame(data.table::fread("compare_list.csv", header = TRUE))
+
+i <- 1
+out <- as.data.frame(t(c("CancerType1"= NA,
+                         "CancerType2"= NA,
+                         "Seeding_Location" = NA,
+                         "odds.ratio" = NA,
+                         "Enriched Processes CT1" = NA,
+                         "Enriched Processes CT2" = NA,
+                         "intersection"= NA,
+                         "p.value" = NA)))
+for(i in 1:length(CT1)){
+  print(i)
+  print(paste0("ego","_",compare_list[i,1],"_",compare_list[i,3],".csv"))
+  print(paste0("ego","_",compare_list[i,2],"_",compare_list[i,3],".csv"))
+  c1 <- data.table::fread(paste0("ego","_",compare_list[i,1],"_",compare_list[i,3],".csv"))
+  c2 <- data.table::fread(paste0("ego","_",compare_list[i,2],"_",compare_list[i,3],".csv"))
+  
+  # add all of the metric to a dataframe. 
+  
+  
+    go.obj <- newGeneOverlap(listA = c1$ID, listB = c2$ID, genome.size = 23393)
+    go.obj <- testGeneOverlap(go.obj)
+    df <- as.data.frame(t(c("CancerType1"= compare_list[i,1],
+               "CancerType2"= compare_list[i,2],
+               "Seeding_Location" = compare_list[i,3],
+               "Enriched Processes CT1" = length(c1$ID),
+               "Enriched Processes CT2" = length(c2$ID),
+               "odds.ratio" = sprintf("%.3f", go.obj@odds.ratio),
+               "intersection"= length(go.obj@intersection),
+               "p.value" = go.obj@pval)))
+    out <- rbind(out,df)
+    
+    
+}
+out <- out[2:length(out$CancerType1),]
+out <- out[sort(out$p.value),]  
+write.csv2(out, file = "/mnt/storage/mskaro1/Machine_Learning/All_MOT_selected_features/feature-selected-datasets/Fisher_exact_test_semantic.csv")
+  
+sessionInfo()
+
+library(simplifyEnrichment)
+library(stringr)
+library(tibble)
+dat <- data.table::fread("ego_TCGA-HNSC_Lymph_Node.csv", header = TRUE) %>%
+  column_to_rownames("V1")
+
+mat = GO_similarity(dat$ID, ont = "BP")
+simplifyGO(mat, method = "binary_cut",column_title = "Biological Processes clustered by Sematic Similarity", plot = TRUE)
+
+dat <- data.table::fread("ego_TCGA-BLCA_Lymph_Node.csv",header = TRUE) %>%
+  column_to_rownames("V1")
+mat = GO_similarity(dat$ID, ont = "BP")
+simplifyGO(mat, method = "binary_cut",column_title = "Biological Processes clustered by Sematic Similarity", plot = TRUE)
+
+# make upsetR plot to finish it off
+
+library(UpSetR)
+seed_loc <- unique(c("Lymph_Node","Lung","Prostate","Lung","Lung","Liver","Lung","Liver","Lung","Liver","Liver","Lung","Lung","Lung","Liver","Lung","Liver","Bone","Lung"))
+
+#Bone
+BLCA_Bone <- data.table::fread("ego_TCGA-BLCA_Bone.csv", header = TRUE) %>%
+  column_to_rownames("V1")
+BRCA_Bone <- data.table::fread("ego_TCGA-BRCA_Bone.csv", header = TRUE) %>%
+  column_to_rownames("V1")
+listInput <- list('BLCA Bone' = BLCA_Bone$ID ,'BRCA Bone' = BRCA_Bone$ID)
+
+
+
+
+# Liver 
+BLCA_Liver <- data.table::fread("ego_TCGA-BLCA_Liver.csv", header = TRUE) %>%
+  column_to_rownames("V1")
+BRCA_Liver <- data.table::fread("ego_TCGA-BRCA_Liver.csv", header = TRUE) %>%
+  column_to_rownames("V1")
+LIHC_Liver <- data.table::fread("ego_TCGA-LIHC_Liver.csv", header = TRUE) %>%
+  column_to_rownames("V1")
+COAD_Liver <- data.table::fread("ego_TCGA-COAD_Liver.csv", header = TRUE) %>%
+  column_to_rownames("V1")
+
+
+library(UpSetR)
+listInput <- list('BLCA Liver' = BLCA_Liver$ID ,'BRCA Liver' = BRCA_Liver$ID ,
+                  'LIHC Liver' = LIHC_Liver$ID,'COAD Liver' = COAD_Liver$ID)
+
+UpSetR::upset(fromList(listInput), order.by ="freq")
+
+
+
+
+
+# Lung
+BLCA<- data.table::fread("ego_TCGA-BLCA_Lung.csv", header = TRUE) %>%
+  column_to_rownames("V1")
+BRCA<- data.table::fread("ego_TCGA-BRCA_Lung.csv", header = TRUE) %>%
+  column_to_rownames("V1")
+LIHC<- data.table::fread("ego_TCGA-LIHC_Lung.csv", header = TRUE) %>%
+  column_to_rownames("V1")
+HNSC<- data.table::fread("ego_TCGA-HNSC_Lung.csv", header = TRUE) %>%
+  column_to_rownames("V1")
+LUAD<- data.table::fread("ego_TCGA-LUAD_Lung.csv", header = TRUE) %>%
+  column_to_rownames("V1")
+
+library(UpSetR)
+listInput <- list('BLCA Lung' = BLCA$ID ,'BRCA Lung' = BRCA$ID , "HNSC Lung"=HNSC$ID,
+                  'LIHC Lung' = LIHC$ID,'LUAD Lung' = LUAD$ID)
+
+# Lymph Node 
+
+#Lymph_Node
+BLCA_Lymph_Node <- data.table::fread("ego_TCGA-BLCA_Lymph_Node.csv", header = TRUE) %>%
+  column_to_rownames("V1")
+HNSC_Lymph_Node <- data.table::fread("ego_TCGA-HNSC_Lymph_Node.csv", header = TRUE) %>%
+  column_to_rownames("V1")
+listInput <- list('BLCA Lymph_Node' = BLCA_Lymph_Node$ID ,'HNSC Lymph_Node' = HNSC_Lymph_Node$ID)
+
+d <- UpSetR::upset(fromList(listInput), order.by ="freq")
+
+dat <- intersect(HNSC_Lymph_Node$ID, BLCA_Lymph_Node$ID)
+mat = GO_similarity(dat, ont = "BP")
+simplifyGO(mat, method = "binary_cut",column_title = "Biological Processes clustered by Sematic Similarity", plot = TRUE)
+
+
+# picture time :)
+
+library(tidyverse)
+library(tibble)
+library(dplyr)
+library(tidyr)
+
+
 setwd("/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/Metastatic_loci_consolidated/one_hot_encoded_labels")
-clinical <- data.table::fread(
-  "~/CSBL_shared/RNASeq/TCGA/annotation/counts_annotation.csv")
+
 projects <- c("TCGA-BLCA","TCGA-BRCA","TCGA-COAD", "TCGA-HNSC", "TCGA-LUAD", "TCGA-LIHC")
-proj <- projects[4]
-organs <- c("Bladder", "Liver", "Lung", "Bone", "Lymph Node", "Pelvis", "Prostate")
-files_in_dir <- list.files()
-org <- organs[5]
-library(ComplexHeatmap)
-
-
-annot <- data.table::fread("~/CSBL_shared/ID_mapping/Ensembl_symbol_entrez.csv")
-
-
-normal.samples <- clinical[sample_type == "Solid Tissue Normal"]
-tumor.samples <- data.table::fread("~/storage/Metastatic_Organo_Tropism/tumor_samples_annotated_progression.csv", stringsAsFactors = TRUE) %>%
-  tibble::column_to_rownames("V1")
-
-# Oncogenic pathways for enrichment analysis
-m_t2g <- msigdbr(species = "Homo sapiens", category = "C4") %>% 
-  dplyr::select(gs_name, entrez_gene)
-
-
+proj <- projects[1]
+organs <- c("Bladder", "Liver", "Lung", "Bone", "Lymph_Node", "Pelvis", "Prostate")
+org <- organs[1]
 
 for(proj in projects){
-    if(file.exists(str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/Metastatic_loci_consolidated/one_hot_encoded_labels/{proj}_metastatic_data_RNAseq.csv"))){
+  print(proj)
+  for(org in organs){
+    print(org)
+    # volcano
+    if(file.exists(str_glue("{proj}_met_{org}_RNAseq.csv"))){
       
-      met_annot <- data.table::fread(str_glue("{proj}_metastatic_data_RNAseq.csv"))
+      # read in DE file, make the filters
+      res <- data.table::fread(str_glue("{proj}_met_{org}_RNAseq.csv")) %>%
+        tibble::column_to_rownames("V1") %>%
+        #dplyr::filter(padj <0.05) %>%
+        #dplyr::filter(abs(log2FoldChange) > 0.5) %>%
+        tibble::rownames_to_column("ENSEMBL")
+      # remove NAs if they exist
+      res <- res[complete.cases(res),]
       
-      coldata.m <- met_annot %>%
-        dplyr::select(c(barcode,colnames(met_annot)[colnames(met_annot) %in% organs]))
+      # add a column of NAs
+      res$diffexpressed <- "NO"
+      # if log2Foldchange > 0.6 and pvalue < 0.05, set as "UP" 
+      res$diffexpressed[res$log2FoldChange > 0.5 & res$padj < 0.05] <- "UP"
+      # if log2Foldchange < -0.6 and pvalue < 0.05, set as "DOWN"
+      res$diffexpressed[res$log2FoldChange < -0.5 & res$padj < 0.05] <- "DOWN"
       
-      # read in counts data, subset counts data to the met tumors for each comparison
+      # make the 
+      res$delabel <- NA
+      res$delabel[res$diffexpressed != "NO"] <- res$ENSEMBL[res$diffexpressed != "NO"]
+      
+      ggplot(data=res, aes(x=log2FoldChange, y=-log10(pvalue), col=diffexpressed, label=delabel)) + 
+        geom_point() + 
+        theme_minimal() +
+        geom_text()
+      
+      
+      # Finally, we can organize the labels nicely using the "ggrepel" package and the geom_text_repel() function
+      # load library
+      library(ggrepel)
+      # plot adding up all layers we have seen so far
+      p1 <- ggplot(data=res, aes(x=log2FoldChange, y=-log10(pvalue), col=diffexpressed, label="")) +
+        geom_point() + 
+        theme_minimal() +
+        geom_text_repel() +
+        scale_color_manual(values=c("blue", "gray", "red")) +
+        geom_vline(xintercept=c(-0.5, 0.5), col="red") +
+        geom_hline(yintercept=-log10(0.001), col="red") +
+        labs(title = str_glue("{proj} tumors metastasize to {org}"))
+      
+      p2 <- ggplot(data=res, aes(x=log2FoldChange, y=-log10(pvalue), col=diffexpressed, label="")) +
+        geom_point() + 
+        theme_minimal() +
+        geom_text_repel() +
+        scale_color_manual(values=c("purple", "black", "orange")) +
+        geom_vline(xintercept=c(-0.5, 0.5), col="red") +
+        geom_hline(yintercept=-log10(0.001), col="red") +
+        labs(title = str_glue("{proj} tumors metastasize to {org}"))
+      ggsave(filename=paste0(str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/Metastatic_loci_consolidated/one_hot_encoded_labels/Volcano/{proj}_{org}"),"_DE_vol_",".pdf"),
+            plot = p1, device = "pdf", width = 5, height = 3, units = "in", dpi = "retina")
+      ggsave(filename=paste0(str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/Metastatic_loci_consolidated/one_hot_encoded_labels/Volcano/{proj}_{org}_2"),"_DE_vol_",".pdf"),
+             plot = p2, device = "pdf", width = 5, height = 3, units = "in", dpi = "retina")
+      
+      
+      
+    }
+    
+  }
+}
+
+
+
+
+# Bar plot where up regs are red and down regs are red: Lung, Bone,Liver,LymphNode
+# Lung upset plot
+BLCA <- data.table::fread(str_glue("TCGA-BLCA_met_Lung_RNAseq.csv")) %>%
+  tibble::column_to_rownames("V1") %>%
+  dplyr::filter(padj <0.05) %>%
+  dplyr::filter(abs(log2FoldChange) > 0.5) %>%
+  tibble::rownames_to_column("ENSEMBL")
+# remove NAs if they exist
+BLCA <- BLCA[complete.cases(BLCA),]
+
+# add a column of NAs
+BLCA$diffexpressed <- "NO"
+# if log2Foldchange > 0.6 and pvalue < 0.05, set as "UP" 
+BLCA$diffexpressed[BLCA$log2FoldChange > 0.5 & BLCA$padj < 0.05] <- "UP"
+# if log2Foldchange < -0.6 and pvalue < 0.05, set as "DOWN"
+BLCA$diffexpressed[BLCA$log2FoldChange < -0.5 & BLCA$padj < 0.05] <- "DOWN"
+
+# make the 
+BLCA$delabel <- NA
+BLCA$delabel[BLCA$diffexpressed != "NO"] <- BLCA$ENSEMBL[BLCA$diffexpressed != "NO"]
+
+
+BRCA <- data.table::fread(str_glue("TCGA-BRCA_met_Lung_RNAseq.csv")) %>%
+  tibble::column_to_rownames("V1") %>%
+  dplyr::filter(padj <0.05) %>%
+  dplyr::filter(abs(log2FoldChange) > 0.5) %>%
+  tibble::rownames_to_column("ENSEMBL")
+# remove NAs if they exist
+BRCA <- BRCA[complete.cases(BRCA),]
+
+# add a column of NAs
+BRCA$diffexpressed <- "NO"
+# if log2Foldchange > 0.6 and pvalue < 0.05, set as "UP" 
+BRCA$diffexpressed[BRCA$log2FoldChange > 0.5 & BRCA$padj < 0.05] <- "UP"
+# if log2Foldchange < -0.6 and pvalue < 0.05, set as "DOWN"
+BRCA$diffexpressed[BRCA$log2FoldChange < -0.5 & BRCA$padj < 0.05] <- "DOWN"
+
+# make the 
+BRCA$delabel <- NA
+BRCA$delabel[BRCA$diffexpressed != "NO"] <- BRCA$ENSEMBL[BRCA$diffexpressed != "NO"]
+
+
+
+HNSC <- data.table::fread(str_glue("TCGA-HNSC_met_Lung_RNAseq.csv")) %>%
+  tibble::column_to_rownames("V1") %>%
+  dplyr::filter(padj <0.05) %>%
+  dplyr::filter(abs(log2FoldChange) > 0.5) %>%
+  tibble::rownames_to_column("ENSEMBL")
+# remove NAs if they exist
+HNSC <- HNSC[complete.cases(HNSC),]
+
+# add a column of NAs
+HNSC$diffexpressed <- "NO"
+# if log2Foldchange > 0.6 and pvalue < 0.05, set as "UP" 
+HNSC$diffexpressed[HNSC$log2FoldChange > 0.5 & HNSC$padj < 0.05] <- "UP"
+# if log2Foldchange < -0.6 and pvalue < 0.05, set as "DOWN"
+HNSC$diffexpressed[HNSC$log2FoldChange < -0.5 & HNSC$padj < 0.05] <- "DOWN"
+
+# make the 
+HNSC$delabel <- NA
+HNSC$delabel[HNSC$diffexpressed != "NO"] <- HNSC$ENSEMBL[HNSC$diffexpressed != "NO"]
+
+LIHC <- data.table::fread(str_glue("TCGA-LIHC_met_Lung_RNAseq.csv")) %>%
+  tibble::column_to_rownames("V1") %>%
+  dplyr::filter(padj <0.05) %>%
+  dplyr::filter(abs(log2FoldChange) > 0.5) %>%
+  tibble::rownames_to_column("ENSEMBL")
+# remove NAs if they exist
+LIHC <- LIHC[complete.cases(LIHC),]
+
+# add a column of NAs
+LIHC$diffexpressed <- "NO"
+# if log2Foldchange > 0.6 and pvalue < 0.05, set as "UP" 
+LIHC$diffexpressed[LIHC$log2FoldChange > 0.5 & LIHC$padj < 0.05] <- "UP"
+# if log2Foldchange < -0.6 and pvalue < 0.05, set as "DOWN"
+LIHC$diffexpressed[LIHC$log2FoldChange < -0.5 & LIHC$padj < 0.05] <- "DOWN"
+
+# make the 
+LIHC$delabel <- NA
+LIHC$delabel[LIHC$diffexpressed != "NO"] <- LIHC$ENSEMBL[LIHC$diffexpressed != "NO"]
+
+
+LUAD <- data.table::fread(str_glue("TCGA-LUAD_met_Lung_RNAseq.csv")) %>%
+  tibble::column_to_rownames("V1") %>%
+  dplyr::filter(padj <0.05) %>%
+  dplyr::filter(abs(log2FoldChange) > 0.5) %>%
+  tibble::rownames_to_column("ENSEMBL")
+# remove NAs if they exist
+LUAD <- LUAD[complete.cases(LUAD),]
+
+# add a column of NAs
+LUAD$diffexpressed <- "NO"
+# if log2Foldchange > 0.6 and pvalue < 0.05, set as "UP" 
+LUAD$diffexpressed[LUAD$log2FoldChange > 0.5 & LUAD$padj < 0.05] <- "UP"
+# if log2Foldchange < -0.6 and pvalue < 0.05, set as "DOWN"
+LUAD$diffexpressed[LUAD$log2FoldChange < -0.5 & LUAD$padj < 0.05] <- "DOWN"
+
+# make the 
+LUAD$delabel <- NA
+LUAD$delabel[LUAD$diffexpressed != "NO"] <- LUAD$ENSEMBL[LUAD$diffexpressed != "NO"]
+
+library(UpSetR)
+listInput <- list('BLCA Lung' = BLCA$ENSEMBL ,'BRCA Lung' = BRCA$ENSEMBL , "HNSC Lung"=HNSC$ENSEMBL,
+                  'LIHC Lung' = LIHC$ENSEMBL,'LUAD Lung' = LUAD$ENSEMBL)
+UpSetR::upset(fromList(listInput), order.by ="freq")
+
+
+
+###############################################
+###############################################
+###############################################
+
+setwd("/mnt/storage/mskaro1/Machine_Learning/All_MOT_selected_features/feature-selected-datasets")
+
+files_in_dir <- list.files()
+projects <- c("TCGA-BLCA","TCGA-BRCA","TCGA-COAD", "TCGA-HNSC", "TCGA-LUAD", "TCGA-LIHC")
+proj <- projects[1]
+organs <- c("Bladder", "Liver", "Lung", "Bone", "Lymph_Node", "Pelvis", "Prostate")
+org <- organs[1]
+
+clinical <- data.table::fread(
+  "~/CSBL_shared/RNASeq/TCGA/annotation/counts_annotation.csv")
+normal.samples <- clinical[sample_type == "Solid Tissue Normal"]
+tumor.samples <- clinical[sample_type != "Solid Tissue Normal"]
+tumor.samples <- tumor.samples[tumor.samples$sample_type == "Primary Tumor",]
+tumor.samples <- tumor.samples[tumor.samples$project %in% projects,]
+
+tumor.samples$bcr_patient_barcode <- substr(tumor.samples$barcode_short, 0, 12)
+clinical$barcode_short <- substr(clinical$barcode, 0,16)
+
+
+
+# Up and down regulated pathways in positive tumors
+for(proj in projects){
+  for(org in organs){
+    if(file.exists(str_glue("{proj}_metastatic_data_RNAseq_{org}_feature_selected_train.csv"))){
+      train <- as.data.frame(data.table::fread(str_glue("{proj}_metastatic_data_RNAseq_{org}_feature_selected_train.csv")))
+      test <- as.data.frame(data.table::fread(str_glue("{proj}_metastatic_data_RNAseq_{org}_feature_selected_test.csv")))
+      # complete data set of IG selected features. The train test splits will be merged 
+      val <- str_sub(proj, 6,9)
+      dat <- rbind(train, test)
+      organ_labels <- dat %>%dplyr::select(org)
+      
+      dat <- dat %>%
+        dplyr::select(-org)
+      dat <- as.data.frame(t(dat))
+      names(dat) <- organ_labels[,1]
+      
+      dat[mapply(is.infinite, dat)] <- 0
+      dat <- ceiling(dat)
+      
+      drop <- c("Negative")
+      dat = dat[,!(names(dat) %in% drop)]
+      
+      # replace the period in the colnames for an underscore
+      
+      newNames <- str_replace_all(colnames(dat), pattern = "\\.", replacement = "_")
+      colnames(dat) <- newNames
+      colnames(dat)
+      # read in the normal data
+      
       df.exp <- data.table::fread(str_glue("~/CSBL_shared/RNASeq/TCGA/counts/{proj}.counts.csv"), stringsAsFactors = TRUE) %>%
         as_tibble() %>%
         tibble::column_to_rownames(var = "Ensembl")
@@ -159,208 +493,222 @@ for(proj in projects){
       n<-dim(df.exp)[1]
       df.exp<-df.exp[1:(n-5),]
       
-      coldata.t<- tumor.samples[tumor.samples$project == proj,]
+      # subset to only normal samples
+     
+      
       coldata.n <- normal.samples[normal.samples$project == proj,]
-      coldata <- rbind(coldata.n, coldata.t, fill = TRUE)
-      coldata <- left_join(coldata, coldata.m, by = "barcode")
-      coldata[is.na(coldata)] <- 0
+      
+      df.exp <- df.exp[ ,colnames(df.exp) %in% coldata.n$barcode]
+      rownames(coldata.n) <- coldata.n$barcode
+      coldata.n$sample_type <- gsub(" ", "_", x = coldata.n$sample_type)
+      
+      # make a coldata for the current dat file
+      
+      coldata.t <- as.data.frame(colnames(dat))
+      coldata.t$sample_type <- "Primary_Tumor"
+      colnames(coldata.t)[1] <- "Samples"
+      # mthe the rownames match the samples column names 
+      rownames(coldata.t) <- coldata.t$Samples
+      
+      # extract only the rows we need for the selected features
+      
+      df.exp <- df.exp[rownames(df.exp) %in% rownames(dat),]
+      
+      # make a column value to left join the two data sets
+      
+      df.exp <- df.exp %>%
+        tibble::rownames_to_column("ENSEMBL")
+      dat <- dat %>%
+        tibble::rownames_to_column("ENSEMBL")
+      
+      df.exp <- left_join(df.exp,dat, by ="ENSEMBL")
+      
+      df.exp <- df.exp %>%
+        column_to_rownames("ENSEMBL")
       
       
-      df.exp <- df.exp[ ,colnames(df.exp) %in% coldata$barcode]
-      rownames(coldata) <- coldata$barcode
-      coldata$sample_type <- gsub(" ", "_", x = coldata$sample_type)
+      # merge the coldata files
+      # I think there is something with ordering the columns as well
       
-      rownames(coldata) <- sort(rownames(coldata))
-      colnames(df.exp) <- sort(colnames(df.exp))
-      
-      
-      met_locs <- colnames(coldata.m)[-1]
+      coldata.n <- coldata.n %>%
+        dplyr::select(barcode,sample_type)
+      colnames(coldata.n)[1] <- "Samples"
       
       
-      for(i in 1:length(met_locs)){
-        
-        # Customize df.exp and cioldata
-        print(proj)
-        print(met_locs[i])
-        org_til<- met_locs[2]
-        
-        coldata.m.l <- coldata %>%
-          filter(
-            .data[[met_locs[[1]]]] == 1)
-        coldata.n <- coldata %>%
-         filter(sample_type == "Solid_Tissue_Normal")
-        
-        coldata.n.m. <- rbind(coldata.n, coldata.m.l)
-        
-        df.exp.t <- df.exp[ ,colnames(df.exp) %in% coldata.n.m.$barcode]
-        rownames(coldata.n.m.) <- sort(rownames(coldata.n.m.))
-        colnames(df.exp.t) <- sort(colnames(df.exp.t))
-        
-        dds <- DESeqDataSetFromMatrix(countData = df.exp.t, colData = coldata.n.m., design = ~ sample_type)
-        
-        keep <- rowSums(counts(dds)) >= 10
-        dds <- dds[keep,]
-        dds$sample_type <- relevel(dds$sample_type, ref = "Solid_Tissue_Normal")
-        
-        dds <- DESeq(dds)
-        
-        res <- results(dds)
-        
-        resOrdered <- res[order(res$pvalue),]
-        resOrdered <- as.data.frame(resOrdered)
-        
-        
-        
-        res <- as.data.frame(res)
-        
-        write.csv(resOrdered, file = str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/Metastatic_loci_consolidated/one_hot_encoded_labels/{proj}_met_{org_til}_RNAseq.csv"))
-        save(dds, file = str_glue("{proj}_{org_til}_DE_met.RData"))
-        
-      }
+      coldata <- rbind(coldata.n,coldata.t)
+      
+      coldata <- coldata[order(coldata$Samples)]
+      df.exp <- df.exp[order(colnames(df.exp))]
+      
+      rownames(coldata) %in% colnames(df.exp)
+      
+      # Differential expression for just selected features
+      # DEseq2
+      dds <- DESeqDataSetFromMatrix(countData = df.exp, colData = coldata, design = ~ sample_type)
+      
+      dds$sample_type <- relevel(dds$sample_type, ref = "Solid_Tissue_Normal")
+      
+      dds <- DESeq(dds)
+      
+      save(dds, file = str_glue("/mnt/storage/mskaro1/Machine_Learning/All_MOT_selected_features/feature-selected-datasets/Rdata/{proj}_DE_met_{org}.RData"))
+      
+      res <- results(dds)
+      resOrdered <- res[order(res$pvalue),]
+      resOrdered <- as.data.frame(resOrdered)
+      res <- as.data.frame(res)
+      
+      write.csv(resOrdered, file = str_glue("/mnt/storage/mskaro1/Machine_Learning/All_MOT_selected_features/feature-selected-datasets/res/{proj}_DE_met_{org}.csv"))
+      
+      # volcano, enrichment for the DE genes
+      
+      res <- res %>%
+        tibble::rownames_to_column("ENSEMBL")
+      
+      
+      res <- res[complete.cases(res),]
+      
+      # add a column of NAs
+      res$diffexpressed <- "NO"
+      # if log2Foldchange > 0.6 and pvalue < 0.05, set as "UP" 
+      res$diffexpressed[res$log2FoldChange > 0.5 & res$padj < 0.05] <- "UP"
+      # if log2Foldchange < -0.6 and pvalue < 0.05, set as "DOWN"
+      res$diffexpressed[res$log2FoldChange < -0.5 & res$padj < 0.05] <- "DOWN"
+      
+      # make the 
+      res$delabel <- NA
+      res$delabel[res$diffexpressed != "NO"] <- res$ENSEMBL[res$diffexpressed != "NO"]
+      
+      ggplot(data=res, aes(x=log2FoldChange, y=-log10(pvalue), col=diffexpressed, label=delabel)) + 
+        geom_point() + 
+        theme_minimal() +
+        geom_text()
+      
+      
+      # Finally, we can organize the labels nicely using the "ggrepel" package and the geom_text_repel() function
+      # load library
+      library(ggrepel)
+      # plot adding up all layers we have seen so far
+      p1 <- ggplot(data=res, aes(x=log2FoldChange, y=-log10(pvalue), col=diffexpressed, label="")) +
+        geom_point() + 
+        theme_minimal() +
+        geom_text_repel() +
+        scale_color_manual(values=c("blue", "gray", "red")) +
+        geom_vline(xintercept=c(-0.5, 0.5), col="red") +
+        geom_hline(yintercept=-log10(0.001), col="red") +
+        labs(title = str_glue("{proj} tumors metastasize to {org}"))
+      
+      p2 <- ggplot(data=res, aes(x=log2FoldChange, y=-log10(pvalue), col=diffexpressed, label="")) +
+        geom_point() + 
+        theme_minimal() +
+        geom_text_repel() +
+        scale_color_manual(values=c("purple", "black", "orange")) +
+        geom_vline(xintercept=c(-0.5, 0.5), col="red") +
+        geom_hline(yintercept=-log10(0.001), col="red") +
+        labs(title = str_glue("{proj} tumors metastasize to {org}"))
+      ggsave(filename=paste0(str_glue("/mnt/storage/mskaro1/Machine_Learning/All_MOT_selected_features/feature-selected-datasets/Volcano/{proj}_{org}"),"_DE_vol_",".pdf"),
+             plot = p1, device = "pdf", width = 5, height = 3, units = "in", dpi = "retina")
+      ggsave(filename=paste0(str_glue("/mnt/storage/mskaro1/Machine_Learning/All_MOT_selected_features/feature-selected-datasets/Volcano/{proj}_{org}_2"),"_DE_vol_",".pdf"),
+             plot = p2, device = "pdf", width = 5, height = 3, units = "in", dpi = "retina")
+      
+      
+      
     }
+  }
 }
 
-# Build a superRes object that add the Project and Org columns as annotation. 
-# This will allow us to iteratively complete all of the intersections, both by 
-# project and by seeding locaiton 
-
-setwd("/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/Metastatic_loci_consolidated/one_hot_encoded_labels")
-proj <- projects[1]
-org <- organs[1]
-organs[5] <- "Lymph_Node"
-# make a dataframe with the same columns as the res object + 2 columns will have
-# add an empty line that will be removed later on
-#read in a res then just fall into the for loop
-superRes <- res[1,]
-superRes[1,] <- NA
-
-for(proj in projects){
-  for(org in organs){
-  if(file.exists(str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/Metastatic_loci_consolidated/one_hot_encoded_labels/{proj}_met_{org}_RNAseq.csv"))){
-    res <- data.table::fread(str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/Metastatic_loci_consolidated/one_hot_encoded_labels/{proj}_met_{org}_RNAseq.csv")) %>%
-      tibble::column_to_rownames("V1")
-    
-    # filter for FC ≥ |1.0|
-  
-    res <- res %>%
-      filter(abs(log2FoldChange) >.5) %>%
-      filter(padj <= .05) %>%
-      rownames_to_column("ENSEMBL")
-    res$ENSEMBL <- substr(res$ENSEMBL,1,15)
-    
-    res$proj <- rep(x = proj, times = length(res$ENSEMBL))
-    res$org <- rep(x = org, times = length(res$ENSEMBL))
-    # add the columns to the res object as annotation
-    
-    # rbind the res object to the SuperRes.
-    
-    superRes <- as.data.frame(rbind(superRes,res))
-    superRes <- superRes[complete.cases(superRes),]
-    
-    }
-  }  
-}
-
-
-
-
-# complete the intersections.
-# iterate over the projects
-# make each of the of the comparisons
-library(tibble)
-library(dplyr)
-library(plyr)
-compare_list <- as.data.frame(data.table::fread("/mnt/storage/mskaro1/Machine_Learning/All_MOT_selected_features/feature-selected-datasets/compare_list.csv", header = TRUE))
-
-out <- as.data.frame(t(c("CancerType1"= NA,
-                         "CancerType2"= NA,
-                         "Seeding_Location" = NA,
-                         "odds.ratio" = NA,
-                         "DE genes CT1" = NA,
-                         "DE genes CT2" = NA,
-                         "intersection"= NA,
-                         "p.value" = NA)))
-
-
-library(UpSetR)
+###############################################
+###############################################
+###############################################
+setwd("/mnt/storage/mskaro1/Machine_Learning/All_MOT_selected_features/feature-selected-datasets/res")
+library(tidyverse)
 library(stringr)
-library(GeneOverlap)
-for(i in 1:length(compare_list$CancerType1)){
-  
-  comp <- superRes %>%
-    filter(proj %in% compare_list[i,1:2]) %>%
-    filter(org %in% compare_list[i,3])
-  c1 <- comp[comp$proj==compare_list[i,1],]
-  c2 <- comp[comp$proj==compare_list[i,2],]
-  go.obj <- newGeneOverlap(listA = c1$ENSEMBL, 
-                           listB = c2$ENSEMBL, 
-                           genome.size = 60483)
-  go.obj <- testGeneOverlap(go.obj)
-  df <- as.data.frame(t(c("CancerType1"= compare_list[i,1],
-                          "CancerType2"= compare_list[i,2],
-                          "Seeding_Location" = compare_list[i,3],
-                          "DE genes CT1" = length(c1$ENSEMBL),
-                          "DE genes CT2" = length(c2$ENSEMBL),
-                          "odds.ratio" = sprintf("%.3f", go.obj@odds.ratio),
-                          "intersection"= length(go.obj@intersection),
-                          "p.value" = go.obj@pval)))
-  out <- rbind(out,df)
-  out <- out[complete.cases(out),]
-  
-}
+library(dplyr)
+library(tidyr)
+library(tibble)
+library(msigdbr)
+library(org.Hs.eg.db)
+library(clusterProfiler)
+library(DOSE)
+library(cowplot)
+# read in the res values 
+projects <- c("TCGA-BLCA","TCGA-BRCA","TCGA-COAD", "TCGA-HNSC", "TCGA-LUAD", "TCGA-LIHC")
+proj <- projects[1]
+organs <- c("Bladder", "Liver", "Lung", "Bone", "Lymph_Node", "Pelvis", "Prostate")
+org <- organs[3]
 
-out$p.value <- as.numeric(out$p.value)
-out <- out[order(out$p.value),] 
-write.csv2(out, file = "/mnt/storage/mskaro1/Machine_Learning/Fisher_Exact_testDE_genes_tumors_met_same_loc.csv")
-
-# make a TSNE of all the cancer types RNAexpression data then add the RNA expression from the 6 cancer types
-# Show 1 or cluster topologies before and after synthetic sample generation.
+#Lung
+# gene set enrichment analysis for the DE genes
+# hallmark human cancer gene set
+all_gene_sets = msigdbr(species = "Homo sapiens")
+h_gene_sets = msigdbr(species = "Homo sapiens", category = "H")
 
 for(proj in projects){
-  # read in the project RNAexpression
-  df.exp <- data.table::fread(str_glue("~/CSBL_shared/RNASeq/TCGA/counts/{proj}.counts.csv"), stringsAsFactors = TRUE) %>%
-    as_tibble() %>%
-    tibble::column_to_rownames(var = "Ensembl")
-  # get rid of the metric rows
-  n<-dim(df.exp)[1]
-  df.exp<-df.exp[1:(n-5),]
   
-  # tranpose the data set to be concatenated with data
-  df.exp <- as.data.frame(t(df.exp))
-  
-  df.exp$label <- proj
-  
-  # save as the temp, if temp cat to temp
-  
-  if(proj =="TCGA-BLCA"){
-    print(proj)
-    temp <- df.exp
-    
+  for(org in organs){
+    if(file.exists(str_glue("{proj}_DE_met_{org}.csv"))){
+      dat <- data.table::fread(str_glue("{proj}_DE_met_Lung.csv", header = TRUE)) %>%
+        tibble::column_to_rownames("V1") %>%
+        dplyr::filter(padj <0.05) %>%
+        dplyr::filter(abs(log2FoldChange) > 0.5) %>%
+        tibble::rownames_to_column("ENSEMBL")
+      # remove NAs if they exist
+      dat <- dat[complete.cases(dat),]
+      dat$ENSEMBL <- substr(dat$ENSEMBL, 1, 15)
+      gene_ids_vector <- clusterProfiler::bitr(geneID = substr(dat$ENSEMBL,1,15), fromType = "ENSEMBL",toType = "ENTREZID", OrgDb = "org.Hs.eg.db")
+      
+      datEnt <- dplyr::left_join(gene_ids_vector,dat,by= "ENSEMBL")
+      
+      
+      # complete GSEA with cluster profiler
+      
+      ## feature 1: numeric vector pointing to foldchange
+      geneList = datEnt[,4]
+      
+      ## feature 2: named vector
+      names(geneList) = datEnt[,2]
+      
+      ## feature 3: decreasing orde
+      geneList = sort(geneList, decreasing = TRUE)
+      
+      ego <- gseGO(geneList     = geneList,
+                    OrgDb        = org.Hs.eg.db,
+                    ont          = "BP",
+                    minGSSize    = 100,
+                    maxGSSize    = 500,
+                    pvalueCutoff = 0.05,
+                    verbose      = FALSE)
+      
+      
+    }
   }
-  else{
-    temp <- rbind(temp,df.exp)
-    print(proj)
-  }
-  
 }
-df.exp <- temp
 
-# make TSNE using the label, pop the label column
-## Curating the database for analysis with both t-SNE and PCA
-library(Rtsne)
-Labels<-df.exp$label
-df.exp$label<-as.factor(df.exp$label)
-## for plotting
-colors = rainbow(length(unique(df.exp$label)))
-names(colors) = unique(df.exp$label)
 
-## Executing the algorithm on curated data
-tsne <- Rtsne(df.exp[,-1], dims = 2, perplexity=30, verbose=TRUE, max_iter = 500)
-exeTimeTsne<- system.time(Rtsne(df.exp[,-1], dims = 2, perplexity=30, verbose=TRUE, max_iter = 500))
 
-## Plotting
-plot(tsne$Y, t='n', main="tsne")
-text(tsne$Y, labels=df.exp$label, col=colors[df.exp$label])
+
+# look at overlapping enriched feature sets given the DE features
+
+# quantify the overlap
+
+# drill down for bone, liver, lung and lymph Node
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -372,50 +720,39 @@ text(tsne$Y, labels=df.exp$label, col=colors[df.exp$label])
 # BLAS/LAPACK: /usr/lib/x86_64-linux-gnu/openblas-openmp/libopenblasp-r0.3.8.so
 # 
 # locale:
-#   [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=en_US.UTF-8       
-# [4] LC_COLLATE=en_US.UTF-8     LC_MONETARY=en_US.UTF-8    LC_MESSAGES=C             
-# [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                  LC_ADDRESS=C              
-# [10] LC_TELEPHONE=C             LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+#   [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+# [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=C              LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+# [9] LC_ADDRESS=C               LC_TELEPHONE=C             LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
 # 
 # attached base packages:
 #   [1] stats4    grid      parallel  stats     graphics  grDevices utils     datasets  methods   base     
 # 
 # other attached packages:
-#   [1] circlize_0.4.11           ComplexHeatmap_2.7.1      forcats_0.5.0            
-# [4] dplyr_1.0.2               purrr_0.3.4               readr_1.4.0              
-# [7] tidyr_1.1.2               ggplot2_3.3.2             tidyverse_1.3.0          
-# [10] UpSetR_1.4.0              tibble_3.0.4              stringr_1.4.0            
-# [13] org.Hs.eg.db_3.11.4       AnnotationDbi_1.50.3      IRanges_2.22.2           
-# [16] S4Vectors_0.26.1          Biobase_2.48.0            simplifyEnrichment_0.99.5
-# [19] BiocGenerics_0.34.0      
+#   [1] UpSetR_1.4.0              ComplexHeatmap_2.7.1      plyr_1.8.6                stringr_1.4.0            
+# [5] GeneOverlap_1.24.0        org.Hs.eg.db_3.11.4       AnnotationDbi_1.50.3      IRanges_2.22.2           
+# [9] S4Vectors_0.26.1          Biobase_2.48.0            simplifyEnrichment_0.99.5 BiocGenerics_0.34.0      
+# [13] tibble_3.0.4              dplyr_1.0.2              
 # 
 # loaded via a namespace (and not attached):
-#   [1] readxl_1.3.1           backports_1.2.0        fastmatch_1.1-0        plyr_1.8.6            
-# [5] igraph_1.2.6           proxyC_0.1.5           splines_4.0.2          BiocParallel_1.22.0   
-# [9] urltools_1.7.3         digest_0.6.27          htmltools_0.5.0        GOSemSim_2.14.2       
-# [13] viridis_0.5.1          GO.db_3.11.4           fansi_0.4.1            magrittr_1.5          
-# [17] memoise_1.1.0          tm_0.7-7               cluster_2.1.0          graphlayouts_0.7.1    
-# [21] modelr_0.1.8           RcppParallel_5.0.2     matrixStats_0.57.0     enrichplot_1.8.1      
-# [25] prettyunits_1.1.1      colorspace_2.0-0       blob_1.2.1             rvest_0.3.6           
-# [29] ggrepel_0.8.2          haven_2.3.1            xfun_0.19              crayon_1.3.4          
-# [33] jsonlite_1.7.1         scatterpie_0.1.5       glue_1.4.2             polyclip_1.10-0       
-# [37] gtable_0.3.0           GetoptLong_1.0.4       shape_1.4.5            scales_1.1.1          
-# [41] DOSE_3.14.0            DBI_1.1.0              Rcpp_1.0.5             viridisLite_0.3.0     
-# [45] progress_1.2.2         clue_0.3-57            gridGraphics_0.5-0     bit_4.0.4             
-# [49] europepmc_0.4          httr_1.4.2             fgsea_1.14.0           RColorBrewer_1.1-2    
-# [53] ellipsis_0.3.1         pkgconfig_2.0.3        farver_2.0.3           dbplyr_2.0.0          
-# [57] ggplotify_0.0.5        tidyselect_1.1.0       rlang_0.4.8            reshape2_1.4.4        
-# [61] munsell_0.5.0          cellranger_1.1.0       tools_4.0.2            downloader_0.4        
-# [65] cli_2.1.0              generics_0.1.0         RSQLite_2.2.1          broom_0.7.2           
-# [69] ggridges_0.5.2         evaluate_0.14          yaml_2.2.1             knitr_1.30            
-# [73] bit64_4.0.5            fs_1.5.0               tidygraph_1.2.0        ggraph_2.0.3          
-# [77] slam_0.1-47            DO.db_2.9              xml2_1.3.2             compiler_4.0.2        
-# [81] rstudioapi_0.13        png_0.1-7              reprex_0.3.0           tweenr_1.0.1          
-# [85] stringi_1.5.3          lattice_0.20-41        Matrix_1.2-18          vctrs_0.3.4           
-# [89] pillar_1.4.6           lifecycle_0.2.0        BiocManager_1.30.10    triebeard_0.3.0       
-# [93] GlobalOptions_0.1.2    data.table_1.13.2      cowplot_1.1.0          qvalue_2.20.0         
-# [97] R6_2.5.0               gridExtra_2.3          MASS_7.3-53            assertthat_0.2.1      
-# [101] rjson_0.2.20           withr_2.3.0            hms_0.5.3              clusterProfiler_3.16.1
-# [105] rmarkdown_2.5          rvcheck_0.1.8          Cairo_1.5-12.2         ggforce_0.3.2         
-# [109] NLP_0.2-1   
-  
+#   [1] fgsea_1.14.0           colorspace_2.0-0       rjson_0.2.20           ellipsis_0.3.1         ggridges_0.5.2        
+# [6] circlize_0.4.11        qvalue_2.20.0          GlobalOptions_0.1.2    clue_0.3-57            rstudioapi_0.13       
+# [11] farver_2.0.3           urltools_1.7.3         graphlayouts_0.7.1     ggrepel_0.8.2          bit64_4.0.5           
+# [16] fansi_0.4.1            scatterpie_0.1.5       xml2_1.3.2             splines_4.0.2          GOSemSim_2.14.2       
+# [21] knitr_1.30             polyclip_1.10-0        jsonlite_1.7.1         Cairo_1.5-12.2         cluster_2.1.0         
+# [26] GO.db_3.11.4           png_0.1-7              ggforce_0.3.2          BiocManager_1.30.10    compiler_4.0.2        
+# [31] httr_1.4.2             rvcheck_0.1.8          assertthat_0.2.1       Matrix_1.2-18          cli_2.1.0             
+# [36] tweenr_1.0.1           htmltools_0.5.0        prettyunits_1.1.1      tools_4.0.2            igraph_1.2.6          
+# [41] NLP_0.2-1              gtable_0.3.0           glue_1.4.2             reshape2_1.4.4         DO.db_2.9             
+# [46] tinytex_0.27           fastmatch_1.1-0        Rcpp_1.0.5             enrichplot_1.8.1       slam_0.1-47           
+# [51] vctrs_0.3.4            ggraph_2.0.3           xfun_0.19              lifecycle_0.2.0        clusterProfiler_3.16.1
+# [56] gtools_3.8.2           DOSE_3.14.0            europepmc_0.4          MASS_7.3-53            scales_1.1.1          
+# [61] tidygraph_1.2.0        hms_0.5.3              RColorBrewer_1.1-2     yaml_2.2.1             memoise_1.1.0         
+# [66] gridExtra_2.3          ggplot2_3.3.2          downloader_0.4         triebeard_0.3.0        stringi_1.5.3         
+# [71] RSQLite_2.2.1          caTools_1.18.0         BiocParallel_1.22.0    shape_1.4.5            bitops_1.0-6          
+# [76] rlang_0.4.8            pkgconfig_2.0.3        matrixStats_0.57.0     evaluate_0.14          lattice_0.20-41       
+# [81] purrr_0.3.4            cowplot_1.1.0          bit_4.0.4              tidyselect_1.1.0       magrittr_1.5          
+# [86] R6_2.5.0               gplots_3.1.0           generics_0.1.0         DBI_1.1.0              pillar_1.4.6          
+# [91] proxyC_0.1.5           crayon_1.3.4           KernSmooth_2.23-17     rmarkdown_2.5          viridis_0.5.1         
+# [96] GetoptLong_1.0.4       progress_1.2.2         data.table_1.13.2      blob_1.2.1             digest_0.6.27         
+# [101] tm_0.7-7               tidyr_1.1.2            gridGraphics_0.5-0     RcppParallel_5.0.2     munsell_0.5.0         
+# [106] viridisLite_0.3.0      ggplotify_0.0.5 
