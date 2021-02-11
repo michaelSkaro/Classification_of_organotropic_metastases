@@ -102,53 +102,63 @@ f <- function(x,y){
              "intersection"= length(go.obj@intersection),
              "p.value" = go.obj@pval)
 }
-# BLCA vs BRCA
-out<- t(sapply(intersect(colnames(BLCA),colnames(BRCA)), function(x) f(BLCA[,x], BRCA[,x])))
-write.csv(out, file = "/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/ranked_features/Ranked_transcripts_10_20_20/BLCA_BRCA_FE.csv")
-# BLCA vs COAD
-out<- t(sapply(intersect(colnames(BLCA),colnames(COAD)), function(x) f(BLCA[,x], COAD[,x])))
-write.csv(out, file = "/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/ranked_features/Ranked_transcripts_10_20_20/BLCA_COAD_FE.csv")
-# BLCA vs HNSC
-out<- t(sapply(intersect(colnames(BLCA),colnames(HNSC)), function(x) f(BLCA[,x], HNSC[,x])))
-write.csv(out, file = "/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/ranked_features/Ranked_transcripts_10_20_20/BLCA_HNSC_FE.csv")
-# BLCA vs LIHC
-out<- t(sapply(intersect(colnames(BLCA),colnames(LIHC)), function(x) f(BLCA[,x], LIHC[,x])))
-write.csv(out, file = "/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/ranked_features/Ranked_transcripts_10_20_20/BLCA_LIHC_FE.csv")
-# BLCA VS LUAD
-out<- t(sapply(intersect(colnames(BLCA),colnames(LUAD)), function(x) f(BLCA[,x], LUAD[,x])))
-write.csv(out, file = "/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/ranked_features/Ranked_transcripts_10_20_20/BLCA_LUAD_FE.csv")
-# BRCA vs COAD
-out<- t(sapply(intersect(colnames(BRCA),colnames(COAD)), function(x) f(BRCA[,x], COAD[,x])))
-write.csv(out, file = "/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/ranked_features/Ranked_transcripts_10_20_20/BRCA_COAD_FE.csv")
-# BRCA vs HNSC
-out<- t(sapply(intersect(colnames(BRCA),colnames(HNSC)), function(x) f(BRCA[,x], HNSC[,x])))
-write.csv(out, file = "/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/ranked_features/Ranked_transcripts_10_20_20/BRCA_HNSC_FE.csv")
-# BRCA vs LIHC
-out<- t(sapply(intersect(colnames(BRCA),colnames(LIHC)), function(x) f(BRCA[,x], LIHC[,x])))
-write.csv(out, file = "/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/ranked_features/Ranked_transcripts_10_20_20/BRCA_LIHC_FE.csv")
-# BRCA vs LUAD
-out<- t(sapply(intersect(colnames(BRCA),colnames(LUAD)), function(x) f(BRCA[,x], LUAD[,x])))
-write.csv(out, file = "/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/ranked_features/Ranked_transcripts_10_20_20/BRCA_LUAD_FE.csv")
-# COAD vs HNSC
-out<- t(sapply(intersect(colnames(COAD),colnames(HNSC)), function(x) f(COAD[,x], HNSC[,x])))
-write.csv(out, file = "/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/ranked_features/Ranked_transcripts_10_20_20/COAD_HNSC_FE.csv")
-# COAD vs LIHC
-out<- t(sapply(intersect(colnames(COAD),colnames(LIHC)), function(x) f(COAD[,x], LIHC[,x])))
-write.csv(out, file = "/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/ranked_features/Ranked_transcripts_10_20_20/COAD_LIHC_FE.csv")
-# COAD vs LUAD
-out<- t(sapply(intersect(colnames(COAD),colnames(LUAD)), function(x) f(COAD[,x], LUAD[,x])))
-write.csv(out, file = "/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/ranked_features/Ranked_transcripts_10_20_20/COAD_LUAD_FE.csv")
-# HNSC vs LIHC
-out<- t(sapply(intersect(colnames(HNSC),colnames(LIHC)), function(x) f(HNSC[,x], LIHC[,x])))
-write.csv(out, file = "/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/ranked_features/Ranked_transcripts_10_20_20/HNSC_LIHC_FE.csv")
-# HNSC vs LUAD 
-out<- t(sapply(intersect(colnames(HNSC),colnames(LUAD)), function(x) f(HNSC[,x], LUAD[,x])))
-write.csv(out, file = "/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/ranked_features/Ranked_transcripts_10_20_20/HNSC_LUAD_FE.csv")
-# LIHC vs LUAD
-out<- t(sapply(intersect(colnames(HNSC),colnames(LUAD)), function(x) f(HNSC[,x], LUAD[,x])))
-write.csv(out, file = "/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/ranked_features/Ranked_transcripts_10_20_20/LIHC_LUAD_FE.csv")
 
-sessionInfo()
+# simulate the recapture of features and BPs
+
+list_of_sizes <- c(100,200,300,400,500)
+
+for(siz in list_of_sizes){
+  out_F <- as.data.frame(t(c("SimulatedL1"= NA,
+                             "SimulatedL2"= NA,
+                             "odds.ratio" = NA,
+                             "simulated.intersection"= NA,
+                             "simulated_p.value" = NA))) 
+  
+  out_BP <- as.data.frame(t(c("SimulatedL1"= NA,
+                              "SimulatedL2"= NA,
+                              "odds.ratio" = NA,
+                              "simulated.intersection"= NA,
+                              "simulated_p.value" = NA)))
+  
+  
+  for(i in 1:50000){
+    
+    # simulate 100 length list
+    L1 <- sample(x = c(1:background_features),size = siz,replace = FALSE)
+    L2 <- sample(x = c(1:background_features),size = siz,replace = FALSE)
+    
+    go.obj <- newGeneOverlap(L1, L2, genome.size = background_features)
+    go.obj <- testGeneOverlap(go.obj)
+    df <- as.data.frame(t(c("SimulatedL1"= length(L1),
+                            "SimulatedL2"= length(L2),
+                            "odds.ratio" = sprintf("%.3f", go.obj@odds.ratio),
+                            "simulated.intersection"= length(go.obj@intersection),
+                            "simulated_p.value" = go.obj@pval)))
+    out_F <- rbind(out_F,df)
+    
+    L1 <- sample(x = c(1:background_BP),size = 100,replace = FALSE)
+    L2 <- sample(x = c(1:background_BP),size = 100,replace = FALSE)
+    
+    go.obj <- newGeneOverlap(L1, L2, genome.size = background_BP)
+    go.obj <- testGeneOverlap(go.obj)
+    df <- as.data.frame(t(c("SimulatedL1"= length(L1),
+                            "SimulatedL2"= length(L2),
+                            "odds.ratio" = sprintf("%.3f", go.obj@odds.ratio),
+                            "simulated.intersection"= length(go.obj@intersection),
+                            "simulated_p.value" = go.obj@pval)))
+    out_BP <- rbind(out_BP,df)
+  }
+  
+  write.csv(out_F,str_glue("Simulated_{siz}_Features.csv"))
+  write.csv(out_BP,str_glue("Simulated_{siz}_BP.csv"))
+  rm(out_BP)
+  rm(out_F)
+}
+
+
+
+
+
 # R version 4.0.2 (2020-06-22)
 # Platform: x86_64-pc-linux-gnu (64-bit)
 # Running under: Ubuntu 20.04 LTS
