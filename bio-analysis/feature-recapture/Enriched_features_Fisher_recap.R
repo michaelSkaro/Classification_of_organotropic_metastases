@@ -105,9 +105,13 @@ f <- function(x,y){
 
 # simulate the recapture of features and BPs
 
-list_of_sizes <- c(100,200,300,400,500)
+library(gtools)
+comp <- combinations(n = 5, r = 2, v = c(100,200,300,400,500), repeats.allowed = TRUE)
 
-for(siz in list_of_sizes){
+for(i in c(1:15)){
+  compL1 <- comp[i,i]
+  compL2 <- comp[i,i]
+  
   out_F <- as.data.frame(t(c("SimulatedL1"= NA,
                              "SimulatedL2"= NA,
                              "odds.ratio" = NA,
@@ -119,13 +123,11 @@ for(siz in list_of_sizes){
                               "odds.ratio" = NA,
                               "simulated.intersection"= NA,
                               "simulated_p.value" = NA)))
-  
-  
-  for(i in 1:50000){
+  for(j in 1:50000){
     
     # simulate 100 length list
-    L1 <- sample(x = c(1:background_features),size = siz,replace = FALSE)
-    L2 <- sample(x = c(1:background_features),size = siz,replace = FALSE)
+    L1 <- sample(x = c(1:background_features),size = comp[i,1],replace = FALSE)
+    L2 <- sample(x = c(1:background_features),size = comp[i,2],replace = FALSE)
     
     go.obj <- newGeneOverlap(L1, L2, genome.size = background_features)
     go.obj <- testGeneOverlap(go.obj)
@@ -136,8 +138,8 @@ for(siz in list_of_sizes){
                             "simulated_p.value" = go.obj@pval)))
     out_F <- rbind(out_F,df)
     
-    L1 <- sample(x = c(1:background_BP),size = 100,replace = FALSE)
-    L2 <- sample(x = c(1:background_BP),size = 100,replace = FALSE)
+    L1 <- sample(x = c(1:background_BP),size = comp[i,1],replace = FALSE)
+    L2 <- sample(x = c(1:background_BP),size = comp[i,2],replace = FALSE)
     
     go.obj <- newGeneOverlap(L1, L2, genome.size = background_BP)
     go.obj <- testGeneOverlap(go.obj)
@@ -149,11 +151,14 @@ for(siz in list_of_sizes){
     out_BP <- rbind(out_BP,df)
   }
   
-  write.csv(out_F,str_glue("Simulated_{siz}_Features.csv"))
-  write.csv(out_BP,str_glue("Simulated_{siz}_BP.csv"))
+  write.csv(out_F,str_glue("Simulated_{compL1}_{compL2}_Features.csv"))
+  write.csv(out_BP,str_glue("Simulated_{compL1}_{compL2}_BP.csv"))
   rm(out_BP)
   rm(out_F)
 }
+
+
+
 
 
 
