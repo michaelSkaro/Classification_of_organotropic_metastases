@@ -103,14 +103,35 @@ f <- function(x,y){
              "p.value" = go.obj@pval)
 }
 
-# simulate the recapture of features and BPs
+BiocManager::install("GeneOverlap")
 
+# simulate the sampling
+library(GeneOverlap)
+
+background_features <- 60483
+background_BP <- 23393
+
+
+# make databank for results
+out_F <- as.data.frame(t(c("SimulatedL1"= NA,
+                           "SimulatedL2"= NA,
+                           "odds.ratio" = NA,
+                           "simulated.intersection"= NA,
+                           "simulated_p.value" = NA))) 
+
+out_BP <- as.data.frame(t(c("SimulatedL1"= NA,
+                            "SimulatedL2"= NA,
+                            "odds.ratio" = NA,
+                            "simulated.intersection"= NA,
+                            "simulated_p.value" = NA))) 
+
+# simulate the sampling
 library(gtools)
 comp <- combinations(n = 5, r = 2, v = c(100,200,300,400,500), repeats.allowed = TRUE)
 
 for(i in c(1:15)){
-  compL1 <- comp[i,i]
-  compL2 <- comp[i,i]
+  compL1 <- comp[i,1]
+  compL2 <- comp[i,2]
   
   out_F <- as.data.frame(t(c("SimulatedL1"= NA,
                              "SimulatedL2"= NA,
@@ -156,7 +177,6 @@ for(i in c(1:15)){
   rm(out_BP)
   rm(out_F)
 }
-
 
 
 
