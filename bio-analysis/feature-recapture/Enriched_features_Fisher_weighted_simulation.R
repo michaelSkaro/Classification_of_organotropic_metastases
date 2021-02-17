@@ -209,12 +209,20 @@ for(i in c(1:15)){
   
   write.csv(out_F,str_glue("Simulated_{compL1}_{compL2}_Features.csv"))
   write.csv(out_BP,str_glue("Simulated_{compL1}_{compL2}_BP.csv"))
-  rm(out_BP)
-  rm(out_F)
+  #rm(out_BP)
+  #rm(out_F)
 }
 
+out_BP <- out_BP[2:750001,]
+out_BP <- out_BP[order(out_BP$simulated.intersection),]
+write.csv(out_BP, "simulated_results.csv")
 
-
+# visualize the weighted simulation analysis
+ggplot(data=out_BP, aes(x=1/(simulated.intersection), y=simulated_p.value, group=comparison, color=comparison)) +
+  xlab("Simulated Intersection") +
+  ylab("Simulated pvalue") +
+  geom_line() +
+  theme_classic()
 
 
 
