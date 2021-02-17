@@ -3,98 +3,13 @@ library(org.Hs.eg.db)
 library(TCGAbiolinks)
 library(dplyr)
 library(tidyverse)
-setwd("/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/ranked_features/Ranked_transcripts")
-
-
-projects <- c("BLCA", "BRCA", "COAD","HNSC","LIHC","LUAD")
-proj <- projects[1]
-
-
-for(proj in projects){
-  dat <- data.table::fread(str_glue("{proj}.txt", header = TRUE))
-  organs <- names(dat)
-  for(org in organs){
-    if(org %in% names(dat)){
-      df.exp <- dat%>%
-        dplyr::select(org)
-      names(df.exp) <- "V1"
-      df.exp$V1 <- substr(df.exp$V1, 1, 15)
-    
-    
-    Genelist <- clusterProfiler::bitr(df.exp$V1, OrgDb = org.Hs.eg.db ,fromType = "ENSEMBL", toType = "SYMBOL", drop = TRUE)
-    system.time(ansEA <- TCGAanalyze_EAcomplete(TFname=str_glue("Highly Enirched {proj} progression to {org}"),Genelist$SYMBOL))
-    library(TCGAbiolinks)
-    TCGAvisualize_EAbarplot(tf = rownames(ansEA$ResBP), 
-                            GOBPTab = ansEA$ResBP,
-                            GOCCTab = ansEA$ResCC,
-                            GOMFTab = ansEA$ResMF,
-                            PathTab = ansEA$ResPat,
-                            nRGTab = Genelist, 
-                            nBar = 15,
-                            filename=paste0("/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/ranked_features/Ranked_transcripts/",
-                                            proj,"_",org,"_","TCGA_viz",".pdf"))
-    
-      }
-    } 
-  }
-  
-#Fisher's test within Cancer
 
 BiocManager::install("GeneOverlap")
 library(GeneOverlap)
 
-BLCA <- data.table::fread("BLCA.txt", header = TRUE)%>%
-  dplyr::select(-Rank)
-BRCA <- data.table::fread("BRCA.txt", header = TRUE)%>%
-  dplyr::select(-Rank)
-COAD <- data.table::fread("COAD.txt", header = TRUE)%>%
-  dplyr::select(-Rank)
-LIHC <- data.table::fread("LIHC.txt", header = TRUE)%>%
-  dplyr::select(-Rank)
-HNSC <- data.table::fread("HNSC.txt", header = TRUE)%>%
-  dplyr::select(-Rank)
-LUAD <- data.table::fread("LUAD.txt", header = TRUE)%>%
-  dplyr::select(-Rank)
-
-BLCA <- as.data.frame(BLCA)
-BRCA <- as.data.frame(BRCA)
-COAD <- as.data.frame(COAD)
-HNSC <- as.data.frame(HNSC)
-LIHC <- as.data.frame(LIHC)
-LUAD <- as.data.frame(LUAD)
-
-
-
-projects <- c("BLCA", "BRCA", "COAD","HNSC","LIHC","LUAD")
-proj <- projects[1]
-
-# within cancer overlap: transcripts driving distant metastasis
-for(proj in projects){
-  dat <- as.data.frame(data.table::fread(str_glue("{proj}.txt", header = TRUE))) %>%
-    dplyr::select(-Rank)
-  combos <- combn(ncol(dat),2)
-  out <- adply(combos, 2, function(x) {
-    go.obj <- newGeneOverlap(dat[,x[1]],dat[,x[2]],genome.size = 60483)
-    go.obj <- testGeneOverlap(go.obj)
-    data.frame("CancerType"=proj,
-                    "listA"=names(dat)[x[1]],
-                    "listB"=names(dat)[x[2]],
-                    "odds.ratio" = sprintf("%.3f", go.obj@odds.ratio),
-                    "intersection"= length(go.obj@intersection),
-                    "p.value" = go.obj@pval)
-  })
-  out <- out %>%
-    dplyr::select(-"X1")
-  write.csv(out, file = str_glue("/mnt/storage/mskaro1/PanCancerAnalysis/ML_2019/ranked_features/Ranked_transcripts_10_20_20/Fisher_exact_test_within_cancer_{proj}.csv"))
-} 
-
-# between cancer types comparisons
-
-# within cancer overlap: transcripts driving distant metastasis
-
-f <- function(x,y){
+go_overlap <- function(x,y,background){
   
-  go.obj <- newGeneOverlap(x,y,genome.size = 60483)
+  go.obj <- newGeneOverlap(x,y,genome.size = background)
   go.obj <- testGeneOverlap(go.obj)
   data.frame( "CancerType1" = deparse(substitute(x)),
               "CancerType2" = deparse(substitute(y)),
@@ -103,9 +18,84 @@ f <- function(x,y){
              "p.value" = go.obj@pval)
 }
 
-BiocManager::install("GeneOverlap")
 
-# simulate the sampling
+
+# simulate the weighted sampling
+
+library(GeneOverlap)
+
+
+# simulate the feature selection
+background_BP <- 23393
+
+
+# make databank for results
+
+out_BP <- as.data.frame(t(c("SimulatedL1"= NA,
+                            "SimulatedL2"= NA,
+                            "odds.ratio" = NA,
+                            "simulated.intersection"= NA,
+                            "simulated_p.value" = NA))) 
+
+for(i in 1:50000){
+  df.exp <- data.table::fread(str_glue("~/CSBL_shared/RNASeq/TCGA/counts/{proj}.counts.csv"), stringsAsFactors = TRUE) %>%
+    as_tibble() %>%
+    tibble::column_to_rownames(var = "Ensembl")
+  n<-dim(df.exp)[1]
+  df.exp<-df.exp[1:(n-5),]
+  
+  # extract 1000 random features
+  features1 <- sample(rownames(df.exp), 1000)
+  
+  features2 <- sample(rownames(df.exp), 1000)
+  
+  ego1 <- clusterProfiler::enrichGO(gene  = substring(features1,1,15),
+                                    OrgDb         = "org.Hs.eg.db",
+                                    keyType       = 'ENSEMBL',
+                                    ont           = "BP",
+                                    pAdjustMethod = "BH",
+                                    pvalueCutoff  = 0.01,
+                                    qvalueCutoff  = 0.05,
+                                    readable      = TRUE)
+  
+ 
+  ego2 <- clusterProfiler::enrichGO(gene  = substring(features2,1,15),
+                                     OrgDb         = "org.Hs.eg.db",
+                                     keyType       = 'ENSEMBL',
+                                     ont           = "BP",
+                                     pAdjustMethod = "BH",
+                                     pvalueCutoff  = 0.01,
+                                     qvalueCutoff  = 0.05,
+                                     readable      = TRUE)
+  # overlap the two sets 
+  
+  res1 <- ego1@result
+  res1 <- res1[res1$p.adjust<0.05,]
+  res1 <- res1[res1$pvalue<0.05,]
+  
+  res2 <- ego2@result
+  res2 <- res2[res2$p.adjust<0.05,]
+  res2 <- res2[res2$pvalue<0.05,]
+  
+  
+  go.obj <- newGeneOverlap(L1, L2, genome.size = background_BP)
+  go.obj <- testGeneOverlap(go.obj)
+  df <- as.data.frame(t(c("SimulatedL1"= length(L1),
+                          "SimulatedL2"= length(L2),
+                          "odds.ratio" = sprintf("%.3f", go.obj@odds.ratio),
+                          "simulated.intersection"= length(go.obj@intersection),
+                          "simulated_p.value" = go.obj@pval)))
+  out_BP <- rbind(out_BP,df)
+  
+}
+
+write.csv(out_BP,str_glue("Simulated_random_feature_selection_and_GO_BP.csv"))
+rm(out_BP)
+
+#############################################
+# random sampling show very few overlapping features in BP. 
+# Simulate the recapture of 100:500 BP processes
+#############################################
 library(GeneOverlap)
 
 background_features <- 60483
@@ -125,7 +115,7 @@ out_BP <- as.data.frame(t(c("SimulatedL1"= NA,
                             "simulated.intersection"= NA,
                             "simulated_p.value" = NA))) 
 
-# simulate the sampling
+# simulate the BP sampling
 library(gtools)
 comp <- combinations(n = 5, r = 2, v = c(100,200,300,400,500), repeats.allowed = TRUE)
 
@@ -177,6 +167,20 @@ for(i in c(1:15)){
   rm(out_BP)
   rm(out_F)
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
