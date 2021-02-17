@@ -121,10 +121,10 @@ for(i in 1:50000){
   # penalize high chance matches from the two sets, filter for matches > 1sd over mean
   
   res1 <- left_join(res1, goIDmap, by = "GO") %>%
-    filter(weight > (mean_mapping_occurence + mapsd))
+    filter(weight < (mean_mapping_occurence + mapsd))
   
   res2 <- left_join(res1, goIDmap, by = "GO") %>%
-    filter(weight > (mean_mapping_occurence + mapsd))
+    filter(weight < (mean_mapping_occurence + mapsd))
   
   go.obj <- newGeneOverlap(L1, L2, genome.size = background_BP)
   go.obj <- testGeneOverlap(go.obj)
@@ -275,7 +275,7 @@ for(proj in projects){
       res <- res[res$p.adjust<0.05,]
       
       res <- left_join(res1, goIDmap, by = "GO") %>%
-        filter(weight > (mean_mapping_occurence + mapsd))
+        filter(weight < (mean_mapping_occurence + mapsd))
       
       
       # write out enriched values to conduct overlap and fisher's exact tests
