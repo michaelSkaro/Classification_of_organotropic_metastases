@@ -224,12 +224,291 @@ ggplot(data=out_BP, aes(x=1/(simulated.intersection), y=simulated_p.value, group
   geom_line() +
   theme_classic()
 
+######################################################
+######################################################
+######################################################
+######################################################
+# analyze real values. Compare to the simulated values
+
+clinical <- data.table::fread(
+  "~/CSBL_shared/RNASeq/TCGA/annotation/counts_annotation.csv")
+normal.samples <- clinical[sample_type == "Solid Tissue Normal"]
+tumor.samples <- clinical[sample_type != "Solid Tissue Normal"]
+tumor.samples <- tumor.samples[tumor.samples$sample_type == "Primary Tumor",]
+tumor.samples <- tumor.samples[tumor.samples$project %in% projects,]
+
+tumor.samples$bcr_patient_barcode <- substr(tumor.samples$barcode_short, 0, 12)
+clinical$barcode_short <- substr(clinical$barcode, 0,16)
 
 
 
+projects <- c("TCGA-BLCA","TCGA-BRCA","TCGA-COAD", "TCGA-HNSC", "TCGA-LUAD", "TCGA-LIHC")
+proj <- projects[1]
+organs <- c("Bladder", "Liver", "Lung", "Bone", "Lymph_Node", "Pelvis", "Prostate")
+org <- organs[1]
+
+for(proj in projects){
+  for(org in organs){
+    if(file.exists(str_glue("{proj}_metastatic_data_RNAseq_{org}_feature_selected_train.csv"))){
+      train <- as.data.frame(data.table::fread(str_glue("{proj}_metastatic_data_RNAseq_{org}_feature_selected_train.csv")))
+      test <- as.data.frame(data.table::fread(str_glue("{proj}_metastatic_data_RNAseq_{org}_feature_selected_test.csv")))
+      # complete data set of IG selected features. The train test splits will be merged 
+      val <- str_sub(proj, 6,9)
+      dat <- rbind(train, test)
+      organ_labels <- dat %>%dplyr::select(org)
+      dat <- dat %>%
+        dplyr::select(-org)
+      
+      # cancer type, metastatic location organ specific gene set enrichment 
+      
+      ego <-clusterProfiler::enrichGO(gene  = substring(colnames(dat),1,15),
+                                      OrgDb         = "org.Hs.eg.db",
+                                      keyType       = 'ENSEMBL',
+                                      ont           = "BP",
+                                      pAdjustMethod = "BH",
+                                      pvalueCutoff  = 0.01,
+                                      qvalueCutoff  = 0.05,
+                                      readable      = TRUE)
+      
+      #Get only  the significant results from enrichment
+      res <- ego@result
+      res <- res[res$p.adjust<0.05,]
+      
+      res <- left_join(res1, goIDmap, by = "GO") %>%
+        filter(weight > (mean_mapping_occurence + mapsd))
+      
+      
+      # write out enriched values to conduct overlap and fisher's exact tests
+      write.csv(res, file = str_glue("~/storage/Metastatic_Organo_Tropism/GeneOverlap/ego_{proj}_{org}.csv"))
+
+}
+    
+    
+# overlaps
+library(tibble)
+library(dplyr)
+library(plyr)
+ # read in compare list values for each of the cancers and metastatic locations
+ 
+compare_list <- as.data.frame(data.table::fread("compare_list.csv", header = TRUE))
+
+i <- 1
+out <- as.data.frame(t(c("CancerType1"= NA,
+                         "CancerType2"= NA,
+                         "Seeding_Location" = NA,
+                         "odds.ratio" = NA,
+                         "Enriched Processes CT1" = NA,
+                         "Enriched Processes CT2" = NA,
+                         "intersection"= NA,
+                         "p.value" = NA)))
+for(i in 1:length(CT1)){
+  print(i)
+  print(paste0("ego","_",compare_list[i,1],"_",compare_list[i,3],".csv"))
+  print(paste0("ego","_",compare_list[i,2],"_",compare_list[i,3],".csv"))
+  c1 <- data.table::fread(paste0("ego","_",compare_list[i,1],"_",compare_list[i,3],".csv"))
+  c2 <- data.table::fread(paste0("ego","_",compare_list[i,2],"_",compare_list[i,3],".csv"))
+  
+  # add all of the metric to a dataframe. 
+  
+  
+  go.obj <- newGeneOverlap(listA = c1$ID, listB = c2$ID, genome.size = 23393)
+  go.obj <- testGeneOverlap(go.obj)
+  df <- as.data.frame(t(c("CancerType1"= compare_list[i,1],
+                          "CancerType2"= compare_list[i,2],
+                          "Seeding_Location" = compare_list[i,3],
+                          "Enriched Processes CT1" = length(c1$ID),
+                          "Enriched Processes CT2" = length(c2$ID),
+                          "odds.ratio" = sprintf("%.3f", go.obj@odds.ratio),
+                          "intersection"= length(go.obj@intersection),
+                          "p.value" = go.obj@pval)))
+  out <- rbind(out,df)
+  
+  
+}
+out <- out[2:length(out$CancerType1),]
+out <- out[sort(out$p.value),]  
+write.csv(out, file = "/mnt/storage/mskaro1/Machine_Learning/All_MOT_selected_features/feature-selected-datasets/Fisher_exact_test_semantic.csv")
 
 
 
+######################################################
+######################################################
+######################################################
+######################################################    
+# Find the overlap values and conduct semantic clustering analyses    
+ 
+# Lung
+
+BLCA_Lung <- data.table::fread("ego_TCGA-BLCA_Lung.csv", header = TRUE) %>%
+  tibble::column_to_rownames("V1")
+BRCA_Lung <- data.table::fread("ego_TCGA-BRCA_Lung.csv", header = TRUE) %>%
+  tibble::column_to_rownames("V1")
+HNSC_Lung <- data.table::fread("ego_TCGA-HNSC_Lung.csv", header = TRUE) %>%
+  tibble::column_to_rownames("V1")
+LUAD_Lung <- data.table::fread("ego_TCGA-LUAD_Lung.csv", header = TRUE) %>%
+  tibble::column_to_rownames("V1")
+LIHC_Lung <- data.table::fread("ego_TCGA-LIHC_Lung.csv", header = TRUE) %>%
+  tibble::column_to_rownames("V1")
+
+
+
+# Make background all goIDs for BP
+total <- 23393
+# make a lung list
+
+listInput <- list('BLCA Lung' = BLCA_Lung$ID ,'BRCA Lung' = BRCA_Lung$ID , "HNSC Lung"=HNSC_Lung$ID,
+                  'LIHC Lung' = LIHC_Lung$ID,'LUAD Lung' = LUAD_Lung$ID)
+
+res=supertest(listInput, n=total)
+plot(res, sort.by="size", margin=c(2,2,2,2), color.scale.pos=c(0.85,1), legend.pos=c(0.8 ,0.12))
+write.csv(summary(res)$Table, file="Lung_summary.table.csv", row.names=FALSE)
+
+#View(summary(res)$Table)
+
+# Liver 
+BLCA_Liver <- data.table::fread("ego_TCGA-BLCA_Liver.csv", header = TRUE) %>%
+  column_to_rownames("V1")
+BRCA_Liver <- data.table::fread("ego_TCGA-BRCA_Liver.csv", header = TRUE) %>%
+  column_to_rownames("V1")
+LIHC_Liver <- data.table::fread("ego_TCGA-LIHC_Liver.csv", header = TRUE) %>%
+  column_to_rownames("V1")
+COAD_Liver <- data.table::fread("ego_TCGA-COAD_Liver.csv", header = TRUE) %>%
+  column_to_rownames("V1")
+
+listInput <- list('BLCA Liver' = BLCA_Liver$ID ,'BRCA Liver' = BRCA_Liver$ID ,
+                  'LIHC Liver' = LIHC_Liver$ID,'COAD Liver' = COAD_Liver$ID)
+
+res=supertest(listInput, n=total)
+plot(res, sort.by="size", margin=c(2,2,2,2), color.scale.pos=c(0.85,1), legend.pos=c(0.8 ,0.12))
+write.csv(summary(res)$Table, file="Liver_summary.table.csv", row.names=FALSE)
+
+
+# Lymph Node
+
+BLCA_Lymph_Node <- data.table::fread("ego_TCGA-BLCA_Lymph_Node.csv", header = TRUE) %>%
+  column_to_rownames("V1")
+HNSC_Lymph_Node <- data.table::fread("ego_TCGA-HNSC_Lymph_Node.csv", header = TRUE) %>%
+  column_to_rownames("V1")
+listInput <- list('BLCA Lymph_Node' = BLCA_Lymph_Node$ID ,'HNSC Lymph_Node' = HNSC_Lymph_Node$ID)
+res=supertest(listInput, n=total)
+plot(res, sort.by="size", margin=c(2,2,2,2), color.scale.pos=c(0.85,1), legend.pos=c(0.6 ,0.1))
+write.csv(summary(res)$Table, file="LN_summary.table.csv", row.names=FALSE)
+
+
+
+# Bone
+BLCA_Bone <- data.table::fread("ego_TCGA-BLCA_Bone.csv", header = TRUE) %>%
+  column_to_rownames("V1")
+BRCA_Bone <- data.table::fread("ego_TCGA-BRCA_Bone.csv", header = TRUE) %>%
+  column_to_rownames("V1")
+listInput <- list('BLCA Bone' = BLCA_Bone$ID ,'BRCA Bone' = BRCA_Bone$ID)
+res=supertest(listInput, n=total)
+plot(res, sort.by="size", margin=c(2,2,2,2), color.scale.pos=c(0.85,1), legend.pos=c(0.8 ,0.12))
+write.csv(summary(res)$Table, file="Bone_summary.table.csv", row.names=FALSE)
+
+
+# consolidate the tables:
+
+# Lung
+
+Lung_OR_BP <- data.table::fread("Lung_summary.table.csv", header = TRUE) 
+
+# Bone
+
+Bone_OR_BP <- data.table::fread("Bone_summary.table.csv", header = TRUE) 
+
+
+# Liver
+
+Liver_OR_BP <- data.table::fread("Liver_summary.table.csv", header = TRUE) 
+
+# LN
+
+LN_OR_BP <- data.table::fread("LN_summary.table.csv", header = TRUE) 
+
+
+# combine to one output table
+allsumms <- rbind(Lung_OR_BP, Bone_OR_BP, Liver_OR_BP,LN_OR_BP)
+
+allsumms <- allsumms[order(allsumms$P.value)]
+allsumms <- allsumms[complete.cases(allsumms)]
+
+allsumms <- allsumms %>%
+  dplyr::select(-Elements)
+
+write.csv(file ="Summary_table_overlap_all_enriched_BP.csv", allsumms)
+
+
+######################################################
+######################################################
+######################################################
+######################################################    
+
+# enrichment visualization    
+ 
+library(simplifyEnrichment)
+library(stringr)
+library(tibble)   
+# Lung
+
+BLCA <- data.table::fread("ego_TCGA-BLCA_Lung.csv",header = TRUE) %>%
+  column_to_rownames("V1")
+BRCA <- data.table::fread("ego_TCGA-BRCA_Lung.csv",header = TRUE) %>%
+  column_to_rownames("V1")
+LIHC <- data.table::fread("ego_TCGA-LIHC_Lung.csv",header = TRUE) %>%
+  column_to_rownames("V1")
+LUAD <- data.table::fread("ego_TCGA-LUAD_Lung.csv",header = TRUE) %>%
+  column_to_rownames("V1")
+
+# simplify enrichment
+listInput <- c(BLCA$ID,BRCA$ID,LIHC$ID,LUAD$ID)
+mat = GO_similarity(listInput, ont = "BP")
+simplifyGO(mat, method = "binary_cut",column_title = "GO:BP clustered by Sematic Similarity Lung metastasis", plot = TRUE)
+
+# Liver
+
+BLCA <- data.table::fread("ego_TCGA-BLCA_Liver.csv",header = TRUE) %>%
+  column_to_rownames("V1")
+BRCA <- data.table::fread("ego_TCGA-BRCA_Liver.csv",header = TRUE) %>%
+  column_to_rownames("V1")
+LIHC <- data.table::fread("ego_TCGA-LIHC_Liver.csv",header = TRUE) %>%
+  column_to_rownames("V1")
+COAD <- data.table::fread("ego_TCGA-COAD_Liver.csv",header = TRUE) %>%
+  column_to_rownames("V1")
+
+    
+# simplify enrichment     
+listInput <- c(BLCA$ID,BRCA$ID,LIHC$ID,COAD$ID)
+mat = GO_similarity(listInput, ont = "BP")
+simplifyGO(mat, method = "binary_cut",
+           column_title = "GO:BP clustered by Sematic Similarity Liver metastasis", 
+           plot = TRUE,max_word =10, 
+           exclude_words = c("regulation", "process", "response", "positive", "cell"))
+
+BLCA <- data.table::fread("ego_TCGA-BLCA_Bone.csv",header = TRUE) %>%
+  column_to_rownames("V1")
+BRCA <- data.table::fread("ego_TCGA-BRCA_Bone.csv",header = TRUE) %>%
+  column_to_rownames("V1")
+listInput <- c(BLCA$ID,BRCA$ID)
+# Bone
+mat = GO_similarity(listInput, ont = "BP")
+simplifyGO(mat, method = "binary_cut",
+           column_title = "GO:BP clustered by Sematic Similarity Bone metastasis", 
+           plot = TRUE,max_word =20, 
+           exclude_words = c("regulation", "process", "response", "positive", "cell"))
+# Bone
+BLCA <- data.table::fread("ego_TCGA-BLCA_Lymph_Node.csv",header = TRUE) %>%
+  column_to_rownames("V1")
+HNSC <- data.table::fread("ego_TCGA-HNSC_Lymph_Node.csv",header = TRUE) %>%
+  column_to_rownames("V1")
+listInput <- c(BLCA$ID,HNSC$ID)
+
+# Lymph Node
+mat = GO_similarity(listInput, ont = "BP")
+simplifyGO(mat, method = "binary_cut",
+           column_title = "GO:BP clustered by Sematic Similarity LN metastasis", 
+           plot = TRUE,max_word =20, 
+           exclude_words = c("regulation", "process", "response", "positive", "cell"))
 
 
 
