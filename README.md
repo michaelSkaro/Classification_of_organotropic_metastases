@@ -36,7 +36,7 @@ Java
   
 R
 - Version: >= 4.0
-- Packages: All session.info() R packages are listed at the bottom of [Enriched_features_Fisher_weighted_simulation.R](feature-recapture/Enriched_features_Fisher_weighted_simulation.R).
+- Packages: All session.info() R packages are listed at the bottom of [Enriched_features_Fisher_weighted_simulation.R](https://github.com/michaelSkaro/Classification_of_organotropic_metastases/blob/master/bio-analysis/feature-recapture/Enriched_features_Fisher_weighted_simulation.R) .
 
 Once all of the required depenedencies are satisfied, run the following command in the base directory to install the project as a python package:
 ```
