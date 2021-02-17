@@ -19,13 +19,58 @@ go_overlap <- function(x,y,background){
 }
 
 
+#BiocManager::install("GeneOverlap")
 
-# simulate the weighted sampling
 
-library(GeneOverlap)
+# make map fo weighted values to stratify GO BPs
 
+# read in RNAseq data
+df.exp <- data.table::fread(str_glue("~/CSBL_shared/RNASeq/TCGA/counts/{proj}.counts.csv"), stringsAsFactors = TRUE) %>%
+  as_tibble() %>%
+  tibble::column_to_rownames(var = "Ensembl")
+n<-dim(df.exp)[1]
+df.exp<-df.exp[1:(n-5),]
+
+# map the values of the IDs to GO IDs
+
+goIDmap <- clusterProfiler::bitr(geneID = substring(rownames(df.exp),1,15), fromType = "ENSEMBL", toType = "GO", OrgDb = org.Hs.eg.db) %>%
+  filter(ONTOLOGY == "BP")
+
+# do not over penalize multi-mapping due to multiple values of evidence. Filter for first occurence of ENSEMBL:GOID matches
+# cat the ENSEMBLID-GO:ID values, filter for first occurrence
+
+goIDmap$cat <- paste0(goIDmap$ENSEMBL, "-", goIDmap$GO)
+
+# filter filter for the first occuence in the dataframe
+
+goIDmap <- goIDmap[!duplicated(goIDmap$cat),]
+# add a count (by x weight) matrix value
+weight <- as.data.frame(table(goIDmap$ENSEMBL))
+colnames(weight) <- c("ENSEMBL","count")
+
+goIDmap <- left_join(goIDmap, weight, by = "ENSEMBL")
+
+# stratify the score by occurence rate distribution
+
+plot(density(goIDmap$count))
+
+# calculate the mean
+
+mean_mapping_occurence <- mean(goIDmap$count)
+# mean = ~24
+
+
+# normalize the (by x weight) to the mean to make normalized 
+# weight scoring mechanism as mean/count
+
+goIDmap$weight <- mean_mapping_occurence/goIDmap$count
+plot(density(goIDmap$weight))
+mapvar <- var(goIDmap$weight)
+mapsd <- sd(goIDmap$weight)
 
 # simulate the feature selection
+
+background_features <- 60483
 background_BP <- 23393
 
 
@@ -38,16 +83,12 @@ out_BP <- as.data.frame(t(c("SimulatedL1"= NA,
                             "simulated_p.value" = NA))) 
 
 for(i in 1:50000){
-  df.exp <- data.table::fread(str_glue("~/CSBL_shared/RNASeq/TCGA/counts/{proj}.counts.csv"), stringsAsFactors = TRUE) %>%
-    as_tibble() %>%
-    tibble::column_to_rownames(var = "Ensembl")
-  n<-dim(df.exp)[1]
-  df.exp<-df.exp[1:(n-5),]
+  
   
   # extract 1000 random features
-  features1 <- sample(rownames(df.exp), 1000)
+  features1 <- sample(goIDmap$ENSEMBL, 1000)
   
-  features2 <- sample(rownames(df.exp), 1000)
+  features2 <- sample(goIDmap$ENSEMBL, 1000)
   
   ego1 <- clusterProfiler::enrichGO(gene  = substring(features1,1,15),
                                     OrgDb         = "org.Hs.eg.db",
@@ -67,7 +108,7 @@ for(i in 1:50000){
                                      pvalueCutoff  = 0.01,
                                      qvalueCutoff  = 0.05,
                                      readable      = TRUE)
-  # overlap the two sets 
+  # overlap the two sets, filter nonsignificant results
   
   res1 <- ego1@result
   res1 <- res1[res1$p.adjust<0.05,]
@@ -77,6 +118,13 @@ for(i in 1:50000){
   res2 <- res2[res2$p.adjust<0.05,]
   res2 <- res2[res2$pvalue<0.05,]
   
+  # penalize high chance matches from the two sets, filter for matches > 1sd over mean
+  
+  res1 <- left_join(res1, goIDmap, by = "GO") %>%
+    filter(weight > (mean_mapping_occurence + mapsd))
+  
+  res2 <- left_join(res1, goIDmap, by = "GO") %>%
+    filter(weight > (mean_mapping_occurence + mapsd))
   
   go.obj <- newGeneOverlap(L1, L2, genome.size = background_BP)
   go.obj <- testGeneOverlap(go.obj)
@@ -92,11 +140,7 @@ for(i in 1:50000){
 write.csv(out_BP,str_glue("Simulated_random_feature_selection_and_GO_BP.csv"))
 rm(out_BP)
 
-#############################################
-# random sampling show very few overlapping features in BP. 
-# Simulate the recapture of 100:500 BP processes
-#############################################
-library(GeneOverlap)
+
 
 background_features <- 60483
 background_BP <- 23393
@@ -115,7 +159,8 @@ out_BP <- as.data.frame(t(c("SimulatedL1"= NA,
                             "simulated.intersection"= NA,
                             "simulated_p.value" = NA))) 
 
-# simulate the BP sampling
+
+# simulate the sampling
 library(gtools)
 comp <- combinations(n = 5, r = 2, v = c(100,200,300,400,500), repeats.allowed = TRUE)
 
@@ -167,7 +212,6 @@ for(i in c(1:15)){
   rm(out_BP)
   rm(out_F)
 }
-
 
 
 
