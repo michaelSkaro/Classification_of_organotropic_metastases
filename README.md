@@ -88,5 +88,5 @@ docker run --rm -it --entrypoint="" mskaro1/mot bash
 ```
 ## Reviewing:
 
-Docker image available now ! Wiki incoming!
+Docker image available now ! Check out our wiki for implementation actions!
 Thanks!
