@@ -111,10 +111,10 @@ for(i in 1:50000){
   # overlap the two sets, filter nonsignificant results
   
   res1 <- ego1@result
-  res1 <- res1[res1$pvalue<0.05,]
+  res1 <- res1[res1$p.adjust<0.05,]
   
   res2 <- ego2@result
-  res2 <- res2[res2$pvalue<0.05,]
+  res2 <- res2[res2$p.adjust<0.05,]
   
   # penalize high chance matches from the two sets, filter for matches > 1sd over mean
   
@@ -270,7 +270,7 @@ for(proj in projects){
       
       #Get only  the significant results from enrichment
       res <- ego@result
-      res <- res[res$pvalue<0.05,]
+      res <- res[res$p.adjust<0.05,]
       
       res <- left_join(res1, goIDmap, by = "GO") %>%
         filter(weight < (mean_mapping_occurence + mapsd))
