@@ -1,57 +1,60 @@
-#I am currently expanding this section to all 32 cancers. Please stand by :)
-
-
-
-
-# Annotation of all TCGA metastatic loci for 32 CTs
+# Towards annotation of all TCGA metastatic loci
 library(TCGAbiolinks)
 library(xml2)
 library(tidyverse)
 
-projects <- c("TCGA-ACC","TCGA-BLCA","TCGA-BRCA","TCGA-CESC","TCGA-CHOL","TCGA-COAD",
-              "TCGA-DLBC","TCGA-ESCA","TCGA-GBM","TCGA-HNSC","TCGA-KICH","TCGA-KIRC",
-              "TCGA-KIRP","TCGA-LAML","TCGA-LGG","TCGA-LIHC","TCGA-LUAD","TCGA-LUSC",
-              "TCGA-MESO","TCGA-OV","TCGA-PAAD","TCGA-PCPG","TCGA-PRAD","TCGA-READ",
-              "TCGA-SARC","TCGA-SKCM","TCGA-STAD","TCGA-TGCT","TCGA-THCA","TCGA-THYM",
-              "TCGA-UCEC","TCGA-UCS","TCGA-UVM")
+projects <- c("TCGA-ACC","TCGA-BLCA","TCGA-BRCA","TCGA-CESC",
+              "TCGA-CHOL","TCGA-COAD","TCGA-DLBC","TCGA-ESCA",
+              "TCGA-GBM","TCGA-HNSC","TCGA-KICH","TCGA-KIRC",
+              "TCGA-KIRP","TCGA-LAML","TCGA-LGG","TCGA-LIHC",
+              "TCGA-LUAD","TCGA-LUSC","TCGA-MESO","TCGA-OV",
+              "TCGA-PAAD","TCGA-PCPG","TCGA-PRAD","TCGA-READ",
+              "TCGA-SARC","TCGA-SKCM","TCGA-STAD","TCGA-TGCT",
+              "TCGA-THCA","TCGA-THYM","TCGA-UCEC","TCGA-UCS","TCGA-UVM")
 
 setwd("/mnt/storage/mskaro1/Clinical_annotation")
 
 proj <- projects[2]
 
-#annot_ACC <- data.table::fread("TCGA-ACC_met_anno.txt", header = TRUE) 
+annot_ACC <- data.table::fread("met_anno/TCGA-ACC_met_anno.txt", header = TRUE) 
 
 ACC <- function(proj){
-    dat <- data.table::fread(str_glue("Clinical_annotation_{proj}.csv"), header = TRUE,na.strings=c("","NA"))
+    dat <- data.table::fread(str_glue("Clinical_annotation_{proj}.csv"), 
+                             header = TRUE,na.strings=c("","NA"))
     dat1 <- dat %>%
-      dplyr::select(fileID,ct_scan_findings,distant_metastasis_anatomic_site,metastatic_neoplasm_initial_diagnosis_anatomic_site,
-                  `metastatic_neoplasm_initial_diagnosis_anatomic_site[1]`,`metastatic_neoplasm_initial_diagnosis_anatomic_site[2]`,
-                  `metastatic_neoplasm_initial_diagnosis_anatomic_site[3]`,new_neoplasm_event_occurrence_anatomic_site,new_neoplasm_occurrence_anatomic_site_text,
+      dplyr::select(fileID,ct_scan_findings,distant_metastasis_anatomic_site,
+                    metastatic_neoplasm_initial_diagnosis_anatomic_site,
+                  `metastatic_neoplasm_initial_diagnosis_anatomic_site[1]`,
+                  `metastatic_neoplasm_initial_diagnosis_anatomic_site[2]`,
+                  `metastatic_neoplasm_initial_diagnosis_anatomic_site[3]`,
+                  new_neoplasm_event_occurrence_anatomic_site,
+                  new_neoplasm_occurrence_anatomic_site_text,
                   number_of_lymphnodes_positive_by_he,other_malignancy_anatomic_site)
-    #write.csv(dat1,str_glue("met_anno/{proj}_met_anno.txt"))
-    met_anno <- data.table::fread("met_anno/TCGA-ACC_met_anno.txt", na.strings=c("","NA"))
+    write.csv(dat1,str_glue("met_anno/Temp_{proj}_met_anno.txt"))
+    met_anno <- data.table::fread("met_anno/Temp_TCGA-ACC_met_anno.txt")
     dat <- left_join(dat, met_anno, by="fileID")
     write.csv(dat, str_glue("/mnt/storage/mskaro1/Clinical_annotation/met_anno/Clinical_annotation_metastatic_locations_{proj}.csv"))
-  }
+} # Complete
 BLCA <- function(proj){
   dat <- data.table::fread(str_glue("Clinical_annotation_{proj}.csv"), header = TRUE,na.strings=c("","NA"))
   dat1 <- dat %>% dplyr::select(fileID,metastatic_site,
                   `metastatic_site[1]`,`metastatic_site[2]`,`metastatic_site[3]`,
                   new_neoplasm_event_occurrence_anatomic_site,new_neoplasm_occurrence_anatomic_site_text, 
                   other_malignancy_anatomic_site,other_malignancy_anatomic_site_text,other_metastatic_site) 
-  write.csv(dat1,str_glue("met_anno/{proj}_met_anno.txt"))
-  met_anno <- data.table::fread(str_glue("met_anno/{proj}_met_anno.txt")) %>%
-    dplyr::select(-index)
+  write.csv(dat1,str_glue("met_anno/Temp_{proj}_met_anno.txt"))
+  met_anno <- data.table::fread(str_glue("met_anno/Temp_{proj}_met_anno.txt")) %>%
+    dplyr::select(c(fileID,Metastatic_site))
+    
   
   dat <- left_join(dat,met_anno, by ="fileID")
-  write.csv(df, str_glue("/mnt/storage/mskaro1/Clinical_annotation/met_anno/Clinical_annotation_metastatic_locations_{proj}.csv"))
+  write.csv(df, str_glue("/mnt/storage/mskaro1/Clinical_annotation/met_anno/Complete/Clinical_annotation_metastatic_locations_{proj}.csv"))
   
-}
-
-# when you read it into python to do the anolysis you can use this line.
-#import pandas as pd
-#new_df = pd.concat([df.drop('Issues', 1), df['Issues'].str.get_dummies(sep=",")], 1)
-
+  # when you read it into python to do the analysis you can use this line.
+  #import pandas as pd
+  #new_df = pd.concat([df.drop('Issues', 1), df['Issues'].str.get_dummies(sep=",")], 1)
+  
+  
+} # Complete
 BRCA <- function(proj){
   dat <- data.table::fread(str_glue("Clinical_annotation_{proj}.csv"),header = TRUE,na.strings=c("","NA"))
   dat1 <- dat %>%
@@ -67,14 +70,21 @@ BRCA <- function(proj){
     ) %>%
     unite("Loci", metastatic_site_at_diagnosis:other_malignancy_anatomic_site, sep= ",", 
           remove = FALSE)
-  met_anno <- dat1 %>% dplyr::select(fileID,Loci)
-  #write.csv(met_anno,str_glue("met_anno/{proj}_met_anno.txt"))
-  met_anno <- data.table::fread("met_anno/TCGA-BRCA_met_anno.txt") %>%
-    dplyr::select(-index)
+  dat1 <- dat1 %>% dplyr::select(fileID,Loci)
+  write.csv(met_anno,str_glue("met_anno/Temp_{proj}_met_anno.txt"))
+  met_anno <- data.table::fread("met_anno/Temp_TCGA-BRCA_met_anno.txt") %>%
+    dplyr::select(c(fileID,Metastatic_site))
   
   df <- left_join(dat,met_anno, by ="fileID")
   
-}
+  
+  # When we get things more clean here
+  #met_anno <- cbind(met_anno, qdapTools::mtabulate(strsplit(met_anno$Loci, ",")))
+  write.csv(df,str_glue("/mnt/storage/mskaro1/Clinical_annotation/met_anno/Complete/Clinical_annotation_metastatic_locations_{proj}.csv"))
+  
+  
+  
+} # Complete
 CESC <- function(proj){
   dat <- data.table::fread(str_glue("Clinical_annotation_{proj}.csv"), header = TRUE,na.strings=c("","NA"))
   dat1 <-  dat %>% dplyr::select(
@@ -100,13 +110,15 @@ CESC <- function(proj){
     other_malignancy_anatomic_site,
     other_malignancy_anatomic_site_text
   )
-  #write.csv(dat1,str_glue("met_anno/{proj}_met_anno.txt"))
+  write.csv(dat1,str_glue("met_anno/Temp_{proj}_met_anno.txt"))
   met_anno <- data.table::fread(str_glue("met_anno/{proj}_met_anno.txt", na.strings=c("","NA"))) %>%
     dplyr::select(fileID, Metastasis)
-  write.csv(dat, str_glue("/mnt/storage/mskaro1/Clinical_annotation/met_anno/Clinical_annotation_metastatic_locations_{proj}.csv"))
+  colnames(met_anno) <- c("fileID","Metastatic_site")
+  dat <- dplyr::left_join(dat,met_anno, by = "fileID")
+  write.csv(dat, str_glue("/mnt/storage/mskaro1/Clinical_annotation/met_anno/Complete/Clinical_annotation_metastatic_locations_{proj}.csv"))
   
 
-}
+} # Complete
 CHOL <- function(proj){
   dat <- data.table::fread(str_glue("Clinical_annotation_{proj}.csv"), header = TRUE, na.strings=c("","NA"))
   dat1 <- dat %>% dplyr::select(
@@ -122,7 +134,7 @@ CHOL <- function(proj){
   dat <- left_join(dat,df, by ="fileID")
   write.csv(dat, str_glue("/mnt/storage/mskaro1/Clinical_annotation/met_anno/Clinical_annotation_metastatic_locations_{proj}.csv"))
   
-}
+} # Too small of a data set
 COAD <- function(proj){
   dat <- data.table::fread(str_glue("Clinical_annotation_{proj}.csv"), na.strings=c("","NA"))
   dat1 <- dat %>% dplyr::select(
@@ -132,13 +144,13 @@ COAD <- function(proj){
     other_malignancy_anatomic_site,
     other_malignancy_anatomic_site_text
   )
-  write.csv(dat1,str_glue("met_anno/{proj}_met_anno.txt"))
-  df <- data.table::fread(str_glue("met_anno/{proj}_met_anno.txt", na.strings=c("","NA"))) %>%
-    dplyr::select(fileID, Metastasis)
+  write.csv(dat1,str_glue("met_anno/Temp_{proj}_met_anno.txt"))
+  df <- data.table::fread(str_glue("met_anno/Temp_{proj}_met_anno.txt", na.strings=c("","NA"))) %>%
+    dplyr::select(c(fileID,Metastatic_site))
   dat <- left_join(dat,df, by ="fileID")
-  write.csv(dat, str_glue("/mnt/storage/mskaro1/Clinical_annotation/met_anno/Clinical_annotation_metastatic_locations_{proj}.csv"))
+  write.csv(dat, str_glue("/mnt/storage/mskaro1/Clinical_annotation/met_anno/Complete/Clinical_annotation_metastatic_locations_{proj}.csv"))
   
-}
+} # Complete
 DLBC <- function(proj){
   dat <- data.table::fread(str_glue("Clinical_annotation_{proj}.csv"), na.strings=c("","NA"))
   dat1 <- dat %>% dplyr::select(
@@ -163,21 +175,36 @@ DLBC <- function(proj){
     `tumor_tissue_site[6]`,
     `tumor_tissue_site[6]`
   )
-  #write.csv(dat1,str_glue("met_anno/{proj}_met_anno.txt"))
+  write.csv(dat1,str_glue("met_anno/Temp_{proj}_met_anno.txt"))
   met_anno <- data.table::fread(str_glue("met_anno/{proj}_met_anno.txt", na.strings=c("","NA"))) %>%
     dplyr::select(fileID, Metastasis)
   dat <- left_join(dat,met_anno, by ="fileID")
-  write.csv(dat, str_glue("/mnt/storage/mskaro1/Clinical_annotation/met_anno/Clinical_annotation_metastatic_locations_{proj}.csv"))
+  write.csv(dat, str_glue("/mnt/storage/mskaro1/Clinical_annotation/met_anno/Complete/Clinical_annotation_metastatic_locations_{proj}.csv"))
   
-}
+} # Complete
 ESCA <- function(proj){
   dat <- data.table::fread(str_glue("Clinical_annotation_{proj}.csv"), na.strings=c("","NA"))
   
+  dat1 <- dat %>% dplyr::select(c(
+    fileID,
+    new_neoplasm_event_occurrence_anatomic_site,
+    other_malignancy_anatomic_site,
+    other_malignancy_anatomic_site_text,
+    number_of_lymphnodes_positive_by_he,
+    number_of_lymphnodes_positive_by_ihc
+  ))
+  met_anno <- data.table::fread("met_anno/Temp_TCGA-ESCA_met_anno.txt") %>%
+    dplyr::select(c(fileID,Metastatic_site))
+  dat <- dplyr::left_join(dat,met_anno, by ="fileID")
   
-}
+  write.csv(dat, str_glue("/mnt/storage/mskaro1/Clinical_annotation/met_anno/Complete/Clinical_annotation_metastatic_locations_{proj}.csv"))
+  
+} # Not enough documented locations
+
 GBM <- function(proj){
   dat <- data.table::fread(str_glue("Clinical_annotation_{proj}.csv"), na.strings=c("","NA"))
-  
+  dat1 <- dat %>%
+    dplyr::select(c(fileID, new_neoplasm_event_type,other_malignancy_anatomic_site,new_neoplasm_event_type,new_tumor_event_after_initial_treatment,tumor_tissue_site))
   
 }
 HNSC <- function(proj){
