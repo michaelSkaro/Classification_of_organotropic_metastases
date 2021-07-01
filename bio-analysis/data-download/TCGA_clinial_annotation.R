@@ -261,29 +261,75 @@ KIRP <- function(proj){
 } # Complete
 LAML <- function(proj){
   dat <- data.table::fread(str_glue("Clinical_annotation_{proj}.csv"), na.strings=c("","NA"))
+  # Stop
   
-  
-}
+} # Not annotation
 LGG <- function(proj){
   dat <- data.table::fread(str_glue("Clinical_annotation_{proj}.csv"), na.strings=c("","NA"))
   
+  dat1 <- dat %>% dplyr::select(c(
+    fileID,
+    #new_neoplasm_event_occurrence_anatomic_site,
+    other_malignancy_anatomic_site,
+    other_malignancy_anatomic_site_text,
+    #number_of_lymphnodes_positive_by_ihc
+  ))
+  write.csv(dat1, "met_anno/Temp_TCGA-LGG_met_anno.txt")
+  # too few annotated metastases
   
-}
+  
+} # Too few annotated Mets
 LIHC <- function(proj){
   dat <- data.table::fread(str_glue("Clinical_annotation_{proj}.csv"), na.strings=c("","NA"))
-  
-  
+  dat1 <- dat %>% dplyr::select(c(
+    fileID,
+    new_neoplasm_event_occurrence_anatomic_site,
+    new_neoplasm_occurrence_anatomic_site_text,
+    other_malignancy_anatomic_site,
+    other_malignancy_anatomic_site_text,
+    other_malignancy_anatomic_site,
+    other_malignancy_anatomic_site_text,
+  ))
+  write.csv(dat1, "met_anno/Temp_TCGA-LIHC_met_anno.txt")
+  met_anno <- data.table::fread("met_anno/Temp_TCGA-LIHC_met_anno.txt") %>%
+    dplyr::select(c(fileID, Metastatic_site))
+  dat <- dplyr::left_join(dat, met_anno, by = "fileID")
+  write.csv(dat1, "met_anno/Complete/Clinical_annotation_metastatic_locations_TCGA-LIHC.csv")
 }
 LUAD <- function(proj){
   dat <- data.table::fread(str_glue("Clinical_annotation_{proj}.csv"), na.strings=c("","NA"))
+  dat1 <- dat %>% dplyr::select(c(
+    fileID,
+    other_malignancy_anatomic_site,
+    other_malignancy_anatomic_site_text,
+    other_malignancy_anatomic_site,
+    other_malignancy_anatomic_site_text,
+    pathologic_N
+  ))
+  write.csv(dat1, "met_anno/Temp_TCGA-LUAD_met_anno.txt")
+  met_anno <- data.table::fread("met_anno/Temp_TCGA-LUAD_met_anno.txt") %>%
+    dplyr::select(c(fileID,Metastatic_site))
+  dat <- dplyr::left_join(dat,met_anno, by = "fileID")
+  write.csv(dat,"met_anno/Complete/Clinical_annotation_metastatic_locations_TCGA-LUAD.csv")
   
-  
-}
+} # Complete
 LUSC <- function(proj){
   dat <- data.table::fread(str_glue("Clinical_annotation_{proj}.csv"), na.strings=c("","NA"))
+  dat1 <- dat %>% dplyr::select(c(
+    fileID,
+    other_malignancy_anatomic_site,
+    other_malignancy_anatomic_site_text,
+    other_malignancy_anatomic_site,
+    other_malignancy_anatomic_site_text,
+    pathologic_N
+  ))
+  write.csv(dat1, "met_anno/Temp_TCGA-LUSC_met_anno.txt")
+  met_anno <- data.table::fread("met_anno/Temp_TCGA-LUSC_met_anno.txt") %>%
+    dplyr::select(c(fileID,Metastatic_site))
+  dat <- dplyr::left_join(dat,met_anno, by = "fileID")
+  write.csv(dat,"met_anno/Complete/Clinical_annotation_metastatic_locations_TCGA-LUSC.csv")
   
-  
-}
+} # Complete
 MESO <- function(proj){
   dat <- data.table::fread(str_glue("Clinical_annotation_{proj}.csv"), na.strings=c("","NA"))
   
