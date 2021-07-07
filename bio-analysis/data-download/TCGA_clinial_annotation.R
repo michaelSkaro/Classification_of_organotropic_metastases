@@ -432,19 +432,47 @@ READ <- function(proj){
 } # Complete
 SARC <- function(proj){
   dat <- data.table::fread(str_glue("Clinical_annotation_{proj}.csv"), na.strings=c("","NA"))
+  dat1 <- dat %>% dplyr::select(c(
+  fileID,
+  new_neoplasm_event_occurrence_anatomic_site,
+  new_neoplasm_occurrence_anatomic_site_text,
+  other_malignancy_anatomic_site,
+  other_malignancy_anatomic_site,
+  other_malignancy_anatomic_site_text,
+  `tumor_tissue_site[1]`,
+  `tumor_tissue_site[2]`,
+  `tumor_tissue_site[3]`
+  ))
+  write.csv(dat1, "met_anno/Temp_TCGA-SARC_met_anno.txt")
+  met_anno <- data.table::fread("met_anno/Temp_TCGA-SARC_met_anno.txt") %>%
+    dplyr::select(c(fileID,Metastatic_site))
+  dat <- dplyr::left_join(dat,met_anno, by = "fileID")
+  write.csv(dat,"met_anno/Complete/Clinical_annotation_metastatic_locations_TCGA-SARC.csv")
   
-  
-}
+} # Complete
 SKCM <- function(proj){
   dat <- data.table::fread(str_glue("Clinical_annotation_{proj}.csv"), na.strings=c("","NA"))
+  dat1 <- dat %>% dplyr::select(c(
+    fileID,
+    new_neoplasm_event_occurrence_anatomic_site,
+    new_tumor_metastasis_anatomic_site,
+    new_tumor_metastasis_anatomic_site_other_text,
+    other_malignancy_anatomic_site,
+    other_malignancy_anatomic_site_text,
+    pathologic_N
+  ))
+  write.csv(dat1, "met_anno/Temp_TCGA-SKCM_met_anno.txt")
+  met_anno <- data.table::fread("met_anno/Temp_TCGA-SKCM_met_anno.txt") %>%
+    dplyr::select(c(fileID,Metastatic_site))
+  dat <- dplyr::left_join(dat,met_anno, by = "fileID")
+  write.csv(dat,"met_anno/Complete/Clinical_annotation_metastatic_locations_TCGA-SKCM.csv")
   
-  
-}
+} # Complete
 STAD <- function(proj){
   dat <- data.table::fread(str_glue("Clinical_annotation_{proj}.csv"), na.strings=c("","NA"))
   
   
-}
+} 
 TGCT <- function(proj){
   dat <- data.table::fread(str_glue("Clinical_annotation_{proj}.csv"), na.strings=c("","NA"))
   
