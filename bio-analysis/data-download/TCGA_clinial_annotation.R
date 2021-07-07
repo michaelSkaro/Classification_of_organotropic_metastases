@@ -470,11 +470,33 @@ SKCM <- function(proj){
 } # Complete
 STAD <- function(proj){
   dat <- data.table::fread(str_glue("Clinical_annotation_{proj}.csv"), na.strings=c("","NA"))
+  dat1 <- dat %>% dplyr::select(c(
+    fileID,
+    new_neoplasm_event_occurrence_anatomic_site,
+    new_neoplasm_occurrence_anatomic_site_text,
+    number_of_lymphnodes_positive_by_he,
+    other_malignancy_anatomic_site,
+    pathologic_N
+  ))
+  write.csv(dat1, "met_anno/Temp_TCGA-STAD_met_anno.txt")
+  met_anno <- data.table::fread("met_anno/Temp_TCGA-STAD_met_anno.txt") %>%
+    dplyr::select(c(fileID,Metastatic_site))
+  dat <- dplyr::left_join(dat,met_anno, by = "fileID")
+  write.csv(dat,"met_anno/Complete/Clinical_annotation_metastatic_locations_TCGA-STAD.csv")
   
   
-} 
+  
+} # Complete
 TGCT <- function(proj){
   dat <- data.table::fread(str_glue("Clinical_annotation_{proj}.csv"), na.strings=c("","NA"))
+  dat1 <- dat %>% dplyr::select(c(
+    fileID,
+    new_neoplasm_event_occurrence_anatomic_site,
+    new_neoplasm_occurrence_anatomic_site_text,
+    number_of_lymphnodes_positive_by_he,
+    other_malignancy_anatomic_site,
+    pathologic_N
+  ))
   
   
 }
