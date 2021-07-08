@@ -394,7 +394,7 @@ PCPG <- function(proj){
   write.csv(dat,"met_anno/Complete/Clinical_annotation_metastatic_locations_TCGA-PCPG.csv")
   
   
-} #Something Wrong
+} # Something Wrong
 PRAD <- function(proj){
   dat <- data.table::fread(str_glue("Clinical_annotation_{proj}.csv"), na.strings=c("","NA"))
   dat1 <- dat %>% dplyr::select(c(
@@ -502,7 +502,7 @@ TGCT <- function(proj){
   dat <- dplyr::left_join(dat,met_anno, by = "fileID")
   write.csv(dat,"met_anno/Complete/Clinical_annotation_metastatic_locations_TCGA-TGCT.csv")
   
-} #Complete
+} # Complete
 THCA <- function(proj){
   dat <- data.table::fread(str_glue("Clinical_annotation_{proj}.csv"), na.strings=c("","NA"))
   dat1 <- dat %>% dplyr::select(c(
@@ -526,21 +526,66 @@ THCA <- function(proj){
 } # Complete
 THYM <- function(proj){
   dat <- data.table::fread(str_glue("Clinical_annotation_{proj}.csv"), na.strings=c("","NA"))
+  dat1 <- dat %>% dplyr::select(c(
+    fileID,
+    new_neoplasm_event_occurrence_anatomic_site,
+    new_neoplasm_occurrence_anatomic_site_text,
+    other_malignancy_anatomic_site,
+    other_malignancy_anatomic_site_text,
+    pathologic_N
+  ))
+  write.csv(dat1, "met_anno/Temp_TCGA-THYM_met_anno.txt")
+  met_anno <- data.table::fread("met_anno/Temp_TCGA-THYM_met_anno.txt") %>%
+    dplyr::select(c(fileID,Metastatic_site))
+  dat <- dplyr::left_join(dat,met_anno, by = "fileID")
+  write.csv(dat,"met_anno/Complete/Clinical_annotation_metastatic_locations_TCGA-THYM.csv")
   
-  
-}
+} # Complete
 UCEC <- function(proj){
   dat <- data.table::fread(str_glue("Clinical_annotation_{proj}.csv"), na.strings=c("","NA"))
-  
-  
-}
+  dat1 <- dat %>% dplyr::select(c(
+    fileID,
+    new_neoplasm_event_occurrence_anatomic_site,
+    new_neoplasm_occurrence_anatomic_site_text,
+    other_malignancy_anatomic_site,
+    other_malignancy_anatomic_site_text,
+    pathologic_N
+  ))
+  write.csv(dat1, "met_anno/Temp_TCGA-UCEC_met_anno.txt")
+  met_anno <- data.table::fread("met_anno/Temp_TCGA-UCEC_met_anno.txt") %>%
+    dplyr::select(c(fileID,Metastatic_site))
+  dat <- dplyr::left_join(dat,met_anno, by = "fileID")
+  write.csv(dat,"met_anno/Complete/Clinical_annotation_metastatic_locations_TCGA-UCEC.csv")
+} # Complete
 UCS <- function(proj){
   dat <- data.table::fread(str_glue("Clinical_annotation_{proj}.csv"), na.strings=c("","NA"))
+  dat1 <- dat %>% dplyr::select(c(
+    fileID,
+    new_neoplasm_event_occurrence_anatomic_site,
+    new_neoplasm_occurrence_anatomic_site_text,
+    other_malignancy_anatomic_site,
+    other_malignancy_anatomic_site_text,
+    pathologic_N
+  ))
+  write.csv(dat1, "met_anno/Temp_TCGA-UCS_met_anno.txt")
+  met_anno <- data.table::fread("met_anno/Temp_TCGA-UCS_met_anno.txt") %>%
+    dplyr::select(c(fileID,Metastatic_site))
+  dat <- dplyr::left_join(dat,met_anno, by = "fileID")
+  write.csv(dat,"met_anno/Complete/Clinical_annotation_metastatic_locations_TCGA-UCS.csv")
   
-  
-}
+} # Complete
 UVM <- function(proj){
   dat <- data.table::fread(str_glue("Clinical_annotation_{proj}.csv"), na.strings=c("","NA"))
-  
-  
-}
+  dat1 <- dat %>% dplyr::select(c(
+    fileID,
+    new_neoplasm_event_occurrence_anatomic_site,
+    new_neoplasm_occurrence_anatomic_site_text,
+    other_malignancy_anatomic_site,
+    pathologic_N
+  ))
+  write.csv(dat1, "met_anno/Temp_TCGA-UVM_met_anno.txt")
+  met_anno <- data.table::fread("met_anno/Temp_TCGA-UVM_met_anno.txt") %>%
+    dplyr::select(c(fileID,Metastatic_site))
+  dat <- dplyr::left_join(dat,met_anno, by = "fileID")
+  write.csv(dat,"met_anno/Complete/Clinical_annotation_metastatic_locations_TCGA-UVM.csv")
+} # Complete
