@@ -588,4 +588,108 @@ UVM <- function(proj){
     dplyr::select(c(fileID,Metastatic_site))
   dat <- dplyr::left_join(dat,met_anno, by = "fileID")
   write.csv(dat,"met_anno/Complete/Clinical_annotation_metastatic_locations_TCGA-UVM.csv")
-} # Complete
+}
+
+print(session.info())
+
+# R version 4.0.3 (2020-10-10)
+# Platform: x86_64-pc-linux-gnu (64-bit)
+# Running under: Ubuntu 20.04 LTS
+# 
+# Matrix products: default
+# BLAS/LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.8.so
+# 
+# locale:
+#   [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C               LC_TIME=en_US.UTF-8       
+# [4] LC_COLLATE=en_US.UTF-8     LC_MONETARY=en_US.UTF-8    LC_MESSAGES=C             
+# [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                  LC_ADDRESS=C              
+# [10] LC_TELEPHONE=C             LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+# 
+# attached base packages:
+#   [1] stats4    grid      parallel  stats     graphics  grDevices utils     datasets  methods  
+# [10] base     
+# 
+# other attached packages:
+#   [1] cowplot_1.1.1            DOSE_3.16.0              clusterProfiler_3.18.1  
+# [4] msigdbr_7.2.1            org.Hs.eg.db_3.12.0      AnnotationDbi_1.52.0    
+# [7] IRanges_2.24.1           S4Vectors_0.28.1         circlize_0.4.12         
+# [10] ComplexHeatmap_2.6.2     xml2_1.3.2               TCGAbiolinks_2.18.0     
+# [13] forcats_0.5.1            stringr_1.4.0            dplyr_1.0.5             
+# [16] purrr_0.3.4              readr_1.4.0              tidyr_1.1.3             
+# [19] tibble_3.1.1             tidyverse_1.3.1          flowAI_1.20.1           
+# [22] MIMOSA_1.28.1            Biobase_2.50.0           reshape_0.8.8           
+# [25] plyr_1.8.6               MASS_7.3-53              flowMerge_2.38.0        
+# [28] snow_0.4-3               foreach_1.5.1            Rgraphviz_2.34.0        
+# [31] feature_1.2.15           graph_1.68.0             BiocGenerics_0.36.1     
+# [34] flowTrans_1.42.0         flowClust_3.28.0         COMPASS_1.28.0          
+# [37] flowViz_1.54.0           lattice_0.20-41          cytolib_2.2.1           
+# [40] openCyto_2.2.0           CytoML_2.2.2             flowStats_4.2.0         
+# [43] ggcyto_1.18.0            ncdfFlow_2.36.0          BH_1.75.0-0             
+# [46] RcppArmadillo_0.10.4.0.0 ggplot2_3.3.3            flowWorkspace_4.2.0     
+# [49] flowCore_2.2.0          
+# 
+# loaded via a namespace (and not attached):
+#   [1] rappdirs_0.3.3              SparseM_1.81                R.methodsS3_1.8.1          
+# [4] coda_0.19-4                 bit64_4.0.5                 knitr_1.33                 
+# [7] DelayedArray_0.16.3         R.utils_2.10.1              data.table_1.14.0          
+# [10] rpart_4.1-15                RCurl_1.98-1.3              generics_0.1.0             
+# [13] timeSeries_3062.100         RSQLite_2.2.7               shadowtext_0.0.8           
+# [16] enrichplot_1.10.2           bit_4.0.4                   lubridate_1.7.10           
+# [19] SummarizedExperiment_1.20.0 assertthat_0.2.1            viridis_0.6.0              
+# [22] xfun_0.22                   fBasics_3042.89.1           hms_1.0.0                  
+# [25] evaluate_0.14               DEoptimR_1.0-8              fansi_0.4.2                
+# [28] progress_1.2.2              dbplyr_2.1.1                readxl_1.3.1               
+# [31] geneplotter_1.68.0          igraph_1.2.6                DBI_1.1.1                  
+# [34] tmvnsim_1.0-2               mcmc_0.9-7                  ellipsis_0.3.1             
+# [37] ks_1.12.0                   backports_1.2.1             annotate_1.68.0            
+# [40] MCMCpack_1.5-0              RcppParallel_5.1.2          biomaRt_2.46.3             
+# [43] MatrixGenerics_1.2.1        vctrs_0.3.7                 quantreg_5.85              
+# [46] Cairo_1.5-12.2              abind_1.4-5                 cachem_1.0.4               
+# [49] withr_2.4.2                 ggforce_0.3.3               aws.signature_0.6.0        
+# [52] robustbase_0.93-7           prettyunits_1.1.1           mclust_5.4.7               
+# [55] mnormt_2.0.2                cluster_2.1.0               crayon_1.4.1               
+# [58] genefilter_1.72.1           ellipse_0.4.2               pkgconfig_2.0.3            
+# [61] tweenr_1.0.2                GenomeInfoDb_1.26.7         changepoint_2.2.2          
+# [64] rlang_0.4.10                spatial_7.3-13              lifecycle_1.0.0            
+# [67] MatrixModels_0.5-0          downloader_0.4              BiocFileCache_1.14.0       
+# [70] modelr_0.1.8                polyclip_1.10-0             cellranger_1.1.0           
+# [73] tcltk_4.0.3                 matrixStats_0.58.0          Matrix_1.3-2               
+# [76] zoo_1.8-9                   reprex_2.0.0                base64enc_0.1-3            
+# [79] GlobalOptions_0.1.2         viridisLite_0.4.0           png_0.1-7                  
+# [82] rjson_0.2.20                stabledist_0.7-1            bitops_1.0-7               
+# [85] R.oo_1.24.0                 KernSmooth_2.23-18          blob_1.2.1                 
+# [88] shape_1.4.5                 qvalue_2.22.0               jpeg_0.1-8.1               
+# [91] aws.s3_0.3.21               scales_1.1.1                memoise_2.0.0              
+# [94] magrittr_2.0.1              hexbin_1.28.2               zlibbioc_1.36.0            
+# [97] scatterpie_0.1.6            compiler_4.0.3              hdrcde_3.4                 
+# [100] RColorBrewer_1.1-2          clue_0.3-59                 DESeq2_1.30.1              
+# [103] rrcov_1.5-5                 cli_2.4.0                   XVector_0.30.0             
+# [106] Formula_1.2-4               tidyselect_1.1.0            stringi_1.5.3              
+# [109] TCGAbiolinksGUI.data_1.10.0 RProtoBufLib_2.2.0          yaml_2.2.1                 
+# [112] GOSemSim_2.16.1             locfit_1.5-9.4              askpass_1.1                
+# [115] ggrepel_0.9.1               latticeExtra_0.6-29         fastmatch_1.1-0            
+# [118] tools_4.0.3                 rstudioapi_0.13             statip_0.2.3               
+# [121] gridExtra_2.3               farver_2.1.0                ggraph_2.0.5               
+# [124] stable_1.1.4                BiocManager_1.30.12         rvcheck_0.1.8              
+# [127] digest_0.6.27               pracma_2.3.3                Rcpp_1.0.6                 
+# [130] GenomicRanges_1.42.0        broom_0.7.6                 fda_5.1.9                  
+# [133] httr_1.4.2                  IDPmisc_1.1.20              colorspace_2.0-0           
+# [136] rvest_1.0.0                 XML_3.99-0.6                fs_1.5.0                   
+# [139] pdist_1.2                   rainbow_3.6                 modeest_2.4.0              
+# [142] splines_4.0.3               rmutil_1.1.5                RBGL_1.66.0                
+# [145] conquer_1.0.2               graphlayouts_0.7.1          xtable_1.8-4               
+# [148] jsonlite_1.7.2              fds_1.8                     tidygraph_1.2.0            
+# [151] corpcor_1.6.9               timeDate_3043.102           UpSetR_1.4.0               
+# [154] testthat_3.0.2              R6_2.5.0                    pillar_1.6.0               
+# [157] htmltools_0.5.1.1           glue_1.4.2                  fastmap_1.1.0              
+# [160] BiocParallel_1.24.1         codetools_0.2-18            fgsea_1.16.0               
+# [163] pcaPP_1.9-74                mvtnorm_1.1-1               utf8_1.2.1                 
+# [166] curl_4.3                    gtools_3.8.2                GO.db_3.12.1               
+# [169] openssl_1.4.3               survival_3.2-7              rmarkdown_2.7              
+# [172] munsell_0.5.0               DO.db_2.9                   GetoptLong_1.0.5           
+# [175] GenomeInfoDbData_1.2.4      iterators_1.0.13            haven_2.4.1                
+# [178] reshape2_1.4.4              gtable_0.3.0        
+# 
+# 
+
+
