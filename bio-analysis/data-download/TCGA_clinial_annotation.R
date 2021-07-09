@@ -130,7 +130,7 @@ CHOL <- function(proj){
   dat <- left_join(dat,df, by ="fileID")
   write.csv(dat, str_glue("/mnt/storage/mskaro1/Clinical_annotation/met_anno/Clinical_annotation_metastatic_locations_{proj}.csv"))
   
-} # Too small of a data set
+} # Too small 
 COAD <- function(proj){
   dat <- data.table::fread(str_glue("Clinical_annotation_{proj}.csv"), na.strings=c("","NA"))
   dat1 <- dat %>% dplyr::select(
@@ -195,7 +195,7 @@ ESCA <- function(proj){
   
   write.csv(dat, str_glue("/mnt/storage/mskaro1/Clinical_annotation/met_anno/Complete/Clinical_annotation_metastatic_locations_{proj}.csv"))
   
-} # Not enough documented locations
+} # Complete
 GBM <- function(proj){
   dat <- data.table::fread(str_glue("Clinical_annotation_{proj}.csv"), na.strings=c("","NA"))
   dat1 <- dat %>%
@@ -259,7 +259,7 @@ LAML <- function(proj){
   dat <- data.table::fread(str_glue("Clinical_annotation_{proj}.csv"), na.strings=c("","NA"))
   # Stop
   
-} # Not annotation
+} # No annotation
 LGG <- function(proj){
   dat <- data.table::fread(str_glue("Clinical_annotation_{proj}.csv"), na.strings=c("","NA"))
   
@@ -274,7 +274,7 @@ LGG <- function(proj){
   # too few annotated metastases
   
   
-} # Too few annotated Mets
+} # Complete
 LIHC <- function(proj){
   dat <- data.table::fread(str_glue("Clinical_annotation_{proj}.csv"), na.strings=c("","NA"))
   dat1 <- dat %>% dplyr::select(c(
@@ -358,7 +358,7 @@ OV <- function(proj){
   
   
   
-} # Too small
+} # Complete
 PAAD <- function(proj){
   dat <- data.table::fread(str_glue("Clinical_annotation_{proj}.csv"), na.strings=c("","NA"))
   dat1 <- dat %>% dplyr::select(c(
@@ -394,16 +394,17 @@ PCPG <- function(proj){
   write.csv(dat,"met_anno/Complete/Clinical_annotation_metastatic_locations_TCGA-PCPG.csv")
   
   
-} # Something Wrong
+} # Complete
 PRAD <- function(proj){
   dat <- data.table::fread(str_glue("Clinical_annotation_{proj}.csv"), na.strings=c("","NA"))
   dat1 <- dat %>% dplyr::select(c(
     fileID,
+    number_of_lymphnodes_positive_by_he,
+    pathologic_N,
     new_neoplasm_event_occurrence_anatomic_site,
     new_neoplasm_occurrence_anatomic_site_text,
     other_malignancy_anatomic_site,
-    other_malignancy_anatomic_site_text,
-    pathologic_N
+    other_malignancy_anatomic_site_text
   ))
   write.csv(dat1, "met_anno/Temp_TCGA-PRAD_met_anno.txt")
   met_anno <- data.table::fread("met_anno/Temp_TCGA-PRAD_met_anno.txt") %>%
@@ -412,7 +413,7 @@ PRAD <- function(proj){
   write.csv(dat,"met_anno/Complete/Clinical_annotation_metastatic_locations_TCGA-PRAD.csv")
   
   
-} # Something Wrong
+} # Complete
 READ <- function(proj){
   dat <- data.table::fread(str_glue("Clinical_annotation_{proj}.csv"), na.strings=c("","NA"))
   dat1 <- dat %>% dplyr::select(c(
@@ -588,9 +589,7 @@ UVM <- function(proj){
     dplyr::select(c(fileID,Metastatic_site))
   dat <- dplyr::left_join(dat,met_anno, by = "fileID")
   write.csv(dat,"met_anno/Complete/Clinical_annotation_metastatic_locations_TCGA-UVM.csv")
-}
-
-print(session.info())
+} # Complete
 
 # R version 4.0.3 (2020-10-10)
 # Platform: x86_64-pc-linux-gnu (64-bit)
@@ -691,5 +690,3 @@ print(session.info())
 # [178] reshape2_1.4.4              gtable_0.3.0        
 # 
 # 
-
-
