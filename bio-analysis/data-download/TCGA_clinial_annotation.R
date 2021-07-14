@@ -591,6 +591,96 @@ UVM <- function(proj){
   write.csv(dat,"met_anno/Complete/Clinical_annotation_metastatic_locations_TCGA-UVM.csv")
 } # Complete
 
+
+met_anno_all <- data.table::fread("Annotated_met_loc_all.txt")
+df <- cbind(met_anno_all, mtabulate(strsplit(met_anno_all$Metastastic_site, ","))) %>%
+  select(-V1)
+
+
+met_anno_all_long <- met_anno_all %>%
+  tidyr::separate_rows(Metastastic_site, sep = ",", convert = TRUE)
+colnames(met_anno_all_long) <- c("fileID","Metastatic_site","CT")
+
+counts <- ddply(met_anno_all_long, .(Metastatic_site, CT), nrow)
+names(counts) <- c("Metastatic_site", "CT", "Freq")
+empty_as_na <- function(x){
+  if("factor" %in% class(x)) x <- as.character(x) ## since ifelse wont work with factors
+  ifelse(as.character(x)!="", x, NA)
+}
+
+## transform all columns
+counts <- counts %>% mutate_each(funs(empty_as_na)) 
+counts$log.abundance <- log(counts$Freq) 
+counts <- counts %>%
+  dplyr::filter(CT != "OV") %>%
+  dplyr::filter(CT !="LGG") %>%
+  dplyr::filter(CT !="TGCT") %>%
+  dplyr::filter(CT !="THYM") %>%
+  dplyr::mutate(CT = replace(CT,CT == "READ", "COADREAD")) %>%
+  dplyr::mutate(CT = replace(CT,CT == "COAD", "COADREAD")) %>%
+  #dplyr::filter(Freq >8) %>%
+  dplyr::arrange(CT) %>%
+  dplyr::select(-log.abundance) %>%
+  dplyr::group_by(Metastatic_site, CT)
+counts <- counts[c(2,1,3)]
+sites <- as.data.frame(unique(counts$Metastatic_site))
+colnames(sites) <- "sites"
+write.csv(sites, "sites.csv")
+
+dat <- data.table::fread("Metastasis_by_loc_by_cancer.csv", sep = ",", header = TRUE) %>%
+  dplyr::select(-V1) %>%
+  pivot_longer(!Metastatic_site, names_to = "CT", values_to = "count") %>%
+  dplyr::filter(CT != "OV") %>%
+  dplyr::filter(CT !="LGG") %>%
+  dplyr::filter(CT !="TGCT") %>%
+  dplyr::filter(CT !="THYM") %>%
+  dplyr::mutate(CT = replace(CT,CT == "READ", "COADREAD")) %>%
+  dplyr::mutate(CT = replace(CT,CT == "COAD", "COADREAD"))
+dat$log.abundance <- log(dat$count)
+dat$log.abundance[dat$log.abundance<0] <- 0
+
+
+p1 <- ggplot(data = dat, mapping = aes(x = CT,y = Metastatic_site, fill =log.abundance)) +
+  geom_raster() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  theme(axis.text.y = element_text(angle = 30, size = 5, face = "bold")) +
+  ylab(label = "Metatatic Sites") + 
+  xlab(label  ="Cancer Types") +
+  ggtitle("Site specific progression")+
+  scale_fill_gradient(name = "Log Frequency",
+                      low = "Black",
+                      high = "Red")
+
+
+dat <- data.table::fread("Metastasis_by_loc_by_cancer.csv", sep = ",", header = TRUE) %>%
+  dplyr::select(-V1) %>%
+  pivot_longer(!Metastatic_site, names_to = "CT", values_to = "count") %>%
+  dplyr::filter(CT != "OV") %>%
+  dplyr::filter(CT !="LGG") %>%
+  dplyr::filter(CT !="TGCT") %>%
+  dplyr::filter(CT !="THYM") %>%
+  dplyr::mutate(CT = replace(CT,CT == "READ", "COADREAD")) %>%
+  dplyr::mutate(CT = replace(CT,CT == "COAD", "COADREAD")) %>%
+  #dplyr::filter(count>=8) %>%
+  dplyr::filter(Metastatic_site %in% selected)
+dat$log.abundance <- log(dat$count)
+dat$log.abundance[dat$log.abundance<0] <- 0
+
+ggplot(data = dat, mapping = aes(x = CT,y = Metastatic_site, fill =log.abundance)) +
+  geom_raster() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  theme(axis.text.y = element_text(angle = 30, size = 5, face = "bold")) +
+  ylab(label = "Metatatic Sites") + 
+  xlab(label  ="Cancer Types") +
+  ggtitle("Selected Locations")+
+  scale_fill_gradient(name = "Log Frequency",
+                      low = "Black",
+                      high = "Red")
+
+
+
+
+
 # R version 4.0.3 (2020-10-10)
 # Platform: x86_64-pc-linux-gnu (64-bit)
 # Running under: Ubuntu 20.04 LTS
