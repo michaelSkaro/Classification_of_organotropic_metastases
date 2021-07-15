@@ -43,7 +43,7 @@ BLCA <- function(proj){
     
   
   dat <- left_join(dat,met_anno, by ="fileID")
-  write.csv(df, str_glue("/mnt/storage/mskaro1/Clinical_annotation/met_anno/Complete/Clinical_annotation_metastatic_locations_{proj}.csv"))
+  write.csv(dat, str_glue("/mnt/storage/mskaro1/Clinical_annotation/met_anno/Complete/Clinical_annotation_metastatic_locations_{proj}.csv"))
   
   # when you read it into python to do the analysis you can use this line.
   #import pandas as pd
@@ -252,6 +252,7 @@ KIRP <- function(proj){
   write.csv(dat1, "met_anno/Temp_TCGA-KIRP_met_anno.txt")
   met_anno <- data.table::fread("met_anno/Temp_TCGA-KIRP_met_anno.txt") %>%
     dplyr::select(c(fileID,Metastatic_site))
+  dat <- dplyr::left_join(dat,met_anno, by = "fileID")
   write.csv(dat, "met_anno/Complete/Clinical_annotation_metastatic_locations_TCGA-KIRP.csv")
   
 } # Complete
@@ -290,7 +291,7 @@ LIHC <- function(proj){
   met_anno <- data.table::fread("met_anno/Temp_TCGA-LIHC_met_anno.txt") %>%
     dplyr::select(c(fileID, Metastatic_site))
   dat <- dplyr::left_join(dat, met_anno, by = "fileID")
-  write.csv(dat1, "met_anno/Complete/Clinical_annotation_metastatic_locations_TCGA-LIHC.csv")
+  write.csv(dat, "met_anno/Complete/Clinical_annotation_metastatic_locations_TCGA-LIHC.csv")
 } # Complete
 LUAD <- function(proj){
   dat <- data.table::fread(str_glue("Clinical_annotation_{proj}.csv"), na.strings=c("","NA"))
@@ -661,6 +662,7 @@ dat <- data.table::fread("Metastasis_by_loc_by_cancer.csv", sep = ",", header = 
   dplyr::filter(CT !="THYM") %>%
   dplyr::mutate(CT = replace(CT,CT == "READ", "COADREAD")) %>%
   dplyr::mutate(CT = replace(CT,CT == "COAD", "COADREAD")) %>%
+  # toggle option for simple filtering
   #dplyr::filter(count>=8) %>%
   dplyr::filter(Metastatic_site %in% selected)
 dat$log.abundance <- log(dat$count)
@@ -676,6 +678,44 @@ ggplot(data = dat, mapping = aes(x = CT,y = Metastatic_site, fill =log.abundance
   scale_fill_gradient(name = "Log Frequency",
                       low = "Black",
                       high = "Red")
+
+
+# match the sample ID with the sample barcode to add the metastatic annotation to the 
+proj <- projects[1]
+for(proj in projects){
+  
+  if(file.exists(str_glue("~/storage/Clinical_annotation/met_anno/Complete/Clinical_annotation_metastatic_locations_{proj}.csv"))){
+    anno <- data.table::fread(str_glue("~/storage/Clinical_annotation/met_anno/Complete/Clinical_annotation_metastatic_locations_{proj}.csv", header = TRUE)) %>%
+      dplyr::select(-V1) %>%
+      dplyr::group_by(bcr_patient_barcode)
+    anno.merge <- anno%>%
+      dplyr::summarise(Metastatic_site = paste(Metastatic_site, collapse = ","))
+    anno <- anno %>% dplyr::select(-Metastatic_site)
+    anno <- dplyr::left_join(anno.merge, anno, by = "bcr_patient_barcode")
+    met <- anno %>% dplyr::select(bcr_patient_barcode,Metastatic_site)
+  }
+  
+  if(file.exists(str_glue("~/CSBL_shared/RNASeq/TCGA/counts/{proj}.counts.csv"))){
+    expr <- data.table::fread(str_glue("~/CSBL_shared/RNASeq/TCGA/counts/{proj}.counts.csv")) %>%
+      tibble::column_to_rownames("Ensembl")
+    expr <- as.data.frame(t(expr[1:(dim(expr)[1]-5),])) %>%
+      tibble::rownames_to_column("barcode")
+    expr$bcr_patient_barcode <- str_extract(string = expr$barcode, pattern = "TCGA-[:graph:]{1,3}-[:graph:]{1,4}")
+    expr <- dplyr::left_join(expr, met, by ="bcr_patient_barcode") %>%
+      dplyr::distinct()
+    expr <- cbind(expr, mtabulate(strsplit(expr$Metastatic_site, split= ",")))
+  }
+  
+  write.csv(expr, file =str_glue("~/storage/Clinical_annotation/Annotated_expression/{proj}_annotated.csv"))
+  
+  
+}
+
+
+#select the non-NA
+
+# get ride of the repeats, just keep primary tumors
+
 
 
 
