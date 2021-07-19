@@ -662,8 +662,7 @@ dat <- data.table::fread("Metastasis_by_loc_by_cancer.csv", sep = ",", header = 
   dplyr::filter(CT !="THYM") %>%
   dplyr::mutate(CT = replace(CT,CT == "READ", "COADREAD")) %>%
   dplyr::mutate(CT = replace(CT,CT == "COAD", "COADREAD")) %>%
-  # toggle option for simple filtering
-  #dplyr::filter(count>=8) %>%
+  dplyr::filter(count>=8) %>%
   dplyr::filter(Metastatic_site %in% selected)
 dat$log.abundance <- log(dat$count)
 dat$log.abundance[dat$log.abundance<0] <- 0
@@ -693,8 +692,11 @@ for(proj in projects){
     anno <- anno %>% dplyr::select(-Metastatic_site)
     anno <- dplyr::left_join(anno.merge, anno, by = "bcr_patient_barcode")
     met <- anno %>% dplyr::select(bcr_patient_barcode,Metastatic_site)
+    #write.csv(file = str_glue("~/storage/Clinical_annotation/clean_anno/{proj}_clean_anno.csv"), x = met)
+    met <- data.table::fread(str_glue("~/storage/Clinical_annotation/clean_anno/{proj}_clean_anno.csv"), header = TRUE) %>%
+      dplyr::select(-V1)
   }
-  
+
   if(file.exists(str_glue("~/CSBL_shared/RNASeq/TCGA/counts/{proj}.counts.csv"))){
     expr <- data.table::fread(str_glue("~/CSBL_shared/RNASeq/TCGA/counts/{proj}.counts.csv")) %>%
       tibble::column_to_rownames("Ensembl")
