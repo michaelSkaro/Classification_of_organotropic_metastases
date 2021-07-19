@@ -714,10 +714,6 @@ for(proj in projects){
 }
 
 
-#select the non-NA
-
-# get ride of the repeats, just keep primary tumors
-
 
 
 
