@@ -692,9 +692,6 @@ for(proj in projects){
     anno <- anno %>% dplyr::select(-Metastatic_site)
     anno <- dplyr::left_join(anno.merge, anno, by = "bcr_patient_barcode")
     met <- anno %>% dplyr::select(bcr_patient_barcode,Metastatic_site)
-    #write.csv(file = str_glue("~/storage/Clinical_annotation/clean_anno/{proj}_clean_anno.csv"), x = met)
-    met <- data.table::fread(str_glue("~/storage/Clinical_annotation/clean_anno/{proj}_clean_anno.csv"), header = TRUE) %>%
-      dplyr::select(-V1)
   }
 
   if(file.exists(str_glue("~/CSBL_shared/RNASeq/TCGA/counts/{proj}.counts.csv"))){
@@ -708,16 +705,81 @@ for(proj in projects){
     expr <- cbind(expr, mtabulate(strsplit(expr$Metastatic_site, split= ",")))
   }
   
+  if(proj == "COADREAD"){
+    p1 <- "TCGA-COAD"
+    p2 <- "TCGA-READ"
+    anno1 <- data.table::fread(str_glue("~/storage/Clinical_annotation/met_anno/Complete/Clinical_annotation_metastatic_locations_{p1}.csv", header = TRUE)) %>%
+      dplyr::select(-c(V1, number_cycles, regimen_number)) %>%
+      dplyr::group_by(bcr_patient_barcode)
+    
+    anno2 <- data.table::fread(str_glue("~/storage/Clinical_annotation/met_anno/Complete/Clinical_annotation_metastatic_locations_{p2}.csv", header = TRUE)) %>%
+      dplyr::select(-c(V1, number_cycles,regimen_number)) %>%
+      dplyr::group_by(bcr_patient_barcode)
+    
+    anno.merge1 <- anno1%>%
+      dplyr::summarise(Metastatic_site = paste(Metastatic_site, collapse = ","))
+    
+    anno.merge2 <- anno2%>%
+      dplyr::summarise(Metastatic_site = paste(Metastatic_site, collapse = ","))
+    
+    anno.merge <- rbind(anno.merge1,anno.merge2)
+    cols <- colnames(anno1)[colnames(anno1) %in% colnames(anno2)]
+    anno1 <- anno1 %>%
+      dplyr::select(all_of(cols))
+    anno2 <- anno2 %>%
+      dplyr::select(all_of(cols))
+    
+    anno <- rbind(anno1,anno2)
+    
+    
+    anno <- anno %>% dplyr::select(-Metastatic_site)
+    anno <- dplyr::left_join(anno.merge, anno, by = "bcr_patient_barcode")
+    met <- anno %>% dplyr::select(bcr_patient_barcode,Metastatic_site)
+    
+    expr1 <- data.table::fread(str_glue("~/CSBL_shared/RNASeq/TCGA/counts/{p1}.counts.csv")) %>%
+      tibble::column_to_rownames("Ensembl")
+    expr2 <- data.table::fread(str_glue("~/CSBL_shared/RNASeq/TCGA/counts/{p2}.counts.csv")) %>%
+      tibble::column_to_rownames("Ensembl")
+    expr1 <- as.data.frame(t(expr1[1:(dim(expr1)[1]-5),])) %>%
+      tibble::rownames_to_column("barcode")
+    expr2 <- as.data.frame(t(expr2[1:(dim(expr2)[1]-5),])) %>%
+      tibble::rownames_to_column("barcode")
+    expr1$bcr_patient_barcode <- str_extract(string = expr1$barcode, pattern = "TCGA-[:graph:]{1,3}-[:graph:]{1,4}")
+    expr2$bcr_patient_barcode <- str_extract(string = expr2$barcode, pattern = "TCGA-[:graph:]{1,3}-[:graph:]{1,4}")
+    expr1 <- dplyr::left_join(expr1, met, by ="bcr_patient_barcode") %>%
+      dplyr::distinct() %>%
+      dplyr::select(-c("barcode","bcr_patient_barcode"))
+    expr2 <- dplyr::left_join(expr2, met, by ="bcr_patient_barcode") %>%
+      dplyr::distinct(-c("barcode","bcr_patient_barcode"))
+    expr1 <- cbind(expr1, mtabulate(strsplit(expr$Metastatic_site, split= ",")))
+    expr2 <- cbind(expr2, mtabulate(strsplit(expr$Metastatic_site, split= ",")))
+    
+    expr <- rbind(expr1,expr2)
+    write.csv(expr, file =str_glue("~/storage/Clinical_annotation/Annotated_expression/TCGA-{proj}_annotated_2.csv"))
+    
+    
+    
+  }
+  
   write.csv(expr, file =str_glue("~/storage/Clinical_annotation/Annotated_expression/{proj}_annotated.csv"))
   
   
 }
+i <- fl[1]
+for (i in fl){
+  print(i)
+  dat <- data.table::fread(i) %>%
+    dplyr::select(-c("V1", "barcode"))
+  write.csv(dat, file = str_glue("{i}_2.csv"))
+}
 
+dat <- dat %>%dplyr::select(-c("Metastatic_site", "bcr_patient_barcode"))
+colnames(dat)[which(colnames(dat) == "Adrenal_Gland")] <- "Adrenal_gland"
+colnames(dat)[which(colnames(dat) == "Oral_Cavity")] <- "Oral_cavity"
+colnames(dat)[which(colnames(dat) == "Oral Cavity")] <- "Oral_cavity"
+colnames(dat)[which(colnames(dat) == "Thyroid_Gland")] <- "Thyroid"
 
-
-
-
-
+write.csv("TCGA-HNSC_annotated_2.csv")
 
 # R version 4.0.3 (2020-10-10)
 # Platform: x86_64-pc-linux-gnu (64-bit)
