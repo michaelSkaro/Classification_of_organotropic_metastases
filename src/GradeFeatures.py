@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
+# In[1]:
 
 
 # New approach lets attack building the shell.
@@ -37,7 +37,7 @@ from sklearn.preprocessing import (
 )
 
 
-# In[20]:
+# In[2]:
 
 
 class molecule_preprocessing:
@@ -89,26 +89,21 @@ class molecule_preprocessing:
             df = df.drop("__not_aligned", axis=1)
         if "__alignment_not_unique" in df.columns:
             df = df.drop("__alignment_not_unique", axis=1)
-        
 
         return df
-    
-    def cut(df, start,end,metastatic_sites):
-        
+
+    def cut(df, start, end, metastatic_site):
+
         X = df.iloc[:, start:end]
 
         # subsetted columns and the subsetted columns
 
-        y = df[metastatic_sites]
-
-        sites = list(y.columns)
+        y = df[metastatic_site]
 
         # bind X block and y's
         X = pd.concat([X.reset_index(drop=True), y.reset_index(drop=True)], axis=1)
-        
+
         return X
-    
-    
 
     def chunkIt(seq, num):
         """
@@ -125,16 +120,16 @@ class molecule_preprocessing:
         return out
 
     def split(df, metastatic_sites, site):
-        y = df[site]
         for col in metastatic_sites:
             if col in df.columns:
                 df[col] = df[col].replace(2, 1)
+        y = df[site]
+        
         for col in metastatic_sites:
             if col in df.columns:
                 df = df.drop(col, axis=1)
-        X = df
-        feature_list = X.columns
-        return X, y, feature_list
+        feature_list = df.columns
+        return df, y, feature_list
 
     def synthetic_instances(X, y):
         counter = Counter(y_train)
@@ -145,7 +140,7 @@ class molecule_preprocessing:
         return Xsm, ysm
 
 
-# In[21]:
+# In[3]:
 
 
 class feature_selection:
@@ -253,13 +248,13 @@ class feature_selection:
         return CV
 
 
-# In[25]:
+# In[4]:
 
 
 mp = molecule_preprocessing(
     path="home/jovyan/storage/Clinical_annotation/Annotated_expression/*_2.csv"
 )
-file = "/home/jovyan/storage/Clinical_annotation/Annotated_expression/TCGA-LUAD_annotated.csv"
+file = "/home/jovyan/storage/Clinical_annotation/Annotated_expression/TCGA-ACC_annotated.csv"
 cancer_type = molecule_preprocessing.CT(file=file)
 selected_locs = molecule_preprocessing.read_selected(
     file="/home/jovyan/storage/Clinical_annotation/Sites_for_classiication.csv",
@@ -267,7 +262,7 @@ selected_locs = molecule_preprocessing.read_selected(
 )
 df = molecule_preprocessing.read(
     file=file)
-dat = molecule_preprocessing.cut(df, start=0,end=500,metastatic_sites=selected_locs)
+dat = molecule_preprocessing.cut(df, start=0,end=500,metastatic_site=selected_locs[1])
 X, y, feature_list = molecule_preprocessing.split(
     dat, selected_locs, site=selected_locs[1]
 )
@@ -279,26 +274,31 @@ CV = feature_selection.grade_features(X, y)
 
 
 import warnings
-warnings.filterwarnings('ignore')
 
-def grade_all_blocks(df,cancer_type,selected_locs,windows):
+warnings.filterwarnings("ignore")
+
+
+def grade_all_blocks(df, cancer_type, selected_locs, windows):
     for i in selected_locs:
         features = []
         for j in windows:
+            #print(len(features))
             start = list(j)[0]
             end = list(j)[-1]
-            # this is what is slowing everything down.
-            sliced = molecule_preprocessing.cut(df, start=start,end=end,metastatic_sites=selected_locs)
-            X, y, feature_list = molecule_preprocessing.split(
-                sliced, selected_locs, site=i
-            )
-            fs = feature_selection(X, y)
-            CV = feature_selection.grade_features(X, y)
-            # CV.to_csv("/home/jovyan/storage/Machine_Learning/Selected_features_binary_classifications/" + str("Organotropic_features")+ "_" + str(cancer_type) + "_" + str(i) + "_" + "ID_window_"  + str(start) + "_" + str(end) + ".csv")
-            features.append(CV)
+            if end<=df.shape[1]:
+                sliced = molecule_preprocessing.cut(
+                    df, start=start, end=end, metastatic_site=i
+                )
+                X, y, feature_list = molecule_preprocessing.split(
+                    sliced, selected_locs, site=i
+                )
+                fs = feature_selection(X, y)
+                CV = feature_selection.grade_features(X, y)
+                # CV.to_csv("/home/jovyan/storage/Machine_Learning/Selected_features_binary_classifications/" + str("Organotropic_features")+ "_" + str(cancer_type) + "_" + str(i) + "_" + "ID_window_"  + str(start) + "_" + str(end) + ".csv")
+                features.append(CV)
 
         dat = pd.concat(features, ignore_index=True)
-        dat = dat.drop_duplicates(subset=["Feature"])  # ****
+        dat = dat.drop_duplicates(subset=["Feature"])
         dat = dat.sort_values(by="Total", ascending=False)
         dat.to_csv(
             "/home/jovyan/storage/Machine_Learning/Selected_features_binary_classifications/"
@@ -313,18 +313,17 @@ def grade_all_blocks(df,cancer_type,selected_locs,windows):
 
 
 def grade_all_cancers(path):
-    windows = molecule_preprocessing.chunkIt(seq=range(60485), num=100)
+    windows = molecule_preprocessing.chunkIt(seq=range(60483), num=100)
     for file in glob.glob(path):
+        tic_all = time.perf_counter()
+        print("Processing:" + str(file))
         cancer_type = molecule_preprocessing.CT(file=file)
         selected_locs = molecule_preprocessing.read_selected(
             file="/home/jovyan/storage/Clinical_annotation/Sites_for_classiication.csv",
             cancer_type=cancer_type,
         )
-        df = molecule_preprocessing.read(
-        file=file)
-        tic_all = time.perf_counter()
-        print("Processing:" + str(file))
-        grade_all_blocks(df,cancer_type,selected_locs,windows)
+        df = molecule_preprocessing.read(file=file)
+        grade_all_blocks(df, cancer_type, selected_locs, windows)
         print(str(file) + "Complete")
         toc_all = time.perf_counter()
         print(f"Read in features in {toc_all - tic_all:0.4f} seconds")
@@ -334,10 +333,4 @@ def grade_all_cancers(path):
 grade_all_cancers(
     path="/home/jovyan/storage/Clinical_annotation/Annotated_expression/*_2.csv"
 )
-
-
-# In[ ]:
-
-
-
 
