@@ -345,7 +345,7 @@ grade_all_cancers(
 )
 
 
-# In[113]:
+# In[153]:
 
 
 # Binary classification
@@ -407,10 +407,11 @@ class Organotropic_classification:
         
         df[metastatic_site] = df[metastatic_site].replace(2, 1)
         y = df[metastatic_site]
+        
         # select the the features
         df = df[df.columns & features]
         df = pd.concat([df.reset_index(drop=True), y.reset_index(drop=True)], axis=1)
-        
+        df = df.iloc[: , :-1]
         
         return df, y
     
@@ -422,13 +423,13 @@ class Organotropic_classification:
     
 
     
-    def synthetic_instances(X_train, y_train):
+    def synthetic_instances(X, y):
         '''
         make synthetic instances for classification this time
         '''
-        print(sorted(Counter(y_train).items()))
-        oversample = SMOTE(sampling_strategy=0.8)
-        Xsm, ysm = oversample.fit_resample(X_train, y_train)
+        print(sorted(Counter(y).items()))
+        oversample = SMOTE()
+        Xsm, ysm = oversample.fit_resample(X, y)
         print(sorted(Counter(ysm).items()))
         Xsm = Xsm.astype(int)
 
@@ -444,7 +445,12 @@ class Organotropic_classification:
         predictions = [round(value) for value in y_pred]
         # evaluate predictions
         accuracy = accuracy_score(y_test, predictions)
+        precision = precision_score(y_test, y_pred, average='weighted')
+        #f1_score = f1_score(y_test, y_pred, average='weighted')
         print("Accuracy: %.2f%%" % (accuracy * 100.0))
+        print("Precision: %.2f%%" % (precision * 100.0))
+        #print("F1 Score: %.2f%%" % (f1_score * 100.0))
+        
         return model, X_test, y_test, y_pred, predictions
     
     def visualize(model, X_test, y_test, y_pred, predictions, ms, CT):
@@ -488,21 +494,27 @@ OC = Organotropic_classification(path =
 # In[ ]:
 
 
+import warnings
+from sklearn.metrics import precision_score
+from sklearn.metrics import f1_score
+
+warnings.filterwarnings("ignore")
+
 path = "/home/jovyan/storage/Machine_Learning/Selected_features_binary_classifications/*.csv"
 ExpressionPath = "/home/jovyan/storage/Clinical_annotation/Completed_feature_selection/"
 
 for file1 in glob.glob(path):
-    print(file1)
     features, CT, ms = Organotropic_classification.extract_info(file = file1)
     file2 = os.path.join(ExpressionPath, 'TCGA-'+ CT + '_annotated_2.csv')
-    print(file2)
     X, y = Organotropic_classification.subset(file = file2, 
                                           features=features,
                                           metastatic_site=ms)
     X_train, X_test, y_train, y_test = Organotropic_classification.d_split(X,y)
     if sorted(Counter(y_test).items())[1][1] >8:
-        if X_test.shape[0] >75:
+        if X_test.shape[0] >50:
             X_train,y_train = Organotropic_classification.synthetic_instances(X_train,y_train)
+            X_test,y_test = Organotropic_classification.synthetic_instances(X_test,y_test)
+            print(CT + "-" + ms)
             model, X_test, y_test, y_pred, predictions = Organotropic_classification.classify(X_train, X_test, y_train, y_test)
             Organotropic_classification.visualize(model, X_test, y_test, y_pred, predictions, ms, CT)
     
