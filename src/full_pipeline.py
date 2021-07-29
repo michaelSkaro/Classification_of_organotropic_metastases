@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[30]:
+# In[175]:
 
 
 # New approach lets attack building the shell.
@@ -46,9 +46,12 @@ from sklearn.metrics import (
     plot_det_curve,
     plot_roc_curve,
 )
+from sklearn.metrics import precision_score
+from sklearn.metrics import f1_score
+from sklearn.metrics import recall_score
 
 
-# In[15]:
+# In[176]:
 
 
 class molecule_preprocessing:
@@ -151,7 +154,7 @@ class molecule_preprocessing:
         return Xsm, ysm
 
 
-# In[16]:
+# In[177]:
 
 
 class feature_selection:
@@ -345,7 +348,7 @@ grade_all_cancers(
 )
 
 
-# In[153]:
+# In[178]:
 
 
 # Binary classification
@@ -376,6 +379,12 @@ class Organotropic_classification:
                 ms = "Lymph_node"
             if ms == "neck":
                 ms = "Head_and_neck"
+            if ms == "gland":
+                ms = "Adrenal_gland"
+            if ms == "tissue":
+                ms = "Soft_tissue"
+            if ms == "cavity":
+                ms = "Oral_cavity"
             
         # extract the metastatic location
         df = pd.read_csv(file)
@@ -446,12 +455,42 @@ class Organotropic_classification:
         # evaluate predictions
         accuracy = accuracy_score(y_test, predictions)
         precision = precision_score(y_test, y_pred, average='weighted')
-        #f1_score = f1_score(y_test, y_pred, average='weighted')
+        recall = recall_score(y_test, y_pred, average='weighted')
+        #f1 = f1_score(y_test, y_pred, average='weighted')
         print("Accuracy: %.2f%%" % (accuracy * 100.0))
         print("Precision: %.2f%%" % (precision * 100.0))
+        print("Recall: %.2f%%" % (recall * 100.0))
         #print("F1 Score: %.2f%%" % (f1_score * 100.0))
         
+        
+        
         return model, X_test, y_test, y_pred, predictions
+    
+    
+    def classify_2(X_train, X_test, y_train, y_test):
+        '''
+        Input the data frames and put them into the classifier
+        '''
+        
+        model = RandomForestClassifier(n_estimators=1000, 
+                               random_state=RSEED, 
+                               max_features = 'sqrt',
+                               n_jobs=-1, verbose = 1)
+        
+        model.fit(X_train, y_train.ravel())
+        y_pred = model.predict(X_test)
+        predictions = [round(value) for value in y_pred]
+        # evaluate predictions
+        accuracy = accuracy_score(y_test, predictions)
+        precision = precision_score(y_test, y_pred, average='weighted')
+        recall = recall_score(y_test, y_pred, average='weighted')
+        #f1 = f1_score(y_test, y_pred, average='weighted')
+        print("Accuracy: %.2f%%" % (accuracy * 100.0))
+        print("Precision: %.2f%%" % (precision * 100.0))
+        print("Recall: %.2f%%" % (recall * 100.0))
+        #print("F1 Score: %.2f%%" % (f1_score * 100.0))
+    
+    
     
     def visualize(model, X_test, y_test, y_pred, predictions, ms, CT):
         from sklearn.metrics import (
@@ -476,7 +515,7 @@ class Organotropic_classification:
             plt.xlabel("Metrics", fontweight="bold", fontsize=20)  # x-axis label with fontsize 15
             plt.ylabel("Classes", fontweight="bold", fontsize=20)  # y-axis label with fontsize 15
             plt.yticks(rotation=0)
-            plt.savefig(CT + "_" + ms + "_" "metrics_GBT_RNA_balanced.pdf")
+            plt.savefig(CT + "_" + ms + "_" "reba_metrics_GBT_RNA_balanced.pdf")
         pass
     
     
@@ -497,6 +536,7 @@ OC = Organotropic_classification(path =
 import warnings
 from sklearn.metrics import precision_score
 from sklearn.metrics import f1_score
+from sklearn.metrics import recall_score
 
 warnings.filterwarnings("ignore")
 
@@ -509,19 +549,18 @@ for file1 in glob.glob(path):
     X, y = Organotropic_classification.subset(file = file2, 
                                           features=features,
                                           metastatic_site=ms)
-    X_train, X_test, y_train, y_test = Organotropic_classification.d_split(X,y)
-    if sorted(Counter(y_test).items())[1][1] >8:
-        if X_test.shape[0] >50:
-            X_train,y_train = Organotropic_classification.synthetic_instances(X_train,y_train)
-            X_test,y_test = Organotropic_classification.synthetic_instances(X_test,y_test)
-            print(CT + "-" + ms)
-            model, X_test, y_test, y_pred, predictions = Organotropic_classification.classify(X_train, X_test, y_train, y_test)
-            Organotropic_classification.visualize(model, X_test, y_test, y_pred, predictions, ms, CT)
     
-
-
-# In[ ]:
-
-
-
-
+    X_train, X_test, y_train, y_test = Organotropic_classification.d_split(X,y)
+    #X_train,y_train = Organotropic_classification.synthetic_instances(X_train,y_train)
+    #X_test,y_test = Organotropic_classification.synthetic_instances(X_test,y_test)
+    
+    if sorted(Counter(y).items())[1][1] >8:
+        if X.shape[0] >50:
+            if Counter(y_test)[1] >8:
+                X_train,y_train = Organotropic_classification.synthetic_instances(X_train,y_train)
+                X_test,y_test = Organotropic_classification.synthetic_instances(X_test,y_test)
+                print(CT + "-" + ms)
+                model, X_test, y_test, y_pred, predictions = Organotropic_classification.classify(X_train, X_test, y_train, y_test)
+                Organotropic_classification.visualize(model, X_test, y_test, y_pred, predictions, ms, CT)
+    
+# DONE
