@@ -827,6 +827,78 @@ ggplot(data = dat, aes(x = Cancer_Type, y = Metastatic_Location, fill = Score)) 
   scale_fill_gradient2(na.value = 0, low = "Black", mid = "White", high = "Red", midpoint = 50)
 
 
+# Read in the selected features for the cancer type metastatic location
+
+projects <- c("BLCA","BRCA","COADREAD","ESCA","HNSC","KIRC","KIRP","LIHC","LUAD","LUSC","PAAD","PRAD","SARC","SKCM","STAD","THCA")
+pairs <- c("BLCA_Pelvis", "BLCA_Liver", "BLCA_Bladder", "BLCA_Lung", "BLCA_Prostate", 
+  "BLCA_Bone", "BLCA_Lymph_node", "BRCA_Lung", "BRCA_Bone", "BRCA_Liver", 
+  "ESCA_Lymph_node", "HNSC_Oropharynx", "HNSC_Lymph_node", "HNSC_Lung", 
+  "HNSC_Oral_cavity", "KIRC_Lymph_node", "KIRP_Lymph_node", "LIHC_Liver", 
+  "LIHC_Lung", "LUAD_Lung", "LUAD_Breast", "LUAD_Prostate", "LUSC_Lymph_node", 
+  "PAAD_Liver", "PRAD_Lymph_node", "SARC_Lung", "SKCM_Brain", "SKCM_Lung", 
+  "SKCM_Lymph_node", "STAD_Liver", "STAD_Lymph_node", "THCA_Lymph_node")
+
+proj <- pairs[1]
+
+temp <- as.data.frame(df$Feature)
+colnames(temp)[1] <- proj
+temp[,1] <- NA
+
+for(proj in pairs){
+  
+  df <- data.table::fread(str_glue("{proj}.csv"), header = TRUE) %>%
+    dplyr::select(-V1)
+  
+  Feature <- df %>% dplyr::select(Feature)
+  colnames(Feature) <- proj
+  temp <- cbind(temp, Feature)
+  
+  
+  
+  
+}
+
+df2 <- df[1:1000,1:31]
+pairs <- colnames(df2)[1:31]
+length(intersect(x = df2$LUSC_Lymph_node, y = df$ESCA_Lymph_node))
+list_of_comps <- distinct(as.data.frame(t(combn(pairs,2,simplify = TRUE))))
+list_of_comps$int <- NA
+list_of_comps$odds.ratio <- NA
+list_of_comps$Pval <- NA
+for(i in 1:length(list_of_comps$V1)){
+  # test length of intersection
+  list_of_comps$int[i] <- length(intersect(df2[,list_of_comps[i,1]],df2[,list_of_comps[i,2]]))
+  # test significance of intersection 
+  
+  go.obj <- newGeneOverlap(df2[,list_of_comps[i,1]], listB = df2[,list_of_comps[i,2]], genome.size = 60843)
+  go.obj <- testGeneOverlap(go.obj)
+  list_of_comps$odds.ratio[i] <- go.obj@odds.ratio
+  list_of_comps$Pval[i] <- go.obj@pval
+  
+  
+}
+list_of_comps$int <- as.numeric(list_of_comps$int)
+list_of_comps <- list_of_comps[order(list_of_comps$int,decreasing = TRUE),]
+library(tidyverse)
+list_of_comps<- list_of_comps%>% mutate("adjusted p-value" = p.adjust(Pval, method="bonferroni"))
+
+# separate the CT and location
+list_of_comps$CT1 <- substr(list_of_comps$V1, 1,4)
+list_of_comps$CT2 <- substr(list_of_comps$V2, 1,4)
+list_of_comps$Loc1 <- substr(list_of_comps$V1, 6,length(list_of_comps$V1))
+list_of_comps$Loc2 <- substr(list_of_comps$V2, 6,length(list_of_comps$V2))
+list_of_comps <- list_of_comps[,c(7,8,9,10,3,4,5,6)]
+
+
+# overlap enticements in tumorsa metastasizing to congruent loci
+
+
+
+
+
+
+
+
 
 # R version 4.0.3 (2020-10-10)
 # Platform: x86_64-pc-linux-gnu (64-bit)
