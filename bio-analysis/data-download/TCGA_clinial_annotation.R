@@ -781,6 +781,53 @@ colnames(dat)[which(colnames(dat) == "Thyroid_Gland")] <- "Thyroid"
 
 write.csv("TCGA-HNSC_annotated_2.csv")
 
+
+dat <- data.table::fread("heatmap_figure3.txt", header = TRUE)
+
+# BLCA <- dat %>% dplyr::filter(Cancer_Type == "BLCA")
+# BRCA <- dat %>% dplyr::filter(Cancer_Type == "BRCA")
+# COADREAD <- dat %>% dplyr::filter(Cancer_Type == "COADREAD")
+# ESCA <- dat %>% dplyr::filter(Cancer_Type == "ESCA")
+# HNSC <- dat %>% dplyr::filter(Cancer_Type == "HNSC")
+# KIRC<- dat %>% dplyr::filter(Cancer_Type == "KIRC")
+# LIHC<- dat %>% dplyr::filter(Cancer_Type == "LIHC")
+# LUAD<- dat %>% dplyr::filter(Cancer_Type == "LUAD")
+# LUSC<- dat %>% dplyr::filter(Cancer_Type == "LUSC")
+# PAAD<- dat %>% dplyr::filter(Cancer_Type == "PAAD")
+# PRAD<- dat %>% dplyr::filter(Cancer_Type == "PRAD")
+# SARC<- dat %>% dplyr::filter(Cancer_Type == "SARC")
+# SKCM<- dat %>% dplyr::filter(Cancer_Type == "SKCM")
+# STAD<- dat %>% dplyr::filter(Cancer_Type == "STAD")
+# THCA<- dat %>% dplyr::filter(Cancer_Type == "THCA")
+
+cts <- names(table(dat$Cancer_Type))
+ct <- cts[1]
+for(ct in cts){
+  dp <- dat %>% dplyr::filter(Cancer_Type == ct)
+  p <- ggplot(data = dp, aes(x = Cancer_Type, y = Metastatic_Location, fill = Score)) +
+    geom_bar() +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+    theme_classic()+
+    facet_grid(cols = vars(Values)) +
+    scale_fill_gradient2(na.value = 0, low = "Black", mid = "White", high = "Red", midpoint = mean(dp$Score))
+  
+  ggsave(filename = str_glue("{ct}_classificiation.pdf"), plot = p, width = 8,height = 5,units = "in",dpi = "retina")
+  
+}
+
+
+
+dat <- data.table::fread("Metrics_heatmap_final.txt")
+dat$Score[is.na(dat$Score)] <- 0
+
+ggplot(data = dat, aes(x = Cancer_Type, y = Metastatic_Location, fill = Score)) +
+  geom_tile() +
+  facet_grid(cols = vars(Metric))+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+  scale_fill_gradient2(na.value = 0, low = "Black", mid = "White", high = "Red", midpoint = 50)
+
+
+
 # R version 4.0.3 (2020-10-10)
 # Platform: x86_64-pc-linux-gnu (64-bit)
 # Running under: Ubuntu 20.04 LTS
