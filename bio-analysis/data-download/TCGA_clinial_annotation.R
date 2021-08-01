@@ -887,17 +887,119 @@ list_of_comps$CT1 <- substr(list_of_comps$V1, 1,4)
 list_of_comps$CT2 <- substr(list_of_comps$V2, 1,4)
 list_of_comps$Loc1 <- substr(list_of_comps$V1, 6,length(list_of_comps$V1))
 list_of_comps$Loc2 <- substr(list_of_comps$V2, 6,length(list_of_comps$V2))
-list_of_comps <- list_of_comps[,c(7,8,9,10,3,4,5,6)]
+#list_of_comps <- list_of_comps[,c(7,8,9,10,3,4,5,6)]
 
 
 # overlap enticements in tumorsa metastasizing to congruent loci
 
+library(clusterProfiler)
+for(i in 1:length(unique(intersect(list_of_comps$V1,list_of_comps$V2)))){
+ 
+  ego <-clusterProfiler::enrichGO(gene  = substring(df2[,list_of_comps[i,1]],1,15),
+                                  OrgDb         = "org.Hs.eg.db",
+                                  keyType       = 'ENSEMBL',
+                                  ont           = "BP",
+                                  pAdjustMethod = "BH",
+                                  pvalueCutoff  = 0.01,
+                                  qvalueCutoff  = 0.05,
+                                  readable      = TRUE)
+  
+  #Get only  the significant results from enrichment
+  res <- ego@result
+  res <- res[res$pvalue<0.05,]
+  write.csv2(res, file = paste0("ego_" , list_of_comps[i,1] , ".csv"))
+}
+
+
+organs <- c("Bone","Lung","Liver", "Lymph_Node")
+
+
+for(org in organs){
+  
+  if(org == "Bone"){
+    # Bone
+    BLCA_Bone <- data.table::fread("ego_BLCA_Bone.csv")
+    BRCA_Bone <- data.table::fread("ego_BRCA_Bone.csv")
+    listInput <- list('BLCA Bone' = BLCA_Bone$ID ,'BRCA Bone' = BRCA_Bone$ID)
+    UpSetR::upset(fromList(listInput), order.by ="freq")
+  }
+  
+  if(org == "Lung"){
+    # Lung
+    BLCA_Lung <- data.table::fread("ego_BLCA_Lung.csv")
+    BRCA_Lung <- data.table::fread("ego_BRCA_Lung.csv")
+    HNSC_Lung <- data.table::fread("ego_HNSC_Lung.csv")
+    LUAD_Lung <- data.table::fread("ego_LUAD_Lung.csv")
+    SARC_Lung <- data.table::fread("ego_SARC_Lung.csv")
+    SKCM_Lung <- data.table::fread("ego_SKCM_Lung.csv")
+    listInput <- list('BLCA Lung' = BLCA_Lung$ID ,'BRCA Lung' = BRCA_Lung$ID,
+                      'HNSC Lung'= HNSC_Lung$ID,'LUAD Lung'= LUAD_Lung$ID,
+                      "SARC Lung" = SARC_Lung$ID, "SKCM Lung" = SKCM_Lung$ID)
+    UpSetR::upset(fromList(listInput), order.by ="freq")
+  }
+  
+  if(org == "Liver"){
+    BLCA_Liver <- data.table::fread("ego_BLCA_Liver.csv")
+    BRCA_Liver <- data.table::fread("ego_BRCA_Liver.csv")
+    LIHC_Liver <- data.table::fread("ego_LIHC_Liver.csv")
+    PAAD_Liver <- data.table::fread("ego_PAAD_Liver.csv")
+    STAD_Liver <- data.table::fread("ego_STAD_Liver.csv")
+    listInput <- list("BLCA Liver" = BLCA_Liver$ID,"BRCA Liver" = BRCA_Liver$ID, 
+                      "LIHC Liver" = LIHC_Liver$ID,"PAAD Liver" = PAAD_Liver$ID,
+                      "STAD Liver" = STAD_Liver$ID)
+    UpSetR::upset(fromList(listInput), order.by ="freq")
+  }
+  
+  
+  if(org == "Lymph_Node"){
+    
+    BLCA_Lymph_node <- data.table::fread("ego_BLCA_Lymph_node.csv")
+    ESCA_Lymph_node <- data.table::fread("ego_ESCA_Lymph_node.csv")
+    HNSC_Lymph_node <- data.table::fread("ego_HNSC_Lymph_node.csv") 
+    KIRC_Lymph_node <- data.table::fread("ego_KIRC_Lymph_node.csv") 
+    KIRP_Lymph_node <- data.table::fread("ego_KIRP_Lymph_node.csv")  
+    LUSC_Lymph_node <- data.table::fread("ego_LUSC_Lymph_node.csv") 
+    PRAD_Lymph_node <- data.table::fread("ego_PRAD_Lymph_node.csv")
+    
+    listInput <- list("BLCA Lymph Node" =  BLCA_Lymph_node$ID,
+                      "ESCA Lymph Node"  =  ESCA_Lymph_node$ID,"HNSC Lymph Node"  =  HNSC_Lymph_node$ID,
+                      "KIRC Lymph Node" =  KIRC_Lymph_node$ID,"KIRP Lymph Node" =  KIRP_Lymph_node$ID,
+                      "LUSC Lymph Node" =  LUSC_Lymph_node$ID, "PRAD Lymph Node" =  PRAD_Lymph_node$ID)
+    UpSetR::upset(fromList(listInput), order.by ="freq")
+  }
+  
+  
+}
 
 
 
 
+listInput_Bone <- list('BLCA Bone' = BLCA_Bone$ID ,'BRCA Bone' = BRCA_Bone$ID)
+
+listInput_Liver <- list("BLCA Liver" = BLCA_Liver$ID,"BRCA Liver" = BRCA_Liver$ID, 
+                  "LIHC Liver" = LIHC_Liver$ID,"PAAD Liver" = PAAD_Liver$ID,
+                  "STAD Liver" = STAD_Liver$ID)
 
 
+listInput_Lung <- list('BLCA Lung' = BLCA_Lung$ID ,'BRCA Lung' = BRCA_Lung$ID,
+                  'HNSC Lung'= HNSC_Lung$ID,'LUAD Lung'= LUAD_Lung$ID,
+                  "SARC Lung" = SARC_Lung$ID, "SKCM Lung" = SKCM_Lung$ID)
+
+listInput_Lymph_node <- list("BLCA Lymph Node" =  BLCA_Lymph_node$ID,
+                  "ESCA Lymph Node"  =  ESCA_Lymph_node$ID,"HNSC Lymph Node"  =  HNSC_Lymph_node$ID,
+                  "KIRC Lymph Node" =  KIRC_Lymph_node$ID,"KIRP Lymph Node" =  KIRP_Lymph_node$ID,
+                  "LUSC Lymph Node" =  LUSC_Lymph_node$ID, "PRAD Lymph Node" =  PRAD_Lymph_node$ID)
+
+total <- 23393
+length.gene.sets=sapply(listInput_Bone,length)
+num.expcted.overlap=total*do.call(prod,as.list(length.gene.sets/total))
+(p=sapply(0:101,function(i) dpsets(i, length.gene.sets, n=total)))
+
+res=supertest(listInput_Lung, n=total)
+plot(res, sort.by="size", margin=c(1,1,1,2), color.scale.pos=c(.8,.9), legend.pos=c(0.6,0.03))
+
+mat = GO_similarity(intersect(listInput_Lung,), ont = "BP")
+simplifyGO(mat, method = "binary_cut",column_title = "Biological Processes clustered by Semantic Similarity", plot = TRUE)
 
 
 # R version 4.0.3 (2020-10-10)
