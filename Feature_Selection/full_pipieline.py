@@ -17,7 +17,6 @@ from collections import Counter
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import tensorflow as tf
 from imblearn.over_sampling import SMOTE
 from imblearn.pipeline import Pipeline
 from imblearn.under_sampling import RandomUnderSampler, TomekLinks
