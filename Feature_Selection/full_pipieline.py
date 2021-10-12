@@ -316,7 +316,7 @@ def grade_all_blocks(df, cancer_type, selected_locs, windows):
                     sliced, selected_locs, site=i
                 )
                 fs = feature_selection(X, y)
-                CV = feature_selection.grade_features(X, y)
+                CV = feature_selection.grade_features(X, y, 50, 20)
                 # CV.to_csv("/home/jovyan/storage/Machine_Learning/Selected_features_binary_classifications/" + str("Organotropic_features")+ "_" + str(cancer_type) + "_" + str(i) + "_" + "ID_window_"  + str(start) + "_" + str(end) + ".csv")
                 features.append(CV)
 
