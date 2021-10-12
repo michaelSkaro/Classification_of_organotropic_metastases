@@ -169,11 +169,12 @@ class feature_selection:
    
    def chiSQ_selector(X, y, nFeatures):
        feature_list = X.columns
-       chiSQ_selector = SelectKBest(chi2, k= nFeatures)
-       chiSQ_selector.fit(X, y.ravel())
-       chiSQ_support = chiSQ_selector.get_support()
+       chiSQ = SelectKBest(chi2, k= nFeatures)
+       chiSQ.fit(X, y.ravel())
+       chiSQ_support = chiSQ.get_support()
 
        return chiSQ-support, feature_list
+
    # adapted from here: https://www.kaggle.com/mlwhiz/feature-selection-using-football-data
    # https://towardsdatascience.com/the-5-feature-selection-algorithms-every-data-scientist-need-to-know-3a6b566efd2
    
