@@ -143,110 +143,127 @@ class molecule_preprocessing:
 # In[3]:
 
 
+import os
+import re
+import sys
+import argparse
+import subprocess
+import math
+
+import fs.args_parse
+
 class feature_selection:
-    def __init__(self, X, y):
-        self.X = X
-        self.y = y
-        pass
+   def __init__(self, X, y, nFeatures,nJobs):
+       self.X = X
+       self.y = y
+       self.nFeatures = nFeatures
+       self.nJobs = nJobs
+       pass
+   # adapted from here: https://www.kaggle.com/mlwhiz/feature-selection-using-football-data
+   # https://towardsdatascience.com/the-5-feature-selection-algorithms-every-data-scientist-need-to-know-3a6b566efd2
+   
+   def chiSQ-selector(X, y, nFeatures):
+       feature_list = X.columns
+       chiSQ-selector = SelectKBest(chi2, k= nFeatures)
+       chiSQ-selector.fit(X, y.ravel())
+       chiSQ-support = chiSQ-selector.get_support()
 
-    def chi_selector(X, y, num_feats):
-        feature_list = X.columns
-        chi_selector = SelectKBest(chi2, k=num_feats)
-        chi_selector.fit(X, y.ravel())
-        chi_support = chi_selector.get_support()
+       return chiSQ-support, feature_list
+   # adapted from here: https://www.kaggle.com/mlwhiz/feature-selection-using-football-data
+   # https://towardsdatascience.com/the-5-feature-selection-algorithms-every-data-scientist-need-to-know-3a6b566efd2
+   
+   def rfR(X, y, nFeatures,nJobs):
+       rfR_features = SelectFromModel(
+           RandomForestRegressor(n_estimators=100, n_jobs = nJobs), max_features=nFeatures
+       )
+       rfR_features.fit(X, y.ravel())
+       rfR_support = rfR_features.get_support()
 
-        return chi_support, feature_list
+       return rfR_support
+   # adapted from here: https://www.kaggle.com/mlwhiz/feature-selection-using-football-data
+   # https://towardsdatascience.com/the-5-feature-selection-algorithms-every-data-scientist-need-to-know-3a6b566efd2
+   
+   def recursiveFeatureSelection(X, y, nFeatures,nJobs):
+       rfe_selector = RFE(
+           estimator=LogisticRegression(n_jobs = nJobs),
+           n_features_to_select=nFeatures,
+           step= math.celi(len(X.columns)/10),
+           verbose=0,
+       )
+       rfe_selector.fit(X, y.ravel())
+       rfe_support = rfe_selector.get_support()
 
-    def rfR(X, y, num_feats):
-        embeded_rf_selector = SelectFromModel(
-            RandomForestRegressor(n_estimators=100, n_jobs=20), max_features=num_feats
-        )
-        embeded_rf_selector.fit(X, y.ravel())
-        embeded_rf_support = embeded_rf_selector.get_support()
-        # embeded_rf_feature = X.loc[:, embeded_rf_support].columns.tolist()
+       return rfe_support
+   
+   # adapted from here: https://www.kaggle.com/mlwhiz/feature-selection-using-football-data
+   # https://towardsdatascience.com/the-5-feature-selection-algorithms-every-data-scientist-need-to-know-3a6b566efd2
+   
+   def lassoR(X, y, nFeatures,nJobs):
+       lR_selector = SelectFromModel(
+           LogisticRegression(penalty="l2", n_jobs= nJobs), max_features=nFeatures
+       )
+       lR_selector.fit(X, y.ravel())
+       lR_support = lR_selector.get_support()
 
-        return embeded_rf_support
+       return lR_support
+   
+   # adapted from here: https://www.kaggle.com/mlwhiz/feature-selection-using-football-data
+   # https://towardsdatascience.com/the-5-feature-selection-algorithms-every-data-scientist-need-to-know-3a6b566efd2
+   
+   def rfC(X, y, nFeatures,nJobs):
+       rfC_features = SelectFromModel(
+           RandomForestClassifier(n_estimators=100, n_jobs=nJobs), max_features=nFeatures
+       )
+       rfC_features.fit(X, y.ravel())
+       rfC_support = rfC_features.get_support()
 
-    # chi_support = chi_selector(X, num_feats=5000)
+       return rfC_support
+   
+   def cross_validate_feature_selection(
+       feature_list,
+       chiSQ-support,
+       rfe_support,
+       lR_support,
+       rfC_support,
+       rfR_support,
+   ):
+       df = pd.DataFrame(
+           {
+               "Feature": feature_list,
+               "chi2": chiSQ-support,
+               "RFE": rfe_support,
+               "Logistics": lR_support,
+               "RandomForestClassifier": rfC_support,
+               "RandomForstRegression": rfR_support,
+           }
+       )
+       # adapted from here: https://www.kaggle.com/mlwhiz/feature-selection-using-football-data
+       # https://towardsdatascience.com/the-5-feature-selection-algorithms-every-data-scientist-need-to-know-3a6b566efd2
+       
+      df["Total"] = np.sum(df, axis=1)
+       df = df.sort_values(["Total", "Feature"], ascending=False)
+       df.index = range(1, len(df) + 1)
 
-    def logR(X, y, num_feats):
-        rfe_selector = RFE(
-            estimator=LogisticRegression(n_jobs=20),
-            n_features_to_select=num_feats,
-            step=40,
-            verbose=0,
-        )
-        rfe_selector.fit(X, y.ravel())
-        rfe_support = rfe_selector.get_support()
+       return df
 
-        return rfe_support
+   def grade_features(X, y, nFeatures, n_jobs):
+       chiSQ-support, feature_list = feature_selection.chiSQ-selector(X, y, nFeatures=nFeatures)
+       rfe_support = feature_selection.recursiveFeatureSelection(X, y, nFeatures=nFeatures, nJobs = nJobs)
+       lR_support = feature_selection.lassoR(X, y, nFeatures=nFeatures, nJobs = nJobs)
+       rfC_support = feature_selection.rfC(X, y, nFeatures=nFeatures, nJobs = nJobs)
+       rfR_support = feature_selection.rfR(X, y, nFeatures=nFeatures, nJobs = nJobs)
 
-    # rfe_support = logR(X, num_feats=5000)
+       CV = feature_selection.cross_validate_feature_selection(
+           feature_list,
+           chiSQ-support,
+           rfe_support,
+           lR_support,
+           rfC_support,
+           rfR_support,
+       )
+       CV = CV[1:nFeatures]
 
-    def lassoR(X, y, num_feats):
-        embeded_lr_selector = SelectFromModel(
-            LogisticRegression(penalty="l2", n_jobs=20), max_features=num_feats
-        )
-        embeded_lr_selector.fit(X, y.ravel())
-        embeded_lr_support = embeded_lr_selector.get_support()
-
-        return embeded_lr_support
-
-    # embeded_lr_support = lassoR(X, num_feats=5000)
-
-    def rfC(X, y, num_feats):
-        embeded_rf_selector = SelectFromModel(
-            RandomForestClassifier(n_estimators=100, n_jobs=20), max_features=num_feats
-        )
-        embeded_rf_selector.fit(X, y.ravel())
-        embeded_rf_support = embeded_rf_selector.get_support()
-
-        return embeded_rf_support
-
-    def cross_validate_feature_selection(
-        feature_list,
-        chi_support,
-        rfe_support,
-        embeded_lr_support,
-        embeded_rfC_support,
-        embeded_rfR_support,
-    ):
-        df = pd.DataFrame(
-            {
-                "Feature": feature_list,
-                "Chi-2": chi_support,
-                "RFE": rfe_support,
-                "Logistics": embeded_lr_support,
-                "RandomForestClassifier": embeded_rfC_support,
-                "RandomForstRegression": embeded_rfR_support,
-            }
-        )
-        # count the selected times for each feature
-        df["Total"] = np.sum(df, axis=1)
-        df = df.sort_values(["Total", "Feature"], ascending=False)
-        df.index = range(1, len(df) + 1)
-
-        return df
-
-    def grade_features(X, y):
-        chi_support, feature_list = feature_selection.chi_selector(X, y, num_feats=50)
-        rfe_support = feature_selection.lassoR(X, y, num_feats=50)
-        embeded_lr_support = feature_selection.logR(X, y, num_feats=50)
-        embeded_rfC_support = feature_selection.rfC(X, y, num_feats=50)
-        embeded_rfR_support = feature_selection.rfR(X, y, num_feats=50)
-
-        CV = feature_selection.cross_validate_feature_selection(
-            feature_list,
-            chi_support,
-            rfe_support,
-            embeded_lr_support,
-            embeded_rfC_support,
-            embeded_rfR_support,
-        )
-        CV = CV[1:50]
-
-        return CV
-
+       return CV
 
 # In[4]:
 
@@ -266,8 +283,8 @@ dat = molecule_preprocessing.cut(df, start=0,end=500,metastatic_site=selected_lo
 X, y, feature_list = molecule_preprocessing.split(
     dat, selected_locs, site=selected_locs[1]
 )
-fs = feature_selection(X, y)
-CV = feature_selection.grade_features(X, y)
+fs = feature_selection(X, y, 50, 20)
+CV = feature_selection.grade_features(X, y, 50, 20)
 
 
 # In[ ]:
@@ -293,7 +310,7 @@ def grade_all_blocks(df, cancer_type, selected_locs, windows):
                     sliced, selected_locs, site=i
                 )
                 fs = feature_selection(X, y)
-                CV = feature_selection.grade_features(X, y)
+                CV = feature_selection.grade_features(X, y, 50, 20)
                 # CV.to_csv("/home/jovyan/storage/Machine_Learning/Selected_features_binary_classifications/" + str("Organotropic_features")+ "_" + str(cancer_type) + "_" + str(i) + "_" + "ID_window_"  + str(start) + "_" + str(end) + ".csv")
                 features.append(CV)
 
