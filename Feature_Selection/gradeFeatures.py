@@ -143,15 +143,6 @@ class molecule_preprocessing:
 # In[3]:
 
 
-import os
-import re
-import sys
-import argparse
-import subprocess
-import math
-
-import fs.args_parse
-
 class feature_selection:
    def __init__(self, X, y, nFeatures,nJobs):
        self.X = X
@@ -162,11 +153,11 @@ class feature_selection:
    # adapted from here: https://www.kaggle.com/mlwhiz/feature-selection-using-football-data
    # https://towardsdatascience.com/the-5-feature-selection-algorithms-every-data-scientist-need-to-know-3a6b566efd2
    
-   def chiSQ-selector(X, y, nFeatures):
+   def chiSQ_selector(X, y, nFeatures):
        feature_list = X.columns
-       chiSQ-selector = SelectKBest(chi2, k= nFeatures)
-       chiSQ-selector.fit(X, y.ravel())
-       chiSQ-support = chiSQ-selector.get_support()
+       chiSQ_selector = SelectKBest(chi2, k= nFeatures)
+       chiSQ_selector.fit(X, y.ravel())
+       chiSQ_support = chiSQ_selector.get_support()
 
        return chiSQ-support, feature_list
    # adapted from here: https://www.kaggle.com/mlwhiz/feature-selection-using-football-data
@@ -221,7 +212,7 @@ class feature_selection:
    
    def cross_validate_feature_selection(
        feature_list,
-       chiSQ-support,
+       chiSQ_support,
        rfe_support,
        lR_support,
        rfC_support,
@@ -230,7 +221,7 @@ class feature_selection:
        df = pd.DataFrame(
            {
                "Feature": feature_list,
-               "chi2": chiSQ-support,
+               "chi2": chiSQ_support,
                "RFE": rfe_support,
                "Logistics": lR_support,
                "RandomForestClassifier": rfC_support,
@@ -247,7 +238,7 @@ class feature_selection:
        return df
 
    def grade_features(X, y, nFeatures, n_jobs):
-       chiSQ-support, feature_list = feature_selection.chiSQ-selector(X, y, nFeatures=nFeatures)
+       chiSQ_support, feature_list = feature_selection.chiSQ_selector(X, y, nFeatures=nFeatures)
        rfe_support = feature_selection.recursiveFeatureSelection(X, y, nFeatures=nFeatures, nJobs = nJobs)
        lR_support = feature_selection.lassoR(X, y, nFeatures=nFeatures, nJobs = nJobs)
        rfC_support = feature_selection.rfC(X, y, nFeatures=nFeatures, nJobs = nJobs)
