@@ -283,13 +283,14 @@ selected_locs = molecule_preprocessing.read_selected(
     file="/home/jovyan/storage/Clinical_annotation/Sites_for_classiication.csv",
     cancer_type=cancer_type,
 )
-df = molecule_preprocessing.read(file=file)
-dat = molecule_preprocessing.cut(df, start=0, end=500, metastatic_site=selected_locs[1])
+df = molecule_preprocessing.read(
+    file=file)
+dat = molecule_preprocessing.cut(df, start=0,end=500,metastatic_site=selected_locs[1])
 X, y, feature_list = molecule_preprocessing.split(
     dat, selected_locs, site=selected_locs[1]
 )
-fs = feature_selection(X, y)
-CV = feature_selection.grade_features(X, y)
+fs = feature_selection(X, y, 50, 20)
+CV = feature_selection.grade_features(X, y, 50, 20)
 
 
 # In[ ]:
