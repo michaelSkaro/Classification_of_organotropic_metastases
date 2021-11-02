@@ -29,8 +29,8 @@ for(proj in projects){
     if(file.exists(str_glue("{proj}_DE_met_{org}.csv"))){
       dat <- data.table::fread(str_glue("{proj}_DE_met_{org}.csv", header = TRUE)) %>%
         tibble::column_to_rownames("V1") %>%
-        #dplyr::filter(padj <0.05) %>%
-        #dplyr::filter(abs(log2FoldChange) > 0.5) %>%
+        # dplyr::filter(padj <0.05) %>% This was done previous steps
+        # dplyr::filter(abs(log2FoldChange) > 0.5) %>%
         tibble::rownames_to_column("ENSEMBL")
       # remove NAs if they exist
       dat <- dat[complete.cases(dat),]
