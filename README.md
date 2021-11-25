@@ -90,3 +90,6 @@ docker run --rm -it --entrypoint="" mskaro1/mot bash
 
 Docker image available now ! Check out our wiki for implementation actions!
 Thanks!
+
+
+Using our code or our model? Consider [citing us](https://rdcu.be/cBZKI)
