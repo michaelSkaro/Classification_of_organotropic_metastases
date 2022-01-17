@@ -8,7 +8,7 @@ import subprocess
 
 def parse_cla(args):
     '''
-    Parses C ommand L ine A rguments.
+    Parses Command L ine A rguments.
     Parameters
     ----------
     args: list
