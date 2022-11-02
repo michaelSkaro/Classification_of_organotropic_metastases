@@ -5,7 +5,7 @@
 This repository is the code base for the classification of organotropic metastases. Transcriptomic profiles of 7,011 cancer patients in the TCGA database were used to classify and analyze the seeding location of primary tumors. The sequencing data and all clinicopatholigic reports for all of these patients were publicly available for bulk data mining through TCGA Biolinks.
 
 ## Installation
-We utilized multiple programming languages (i.e. Java, Python, and R) to construct learning models and to perform biological analyses. As a result, this created many dependencie so we have provided two different ways to install our framework -- a manual installation and a docker installation.
+We utilized multiple programming languages (i.e. Java, Python, and R) to construct learning models and to perform biological analyses. As a result, this created many dependencies so we have provided two different ways to install our framework -- a manual installation and a docker installation.
 
 **Docker Installation**
 
